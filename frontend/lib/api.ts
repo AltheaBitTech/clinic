@@ -1,0 +1,160 @@
+import axios from 'axios';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// Request interceptor — attach token
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('accessToken');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Response interceptor — handle 401 and token refresh
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const original = error.config;
+    if (error.response?.status === 401 && !original._retry) {
+      original._retry = true;
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) throw new Error('No refresh token');
+        const { data } = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        original.headers.Authorization = `Bearer ${data.accessToken}`;
+        return api(original);
+      } catch {
+        localStorage.clear();
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
+export default api;
+
+// ─── API Helpers ──────────────────────────────────────────────────────────────
+
+export const authApi = {
+  register: (data: any) => api.post('/auth/register', data),
+  login: (data: any) => api.post('/auth/login', data),
+  sendOtp: (phone: string) => api.post('/auth/otp/send', { phone }),
+  verifyOtp: (phone: string, otp: string) => api.post('/auth/otp/verify', { phone, otp }),
+  logout: () => api.post('/auth/logout'),
+  getProfile: () => api.get('/auth/profile'),
+  acceptInvite: (data: any) => api.post('/auth/invite/accept', data),
+};
+
+export const tenantsApi = {
+  create: (data: any) => api.post('/tenants', data),
+  getAll: (params?: any) => api.get('/tenants', { params }),
+  getMy: () => api.get('/tenants/my'),
+  getMyStats: () => api.get('/tenants/my/stats'),
+  update: (id: string, data: any) => api.put(`/tenants/${id}`, data),
+  invite: (id: string, data: any) => api.post(`/tenants/${id}/invite`, data),
+};
+
+export const patientsApi = {
+  create: (data: any) => api.post('/patients', data),
+  getAll: (params?: any) => api.get('/patients', { params }),
+  getOne: (id: string) => api.get(`/patients/${id}`),
+  update: (id: string, data: any) => api.put(`/patients/${id}`, data),
+  getMe: () => api.get('/patients/me'),
+  addFamilyMember: (id: string, data: any) => api.post(`/patients/${id}/family-members`, data),
+  getTimeline: (id: string, params?: any) => api.get(`/patients/${id}/timeline`, { params }),
+};
+
+export const doctorsApi = {
+  create: (data: any) => api.post('/doctors', data),
+  getAll: (params?: any) => api.get('/doctors', { params }),
+  getOne: (id: string) => api.get(`/doctors/${id}`),
+  update: (id: string, data: any) => api.put(`/doctors/${id}`, data),
+  getSlots: (id: string, date: string) => api.get(`/doctors/${id}/slots`, { params: { date } }),
+};
+
+export const departmentsApi = {
+  create: (data: any) => api.post('/departments', data),
+  getAll: () => api.get('/departments'),
+  update: (id: string, data: any) => api.put(`/departments/${id}`, data),
+  delete: (id: string) => api.delete(`/departments/${id}`),
+};
+
+export const appointmentsApi = {
+  create: (data: any) => api.post('/appointments', data),
+  getAll: (params?: any) => api.get('/appointments', { params }),
+  getOne: (id: string) => api.get(`/appointments/${id}`),
+  update: (id: string, data: any) => api.put(`/appointments/${id}`, data),
+  getToday: () => api.get('/appointments/today'),
+  getMissedFollowUps: () => api.get('/appointments/missed-followups'),
+};
+
+export const prescriptionsApi = {
+  create: (data: any) => api.post('/prescriptions', data),
+  getAll: (params?: any) => api.get('/prescriptions', { params }),
+  getOne: (id: string) => api.get(`/prescriptions/${id}`),
+};
+
+export const reportsApi = {
+  upload: (formData: FormData) => api.post('/reports', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getAll: (params?: any) => api.get('/reports', { params }),
+  getOne: (id: string) => api.get(`/reports/${id}`),
+  delete: (id: string) => api.delete(`/reports/${id}`),
+};
+
+export const notificationsApi = {
+  getAll: (params?: any) => api.get('/notifications', { params }),
+  markRead: (id: string) => api.put(`/notifications/${id}/read`),
+  markAllRead: () => api.put('/notifications/read-all'),
+};
+
+export const chatApi = {
+  getOrCreateRoom: (data: any) => api.post('/chat/rooms', data),
+  getRooms: () => api.get('/chat/rooms'),
+  getMessages: (roomId: string, params?: any) => api.get(`/chat/rooms/${roomId}/messages`, { params }),
+};
+
+export const dashboardApi = {
+  getSuperAdmin: () => api.get('/dashboard/super-admin'),
+  getHospital: () => api.get('/dashboard/hospital'),
+  getDoctor: () => api.get('/dashboard/doctor'),
+  getPatient: () => api.get('/dashboard/patient'),
+  getReceptionist: () => api.get('/dashboard/receptionist'),
+};
+
+export const billingApi = {
+  createInvoice: (data: any) => api.post('/billing/invoices', data),
+  getInvoices: (params?: any) => api.get('/billing/invoices', { params }),
+  getOne: (id: string) => api.get(`/billing/invoices/${id}`),
+  markPaid: (id: string) => api.put(`/billing/invoices/${id}/pay`),
+};
+
+export const tenantRequestsApi = {
+  create: (data: any) => api.post('/tenant-requests', data),
+  getAll: () => api.get('/tenant-requests'),
+  approve: (id: string) => api.post(`/tenant-requests/${id}/approve`),
+  reject: (id: string) => api.post(`/tenant-requests/${id}/reject`),
+};
+
+export const usersApi = {
+  getAll: (params?: any) => api.get('/users', { params }),
+  updateProfile: (data: any) => api.put('/users/profile', data),
+  toggleActive: (id: string) => api.put(`/users/${id}/toggle-active`),
+  uploadAvatar: (formData: FormData) => api.post('/users/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+};
+
+export const medicalCatalogApi = {
+  create: (data: any) => api.post('/medical-catalog', data),
+  getAll: (params?: any) => api.get('/medical-catalog', { params }),
+  delete: (id: string) => api.delete(`/medical-catalog/${id}`),
+};
+
+

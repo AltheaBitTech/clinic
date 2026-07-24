@@ -1,0 +1,77 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { ReportType } from '@prisma/client';
+import * as path from 'path';
+import * as fs from 'fs';
+
+@Injectable()
+export class ReportsService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(tenantId: string, uploadedBy: string, patientId: string, file: Express.Multer.File, body: any) {
+    const fileUrl = `/uploads/reports/${file.filename}`;
+
+    const report = await this.prisma.report.create({
+      data: {
+        tenantId,
+        patientId,
+        uploadedBy,
+        type: body.type || 'OTHER',
+        title: body.title || file.originalname,
+        description: body.description,
+        fileUrl,
+        fileName: file.originalname,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        labName: body.labName,
+        reportDate: body.reportDate ? new Date(body.reportDate) : new Date(),
+      },
+    });
+
+    // Timeline event
+    await this.prisma.patientTimeline.create({
+      data: {
+        patientId,
+        eventType: 'REPORT_UPLOADED',
+        title: `Report Uploaded: ${report.title}`,
+        description: report.description || `${report.type} report`,
+        metadata: { reportId: report.id, type: report.type },
+      },
+    });
+
+    return report;
+  }
+
+  async findAll(tenantId: string, patientId?: string, type?: ReportType, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const where: any = { tenantId };
+    if (patientId) where.patientId = patientId;
+    if (type) where.type = type;
+
+    const [data, total] = await Promise.all([
+      this.prisma.report.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.report.count({ where }),
+    ]);
+
+    return { data, total, page, limit };
+  }
+
+  async findOne(id: string) {
+    const report = await this.prisma.report.findUnique({ where: { id } });
+    if (!report) throw new NotFoundException('Report not found');
+    return report;
+  }
+
+  async delete(id: string) {
+    const report = await this.findOne(id);
+    // Delete file from disk
+    const filePath = path.join(process.cwd(), report.fileUrl);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    return this.prisma.report.delete({ where: { id } });
+  }
+}

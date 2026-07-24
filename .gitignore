@@ -1,0 +1,38 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+.next/
+**/ .next/
+out/
+**/out/
+build/
+**/build/
+tsconfig.tsbuildinfo
+**/*.tsbuildinfo
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploads and temporary files
+uploads/
+**/uploads/*
+!**/uploads/.gitkeep
+
+# IDE files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

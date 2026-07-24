@@ -1,0 +1,556 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum UserRole {
+  SUPER_ADMIN
+  HOSPITAL_ADMIN
+  DOCTOR
+  RECEPTIONIST
+  PATIENT
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum NotificationChannel {
+  PUSH
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum ReportType {
+  BLOOD_TEST
+  XRAY
+  MRI
+  CT_SCAN
+  ULTRASOUND
+  ECG
+  PRESCRIPTION
+  OTHER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  CANCELLED
+}
+
+enum TimelineEventType {
+  APPOINTMENT
+  PRESCRIPTION
+  MEDICINE_STARTED
+  REPORT_UPLOADED
+  FOLLOW_UP
+  REMINDER_SENT
+  NOTE_ADDED
+}
+
+// ─────────────────────────────────────────
+// TENANT (Hospital / Clinic)
+// ─────────────────────────────────────────
+
+model Tenant {
+  id               String           @id @default(cuid())
+  name             String
+  slug             String           @unique
+  email            String
+  phone            String?
+  address          String?
+  city             String?
+  state            String?
+  country          String?          @default("India")
+  logoUrl          String?
+  website          String?
+  licenseNumber    String?
+  subscriptionPlan SubscriptionPlan @default(FREE)
+  subscriptionEndsAt DateTime?
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  users        User[]
+  departments  Department[]
+  patients     Patient[]
+  appointments Appointment[]
+  reports      Report[]
+  invoices     Invoice[]
+  invites      HospitalInvite[]
+  medicalCatalogItems MedicalCatalogItem[]
+
+  @@map("tenants")
+}
+
+// ─────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  tenantId     String?
+  email        String    @unique
+  phone        String?   @unique
+  passwordHash String?
+  firstName    String
+  lastName     String
+  role         UserRole  @default(PATIENT)
+  avatarUrl    String?
+  isActive     Boolean   @default(true)
+  isVerified   Boolean   @default(false)
+  googleId     String?   @unique
+  refreshToken String?
+  otp          String?
+  otpExpiresAt DateTime?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant        Tenant?        @relation(fields: [tenantId], references: [id])
+  doctor        Doctor?
+  patient       Patient?
+  sentMessages  Message[]      @relation("SentMessages")
+  notifications Notification[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// HOSPITAL INVITE
+// ─────────────────────────────────────────
+
+model HospitalInvite {
+  id        String   @id @default(cuid())
+  tenantId  String
+  email     String
+  role      UserRole
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("hospital_invites")
+}
+
+// ─────────────────────────────────────────
+// DEPARTMENT
+// ─────────────────────────────────────────
+
+model Department {
+  id          String  @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  doctors Doctor[]
+
+  @@map("departments")
+}
+
+// ─────────────────────────────────────────
+// DOCTOR
+// ─────────────────────────────────────────
+
+model Doctor {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  tenantId         String
+  departmentId     String?
+  specialization   String
+  qualification    String?
+  registrationNo   String?
+  experienceYears  Int?
+  consultationFee  Decimal? @db.Decimal(10, 2)
+  bio              String?
+  availableDays    String[] @default(["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"])
+  consultationStart String  @default("09:00")
+  consultationEnd   String  @default("17:00")
+  slotDuration     Int      @default(30)
+  isAvailable      Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id])
+  department   Department?  @relation(fields: [departmentId], references: [id])
+  appointments Appointment[]
+  prescriptions Prescription[]
+
+  @@map("doctors")
+}
+
+// ─────────────────────────────────────────
+// PATIENT
+// ─────────────────────────────────────────
+
+model Patient {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  tenantId         String
+  patientCode      String    @unique
+  dateOfBirth      DateTime?
+  gender           Gender?
+  bloodGroup       String?
+  address          String?
+  city             String?
+  emergencyName    String?
+  emergencyPhone   String?
+  emergencyRelation String?
+  allergies        String[]  @default([])
+  chronicConditions String[] @default([])
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user          User            @relation(fields: [userId], references: [id])
+  tenant        Tenant          @relation(fields: [tenantId], references: [id])
+  familyMembers FamilyMember[]
+  appointments  Appointment[]
+  prescriptions Prescription[]
+  reports       Report[]
+  timeline      PatientTimeline[]
+  reminders     MedicineReminder[]
+  invoices      Invoice[]
+
+  @@map("patients")
+}
+
+// ─────────────────────────────────────────
+// FAMILY MEMBER
+// ─────────────────────────────────────────
+
+model FamilyMember {
+  id          String    @id @default(cuid())
+  patientId   String
+  name        String
+  relation    String
+  dateOfBirth DateTime?
+  gender      Gender?
+  bloodGroup  String?
+  phone       String?
+  allergies   String[]  @default([])
+  createdAt   DateTime  @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@map("family_members")
+}
+
+// ─────────────────────────────────────────
+// APPOINTMENT
+// ─────────────────────────────────────────
+
+model Appointment {
+  id             String            @id @default(cuid())
+  tenantId       String
+  patientId      String
+  doctorId       String
+  scheduledAt    DateTime
+  endsAt         DateTime?
+  status         AppointmentStatus @default(SCHEDULED)
+  type           String            @default("CONSULTATION")
+  reason         String?
+  notes          String?
+  followUpDate   DateTime?
+  followUpNotes  String?
+  checkedInAt    DateTime?
+  completedAt    DateTime?
+  cancelledAt    DateTime?
+  cancelReason   String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  doctor        Doctor         @relation(fields: [doctorId], references: [id])
+  prescriptions Prescription[]
+  invoice       Invoice?
+
+  @@map("appointments")
+}
+
+// ─────────────────────────────────────────
+// PRESCRIPTION
+// ─────────────────────────────────────────
+
+model Prescription {
+  id            String   @id @default(cuid())
+  appointmentId String?
+  patientId     String
+  doctorId      String
+  diagnosis     String?
+  notes         String?
+  pdfUrl        String?
+  validUntil    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  appointment Appointment?       @relation(fields: [appointmentId], references: [id])
+  patient     Patient            @relation(fields: [patientId], references: [id])
+  doctor      Doctor             @relation(fields: [doctorId], references: [id])
+  medicines   Medicine[]
+  reminders   MedicineReminder[]
+
+  @@map("prescriptions")
+}
+
+// ─────────────────────────────────────────
+// MEDICINE
+// ─────────────────────────────────────────
+
+model Medicine {
+  id             String  @id @default(cuid())
+  prescriptionId String
+  name           String
+  type           String  @default("MEDICINE")
+  dosage         String
+  frequency      String
+  duration       String
+  timing         String  @default("AFTER_FOOD")
+  instructions   String?
+  reminderTimes  String[] @default([])
+  createdAt      DateTime @default(now())
+
+  prescription Prescription       @relation(fields: [prescriptionId], references: [id])
+  reminders    MedicineReminder[]
+
+  @@map("medicines")
+}
+
+// ─────────────────────────────────────────
+// MEDICINE REMINDER
+// ─────────────────────────────────────────
+
+model MedicineReminder {
+  id             String              @id @default(cuid())
+  patientId      String
+  prescriptionId String
+  medicineId     String
+  scheduledAt    DateTime
+  channel        NotificationChannel
+  status         NotificationStatus  @default(PENDING)
+  sentAt         DateTime?
+  createdAt      DateTime            @default(now())
+
+  patient      Patient      @relation(fields: [patientId], references: [id])
+  prescription Prescription @relation(fields: [prescriptionId], references: [id])
+  medicine     Medicine     @relation(fields: [medicineId], references: [id])
+
+  @@map("medicine_reminders")
+}
+
+// ─────────────────────────────────────────
+// REPORT
+// ─────────────────────────────────────────
+
+model Report {
+  id          String     @id @default(cuid())
+  tenantId    String
+  patientId   String
+  uploadedBy  String
+  type        ReportType
+  title       String
+  description String?
+  fileUrl     String
+  fileName    String
+  fileSize    Int?
+  mimeType    String?
+  labName     String?
+  reportDate  DateTime?
+  createdAt   DateTime   @default(now())
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@map("reports")
+}
+
+// ─────────────────────────────────────────
+// PATIENT TIMELINE
+// ─────────────────────────────────────────
+
+model PatientTimeline {
+  id          String            @id @default(cuid())
+  patientId   String
+  eventType   TimelineEventType
+  title       String
+  description String?
+  metadata    Json?
+  occurredAt  DateTime          @default(now())
+  createdAt   DateTime          @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@map("patient_timeline")
+}
+
+// ─────────────────────────────────────────
+// NOTIFICATION
+// ─────────────────────────────────────────
+
+model Notification {
+  id          String              @id @default(cuid())
+  userId      String
+  title       String
+  body        String
+  channel     NotificationChannel
+  status      NotificationStatus  @default(PENDING)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  readAt      DateTime?
+  metadata    Json?
+  createdAt   DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────
+// INVOICE
+// ─────────────────────────────────────────
+
+model Invoice {
+  id            String        @id @default(cuid())
+  tenantId      String
+  patientId     String
+  appointmentId String?       @unique
+  invoiceNo     String        @unique
+  amount        Decimal       @db.Decimal(10, 2)
+  discount      Decimal?      @db.Decimal(10, 2)
+  tax           Decimal?      @db.Decimal(10, 2)
+  total         Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus @default(PENDING)
+  paidAt        DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  patient     Patient      @relation(fields: [patientId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+
+  @@map("invoices")
+}
+
+// ─────────────────────────────────────────
+// CHAT
+// ─────────────────────────────────────────
+
+model ChatRoom {
+  id        String   @id @default(cuid())
+  patientId String
+  doctorId  String
+  tenantId  String
+  createdAt DateTime @default(now())
+
+  messages Message[]
+
+  @@unique([patientId, doctorId])
+  @@map("chat_rooms")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  chatRoomId String
+  senderId   String
+  content    String
+  fileUrl    String?
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id])
+  sender   User     @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@map("messages")
+}
+
+// ─────────────────────────────────────────
+// TENANT REGISTRATION REQUEST
+// ─────────────────────────────────────────
+
+model TenantRequest {
+  id          String        @id @default(cuid())
+  name        String        // Hospital/Clinic Name
+  email       String        @unique // Requester Admin Email
+  phone       String?
+  firstName   String        // Requester Admin First Name
+  lastName    String        // Requester Admin Last Name
+  address     String?
+  city        String?
+  state       String?
+  status      RequestStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("tenant_requests")
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─────────────────────────────────────────
+// MEDICAL CATALOG ITEM
+// ─────────────────────────────────────────
+
+model MedicalCatalogItem {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  type      String   // "MEDICINE" or "OINTMENT"
+  dosage    String?  // suggested default dosage
+  frequency String?  // suggested default frequency
+  timing    String?  // suggested default timing
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, name, type])
+  @@map("medical_catalog_items")
+}
+
