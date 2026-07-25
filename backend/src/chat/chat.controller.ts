@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
+import { CreateRoomDto } from './dto/chat.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('chat')
@@ -11,8 +12,8 @@ export class ChatController {
 
   @Post('rooms')
   @ApiOperation({ summary: 'Get or create a chat room between doctor and patient' })
-  getOrCreateRoom(@Body() body: { patientId: string; doctorId: string }, @CurrentUser() user: any) {
-    return this.chatService.getOrCreateRoom(body.patientId, body.doctorId, user.tenantId);
+  getOrCreateRoom(@Body() dto: CreateRoomDto, @CurrentUser() user: any) {
+    return this.chatService.getOrCreateRoom(dto.patientId, dto.doctorId, user.tenantId);
   }
 
   @Get('rooms')

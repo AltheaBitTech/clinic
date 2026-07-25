@@ -5,6 +5,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { UsersService } from './users.service';
+import { UpdateProfileDto, UploadAvatarDto } from './dto/user.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
@@ -30,6 +31,7 @@ export class UsersController {
 
   @Get()
   @Roles(UserRole.HOSPITAL_ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'List all users' })
   findAll(@CurrentUser() user: any, @Query('role') role?: UserRole, @Query('page') page?: number) {
     return this.svc.findAll(user.tenantId, role, page);
   }
@@ -38,17 +40,19 @@ export class UsersController {
   @UseInterceptors(FileInterceptor('file', { storage }))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload profile avatar' })
-  uploadAvatar(@UploadedFile() file: Express.Multer.File) {
+  uploadAvatar(@UploadedFile() file: Express.Multer.File, @Body() dto: UploadAvatarDto) {
     return { url: `/uploads/avatars/${file.filename}` };
   }
 
   @Put('profile')
-  updateProfile(@CurrentUser() user: any, @Body() body: any) {
-    return this.svc.updateProfile(user.id, body);
+  @ApiOperation({ summary: 'Update own user profile' })
+  updateProfile(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
+    return this.svc.updateProfile(user.id, dto);
   }
 
   @Put(':id/toggle-active')
   @Roles(UserRole.HOSPITAL_ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Toggle user active/inactive status' })
   toggleActive(@Param('id') id: string) {
     return this.svc.toggleActive(id);
   }

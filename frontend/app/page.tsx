@@ -2,53 +2,69 @@ import Link from 'next/link';
 import { Activity, Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle } from 'lucide-react';
 import ClinicRequestForm from '@/components/ClinicRequestForm';
 
+const featureColorMap: Record<string, { bg: string; text: string; border: string }> = {
+  indigo: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20' },
+  emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
+  purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
+  blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
+  rose: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
+};
+
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white overflow-x-hidden relative">
+      {/* Visual Ambient Glows */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute top-40 right-1/4 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
       {/* Nav */}
-      <nav className="flex items-center justify-between px-8 py-5 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
-            <Activity className="w-5 h-5 text-white" />
+      <header className="sticky top-0 z-50 bg-slate-950/60 backdrop-blur-lg border-b border-white/5">
+        <nav className="flex items-center justify-between px-8 py-4 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">CareSync</span>
           </div>
-          <span className="text-xl font-bold">CareSync</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-slate-300 hover:text-white transition-colors text-sm font-medium">
-            Sign In
-          </Link>
-          <Link href="/register" className="btn-primary text-sm">
-            Get Started Free
-          </Link>
-        </div>
-      </nav>
+          <div className="flex items-center gap-5">
+            <Link href="/login" className="text-slate-300 hover:text-white transition-colors text-sm font-semibold">
+              Sign In
+            </Link>
+            <Link href="/register" className="btn-primary text-sm shadow-md">
+              Get Started Free
+            </Link>
+          </div>
+        </nav>
+      </header>
 
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-8 pt-20 pb-28 text-center">
-        <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 text-sm text-indigo-300 mb-8">
-          <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
+      <section className="max-w-7xl mx-auto px-8 pt-24 pb-28 text-center relative">
+        <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4.5 py-1.5 text-xs font-semibold text-indigo-300 mb-8 animate-fade-in">
+          <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
           Multi-Tenant Hospital SaaS Platform
         </div>
-        <h1 className="text-6xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
-          The Modern OS<br />for Healthcare
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-6 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent tracking-tight">
+          The Modern OS <br className="hidden md:inline" />for Healthcare
         </h1>
-        <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
-          Appointments, digital prescriptions, medicine reminders, patient timelines, and real-time chat — all in one platform.
+        <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+          Appointments, digital prescriptions, medicine reminders, patient timelines, and real-time chat — unified in a single, high-performance platform.
         </p>
-        <div className="flex items-center justify-center gap-4 flex-wrap">
-          <Link href="/register" className="btn-primary flex items-center gap-2 text-base px-8 py-3.5">
-            Start for Free <ArrowRight className="w-4 h-4" />
+        <div className="flex items-center justify-center gap-4.5 flex-wrap animate-slide-up">
+          <Link href="/register" className="btn-primary flex items-center gap-2 text-base px-8 py-3.5 shadow-lg">
+            Start for Free <ArrowRight className="w-4.5 h-4.5" />
           </Link>
-          <Link href="/login" className="btn-secondary text-base px-8 py-3.5 bg-white/10 text-white hover:bg-white/20 border border-white/20">
+          <Link href="/login" className="btn-secondary text-base px-8 py-3.5 bg-white/5 text-white hover:bg-white/10 border border-white/15 backdrop-blur-sm">
             Sign In
           </Link>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-8 pb-28">
-        <h2 className="text-3xl font-bold text-center mb-4">Everything your clinic needs</h2>
-        <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto">From individual doctors to multi-speciality hospitals, CareSync scales with you.</p>
+      <section className="max-w-7xl mx-auto px-8 pb-28 relative">
+        <div className="absolute -left-20 top-40 w-80 h-80 bg-emerald-600/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+        <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 tracking-tight">Everything your clinic needs</h2>
+        <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">From individual doctors to multi-speciality hospitals, CareSync scales with your operation.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             { icon: Calendar, color: 'indigo', title: 'Smart Appointments', desc: 'Book, reschedule, and track appointments. Automatic reminders 24h before.' },
@@ -57,53 +73,61 @@ export default function HomePage() {
             { icon: Activity, color: 'purple', title: 'Patient Timeline', desc: 'Chronological view of every visit, prescription, test, and follow-up.' },
             { icon: Shield, color: 'blue', title: 'Multi-Tenant Security', desc: 'Every hospital is fully isolated. RBAC with 5 roles. JWT auth.' },
             { icon: Users, color: 'rose', title: 'Family Health Records', desc: 'Patients can manage health records for their entire family.' },
-          ].map(({ icon: Icon, color, title, desc }) => (
-            <div key={title} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200">
-              <div className={`w-11 h-11 rounded-xl bg-${color}-500/20 flex items-center justify-center mb-4`}>
-                <Icon className={`w-5 h-5 text-${color}-400`} />
+          ].map(({ icon: Icon, color, title, desc }) => {
+            const mapped = featureColorMap[color] || featureColorMap.indigo;
+            return (
+              <div key={title} className="bg-white/[0.02] border border-white/10 rounded-2xl p-6.5 hover:bg-white/[0.06] hover:border-white/20 hover:-translate-y-1.5 transition-all duration-300 group">
+                <div className={`w-11 h-11 rounded-xl ${mapped.bg} ${mapped.border} border flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className={`w-5 h-5 ${mapped.text}`} />
+                </div>
+                <h3 className="font-semibold text-lg mb-2.5 text-slate-100 group-hover:text-white transition-colors">{title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed font-light">{desc}</p>
               </div>
-              <h3 className="font-semibold text-lg mb-2">{title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
       {/* User Roles */}
-      <section className="max-w-7xl mx-auto px-8 pb-24">
-        <h2 className="text-3xl font-bold text-center mb-12">Built for every role</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <section className="max-w-7xl mx-auto px-8 pb-28 relative">
+        <h2 className="text-3xl font-extrabold text-center mb-12 tracking-tight">Built for every role</h2>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
           {[
             { role: 'Super Admin', desc: 'Platform & billing', color: 'purple' },
             { role: 'Hospital Admin', desc: 'Staff & reports', color: 'blue' },
             { role: 'Doctor', desc: 'Appointments & Rx', color: 'emerald' },
             { role: 'Receptionist', desc: 'Registration & billing', color: 'amber' },
             { role: 'Patient', desc: 'Health portal', color: 'rose' },
-          ].map(({ role, desc, color }) => (
-            <div key={role} className={`bg-${color}-500/10 border border-${color}-500/20 rounded-2xl p-4 text-center`}>
-              <div className={`text-${color}-400 font-bold mb-1`}>{role}</div>
-              <div className="text-slate-400 text-xs">{desc}</div>
-            </div>
-          ))}
+          ].map(({ role, desc, color }) => {
+            const mapped = featureColorMap[color] || featureColorMap.indigo;
+            return (
+              <div key={role} className={`${mapped.bg} ${mapped.border} border rounded-2xl p-5.5 text-center hover:bg-white/[0.02] transition-colors duration-300`}>
+                <div className={`${mapped.text} font-bold text-base mb-1.5`}>{role}</div>
+                <div className="text-slate-400 text-xs leading-relaxed font-light">{desc}</div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
       {/* Partner Registration Form */}
-      <section className="max-w-7xl mx-auto px-8 pb-24">
+      <section className="max-w-7xl mx-auto px-8 pb-24 relative">
+        <div className="absolute right-0 bottom-10 w-96 h-96 bg-purple-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
         <ClinicRequestForm />
       </section>
 
       {/* CTA */}
-      <section className="max-w-3xl mx-auto px-8 pb-24 text-center">
-        <div className="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 rounded-3xl p-12">
-          <h2 className="text-3xl font-bold mb-4">Ready to transform your practice?</h2>
-          <p className="text-slate-400 mb-8">Join clinics and hospitals already using CareSync to improve patient care.</p>
-          <Link href="/register" className="btn-primary text-base px-10 py-4 inline-flex items-center gap-2">
-            Get Started Free <ArrowRight className="w-4 h-4" />
+      <section className="max-w-4xl mx-auto px-8 pb-28 text-center">
+        <div className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/20 rounded-3xl p-12 md:p-16 backdrop-blur-md relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <h2 className="text-3.5xl font-extrabold mb-4 tracking-tight">Ready to transform your practice?</h2>
+          <p className="text-slate-300 mb-8 max-w-lg mx-auto font-light leading-relaxed">Join progressive clinics and hospitals utilizing CareSync to streamline care delivery.</p>
+          <Link href="/register" className="btn-primary text-base px-10 py-4 inline-flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+            Get Started Free <ArrowRight className="w-4.5 h-4.5" />
           </Link>
-          <div className="flex items-center justify-center gap-6 mt-8 text-sm text-slate-400">
+          <div className="flex items-center justify-center gap-6 mt-10 text-xs text-slate-400 flex-wrap">
             {['No credit card required', 'Free 30-day trial', 'Cancel anytime'].map((t) => (
-              <span key={t} className="flex items-center gap-1.5">
+              <span key={t} className="flex items-center gap-1.5 font-medium">
                 <CheckCircle className="w-4 h-4 text-emerald-400" /> {t}
               </span>
             ))}
@@ -112,12 +136,12 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-8 text-center text-slate-500 text-sm">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Activity className="w-4 h-4 text-indigo-400" />
-          <span className="font-semibold text-white">CareSync</span>
+      <footer className="border-t border-white/5 py-10 text-center text-slate-500 text-sm bg-slate-950/40">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Activity className="w-4.5 h-4.5 text-indigo-400 animate-pulse" />
+          <span className="font-bold text-white tracking-wider">CareSync</span>
         </div>
-        <p>© 2025 CareSync. Multi-tenant hospital management SaaS.</p>
+        <p className="font-light text-xs text-slate-500">© 2026 CareSync. Intelligent Multi-Tenant Hospital OS.</p>
       </footer>
     </div>
   );

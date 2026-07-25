@@ -1,10 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-
-export class CreateDepartmentDto {
-  name: string;
-  description?: string;
-}
+import { CreateDepartmentDto, UpdateDepartmentDto } from './dto/department.dto';
 
 @Injectable()
 export class DepartmentsService {
@@ -21,7 +17,7 @@ export class DepartmentsService {
     });
   }
 
-  async update(id: string, dto: Partial<CreateDepartmentDto>) {
+  async update(id: string, dto: UpdateDepartmentDto) {
     return this.prisma.department.update({ where: { id }, data: dto });
   }
 

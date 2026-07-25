@@ -4,6 +4,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagg
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ReportsService } from './reports.service';
+import { UploadReportDto } from './dto/report.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ReportType } from '@prisma/client';
 
@@ -28,9 +29,9 @@ export class ReportsController {
   upload(
     @CurrentUser() user: any,
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: any,
+    @Body() dto: UploadReportDto,
   ) {
-    return this.reportsService.create(user.tenantId, user.id, body.patientId, file, body);
+    return this.reportsService.create(user.tenantId, user.id, dto.patientId, file, dto);
   }
 
   @Get()
@@ -45,11 +46,13 @@ export class ReportsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a patient report by ID' })
   findOne(@Param('id') id: string) {
     return this.reportsService.findOne(id);
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a patient report' })
   delete(@Param('id') id: string) {
     return this.reportsService.delete(id);
   }
