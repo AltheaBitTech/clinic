@@ -270,7 +270,7 @@ export default function StaffPage() {
                       required
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="e.g. staff@clinic.caresync.health"
+                      placeholder="e.g. staff@clinic.Arogyix.health"
                       className="input pl-10 text-sm"
                     />
                   </div>

@@ -32,7 +32,7 @@ async function bootstrap() {
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('CareSync API')
+    .setTitle('Arogyix API')
     .setDescription('Hospital Management SaaS Platform API')
     .setVersion('1.0')
     .addBearerAuth()
@@ -55,7 +55,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log(`🚀 CareSync API running on: http://localhost:${port}/api/v1`);
+  console.log(`🚀 Arogyix API running on: http://localhost:${port}/api/v1`);
   console.log(`📚 Swagger Docs: http://localhost:${port}/api/docs`);
 }
 

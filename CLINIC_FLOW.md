@@ -1,12 +1,12 @@
-# CareSync — Application Flow & Features Guide
+# Arogyix — Application Flow & Features Guide
 
-Welcome to the **CareSync** Application Flow and Features Guide. This document provides a complete overview of the user onboarding processes, end-to-end clinical workflows, and feature directories for all users, completely free of technical jargon.
+Welcome to the **Arogyix** Application Flow and Features Guide. This document provides a complete overview of the user onboarding processes, end-to-end clinical workflows, and feature directories for all users, completely free of technical jargon.
 
 ---
 
 ## 👥 1. Platform Roles Overview
 
-CareSync is a multi-clinic healthcare management platform. The system coordinates care through five distinct roles:
+Arogyix is a multi-clinic healthcare management platform. The system coordinates care through five distinct roles:
 
 *   **Super Admin (Platform Owner)**: Governs the entire platform, approves new hospital sign-ups, and oversees clinic subscriptions.
 *   **Hospital Admin (Clinic Owner)**: Manages clinic settings, departments, and onboarding/management of clinical and administrative staff.
@@ -34,7 +34,7 @@ Every user enters the platform through one of these distinct onboarding pathways
 *   **Path A: Front-Desk Registration (Standard)**:
     When a patient visits the clinic, the Receptionist collects their demographics (Name, Date of Birth, gender, contact number, blood group, emergency contact) and registers them. The system automatically creates a patient profile and generates a unique **Patient Code** (e.g., `PAT-0042`) to index all future medical files.
 *   **Path B: Online Self-Registration**:
-    Patients can visit the CareSync portal, click register, and enter their name, email, phone number, and password to create an account. They can immediately log in to access the patient dashboard.
+    Patients can visit the Arogyix portal, click register, and enter their name, email, phone number, and password to create an account. They can immediately log in to access the patient dashboard.
 
 ### 👑 Super Admin
 *   This is the system administrator role responsible for platform-wide operations. This account is pre-provisioned at installation and cannot be registered publicly.

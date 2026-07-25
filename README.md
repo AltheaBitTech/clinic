@@ -1,4 +1,4 @@
-# CareSync — Hospital Management SaaS Platform
+# Arogyix — Hospital Management SaaS Platform
 
 A full-stack, multi-tenant hospital management platform built with **NestJS + Prisma** (backend) and **Next.js 14** (frontend).
 
@@ -72,11 +72,11 @@ All roles log in through the main login portal at: `http://localhost:3000/login`
 
 | Role | Dashboard Redirect | Email | Password |
 |---|---|---|---|
-| **Super Admin** | `/dashboard/super-admin` | `superadmin@caresync.health` | `Password123!` |
-| **Hospital Admin** | `/dashboard/hospital` | `admin@caresync.health` | `Password123!` |
-| **Doctor** | `/dashboard/doctor` | `doctor@caresync.health` | `Password123!` |
-| **Receptionist** | `/dashboard/receptionist` | `receptionist@caresync.health` | `Password123!` |
-| **Patient** | `/dashboard/patient` | `patient@caresync.health` | `Password123!` |
+| **Super Admin** | `/dashboard/super-admin` | `superadmin@Arogyix.health` | `Password123!` |
+| **Hospital Admin** | `/dashboard/hospital` | `admin@Arogyix.health` | `Password123!` |
+| **Doctor** | `/dashboard/doctor` | `doctor@Arogyix.health` | `Password123!` |
+| **Receptionist** | `/dashboard/receptionist` | `receptionist@Arogyix.health` | `Password123!` |
+| **Patient** | `/dashboard/patient` | `patient@Arogyix.health` | `Password123!` |
 
 ---
 

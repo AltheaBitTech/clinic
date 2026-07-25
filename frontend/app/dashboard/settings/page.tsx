@@ -361,7 +361,7 @@ export default function SettingsPage() {
               required
               value={hospitalName}
               onChange={(e) => setHospitalName(e.target.value)}
-              placeholder="CareSync Hospital & Research"
+              placeholder="Arogyix Hospital & Research"
               className="input"
             />
           </div>

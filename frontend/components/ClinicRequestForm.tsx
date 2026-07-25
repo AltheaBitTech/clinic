@@ -70,7 +70,7 @@ export default function ClinicRequestForm() {
         </div>
         <h3 className="text-2xl font-bold text-white mb-3">Request Received!</h3>
         <p className="text-slate-300 leading-relaxed mb-6">
-          Thank you for requesting to register <strong>{form.name}</strong> on CareSync. 
+          Thank you for requesting to register <strong>{form.name}</strong> on Arogyix. 
           Our platform administrators will review your request and get in touch with you at <strong>{form.email}</strong> to set up your account.
         </p>
         <button

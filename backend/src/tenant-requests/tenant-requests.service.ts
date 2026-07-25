@@ -78,7 +78,7 @@ export class TenantRequestsService {
     });
 
     // Create the HOSPITAL_ADMIN User
-    const tempPassword = 'Welcome@CareSync2026';
+    const tempPassword = 'Welcome@Arogyix2026';
     const passwordHash = await bcrypt.hash(tempPassword, 12);
 
     const user = await this.prisma.user.create({

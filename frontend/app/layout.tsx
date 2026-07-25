@@ -11,9 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'CareSync — Hospital Management Platform',
-  description: 'All-in-one hospital management SaaS — appointments, prescriptions, reminders, and patient timelines.',
-  keywords: 'hospital management, clinic software, patient portal, medical records',
+  title: 'Arogyix — Run your clinic. Heal your patients.',
+  description: 'Arogyix: All-in-one clinic management platform — appointments, prescriptions, reminders, and patient timelines.',
+  keywords: 'clinic management, hospital software, patient portal, medical records, Arogyix',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

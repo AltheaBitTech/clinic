@@ -89,9 +89,9 @@ function CredentialsModal({ isOpen, onClose, credentials }: CredentialsModalProp
           <div className="space-y-1">
             <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Temporary Password</label>
             <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-indigo-100 bg-indigo-50/20">
-              <span className="text-sm font-mono text-indigo-700 font-semibold">{credentials.temporaryPassword || 'Welcome@CareSync2026'}</span>
+              <span className="text-sm font-mono text-indigo-700 font-semibold">{credentials.temporaryPassword || 'Welcome@Arogyix2026'}</span>
               <button 
-                onClick={() => handleCopy(credentials.temporaryPassword || 'Welcome@CareSync2026', 'Password')}
+                onClick={() => handleCopy(credentials.temporaryPassword || 'Welcome@Arogyix2026', 'Password')}
                 className="p-1 hover:bg-indigo-100 rounded text-indigo-600 hover:text-indigo-800 transition"
               >
                 <Copy className="w-4 h-4" />
@@ -200,7 +200,7 @@ export default function SuperAdminDashboard() {
       <div className="page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="page-title">Super Admin Portal</h1>
-          <p className="page-subtitle">Welcome back, {user?.firstName}. Manage CareSync hospital nodes & approvals.</p>
+          <p className="page-subtitle">Welcome back, {user?.firstName}. Manage Arogyix hospital nodes & approvals.</p>
         </div>
       </div>
 

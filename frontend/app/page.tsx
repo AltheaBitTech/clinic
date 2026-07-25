@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Activity, Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
+import { Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle, Activity } from 'lucide-react';
 import ClinicRequestForm from '@/components/ClinicRequestForm';
 
 const featureColorMap: Record<string, { bg: string; text: string; border: string }> = {
@@ -22,10 +23,8 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 bg-slate-950/60 backdrop-blur-lg border-b border-white/5">
         <nav className="flex items-center justify-between px-8 py-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">CareSync</span>
+            <Image src="/arogyix-logo.svg" alt="Arogyix" width={36} height={36} className="drop-shadow-md" />
+            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
           </div>
           <div className="flex items-center gap-5">
             <Link href="/login" className="text-slate-300 hover:text-white transition-colors text-sm font-semibold">
@@ -44,8 +43,8 @@ export default function HomePage() {
           <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
           Multi-Tenant Hospital SaaS Platform
         </div>
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-6 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent tracking-tight">
-          The Modern OS <br className="hidden md:inline" />for Healthcare
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-4 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent tracking-tight">
+          Run your clinic.<br className="hidden md:inline" /> Heal your patients.
         </h1>
         <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
           Appointments, digital prescriptions, medicine reminders, patient timelines, and real-time chat — unified in a single, high-performance platform.
@@ -64,7 +63,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-8 pb-28 relative">
         <div className="absolute -left-20 top-40 w-80 h-80 bg-emerald-600/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
         <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 tracking-tight">Everything your clinic needs</h2>
-        <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">From individual doctors to multi-speciality hospitals, CareSync scales with your operation.</p>
+        <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">From individual doctors to multi-speciality hospitals, Arogyix scales with your operation.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             { icon: Calendar, color: 'indigo', title: 'Smart Appointments', desc: 'Book, reschedule, and track appointments. Automatic reminders 24h before.' },
@@ -121,7 +120,7 @@ export default function HomePage() {
         <div className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/20 rounded-3xl p-12 md:p-16 backdrop-blur-md relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
           <h2 className="text-3.5xl font-extrabold mb-4 tracking-tight">Ready to transform your practice?</h2>
-          <p className="text-slate-300 mb-8 max-w-lg mx-auto font-light leading-relaxed">Join progressive clinics and hospitals utilizing CareSync to streamline care delivery.</p>
+          <p className="text-slate-300 mb-8 max-w-lg mx-auto font-light leading-relaxed">Join progressive clinics and hospitals utilizing Arogyix to streamline care delivery.</p>
           <Link href="/register" className="btn-primary text-base px-10 py-4 inline-flex items-center gap-2 shadow-lg shadow-indigo-600/20">
             Get Started Free <ArrowRight className="w-4.5 h-4.5" />
           </Link>
@@ -138,10 +137,10 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-white/5 py-10 text-center text-slate-500 text-sm bg-slate-950/40">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <Activity className="w-4.5 h-4.5 text-indigo-400 animate-pulse" />
-          <span className="font-bold text-white tracking-wider">CareSync</span>
+          <Image src="/arogyix-logo.svg" alt="Arogyix" width={20} height={20} />
+          <span className="font-bold text-white tracking-wider">Arogyix</span>
         </div>
-        <p className="font-light text-xs text-slate-500">© 2026 CareSync. Intelligent Multi-Tenant Hospital OS.</p>
+        <p className="font-light text-xs text-slate-500">© 2026 Arogyix. Run your clinic. Heal your patients.</p>
       </footer>
     </div>
   );

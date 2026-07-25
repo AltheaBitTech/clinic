@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Activity, LayoutDashboard, Calendar, Users, FileText, Bell,
   MessageSquare, BarChart3, Receipt, Settings, LogOut, ChevronRight,
@@ -53,7 +54,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-slate-500 font-medium">Loading CareSync...</span>
+          <span className="text-slate-500 font-medium">Loading Arogyix...</span>
         </div>
       </div>
     );
@@ -88,10 +89,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo */}
         <div className="px-5 py-5 border-b border-slate-100">
           <Link href={getDashboardHref()} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center">
-              <Activity className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-slate-900">CareSync</span>
+            <Image src="/arogyix-logo.svg" alt="Arogyix" width={32} height={32} />
+            <span className="text-lg font-bold text-slate-900">Arogyix</span>
           </Link>
           {user.tenant && (
             <div className="mt-3 px-2 py-1.5 bg-indigo-50 rounded-lg">

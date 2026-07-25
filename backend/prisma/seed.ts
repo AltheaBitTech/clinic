@@ -13,12 +13,12 @@ async function main() {
   // 1. Create Tenant
   console.log('Creating Tenant...');
   const tenant = await prisma.tenant.upsert({
-    where: { slug: 'caresync-clinic' },
+    where: { slug: 'Arogyix-clinic' },
     update: {},
     create: {
-      name: 'CareSync Clinic',
-      slug: 'caresync-clinic',
-      email: 'contact@caresync.health',
+      name: 'Arogyix Clinic',
+      slug: 'Arogyix-clinic',
+      email: 'contact@Arogyix.health',
       phone: '+1234567890',
       address: '123 Health Ave',
       city: 'Mumbai',
@@ -33,10 +33,10 @@ async function main() {
   // 2. Create Super Admin (No tenantId)
   console.log('Creating Super Admin...');
   const superAdmin = await prisma.user.upsert({
-    where: { email: 'superadmin@caresync.health' },
+    where: { email: 'superadmin@Arogyix.health' },
     update: { passwordHash },
     create: {
-      email: 'superadmin@caresync.health',
+      email: 'superadmin@Arogyix.health',
       passwordHash,
       firstName: 'Super',
       lastName: 'Admin',
@@ -50,10 +50,10 @@ async function main() {
   // 3. Create Hospital Admin
   console.log('Creating Hospital Admin...');
   const hospitalAdmin = await prisma.user.upsert({
-    where: { email: 'admin@caresync.health' },
+    where: { email: 'admin@Arogyix.health' },
     update: { passwordHash, tenantId: tenant.id },
     create: {
-      email: 'admin@caresync.health',
+      email: 'admin@Arogyix.health',
       passwordHash,
       firstName: 'Clinic',
       lastName: 'Admin',
@@ -68,10 +68,10 @@ async function main() {
   // 4. Create Doctor
   console.log('Creating Doctor User...');
   const doctorUser = await prisma.user.upsert({
-    where: { email: 'doctor@caresync.health' },
+    where: { email: 'doctor@Arogyix.health' },
     update: { passwordHash, tenantId: tenant.id },
     create: {
-      email: 'doctor@caresync.health',
+      email: 'doctor@Arogyix.health',
       passwordHash,
       firstName: 'John',
       lastName: 'Doe',
@@ -102,10 +102,10 @@ async function main() {
   // 5. Create Receptionist
   console.log('Creating Receptionist...');
   const receptionist = await prisma.user.upsert({
-    where: { email: 'receptionist@caresync.health' },
+    where: { email: 'receptionist@Arogyix.health' },
     update: { passwordHash, tenantId: tenant.id },
     create: {
-      email: 'receptionist@caresync.health',
+      email: 'receptionist@Arogyix.health',
       passwordHash,
       firstName: 'Jane',
       lastName: 'Smith',
@@ -120,10 +120,10 @@ async function main() {
   // 6. Create Patient
   console.log('Creating Patient User...');
   const patientUser = await prisma.user.upsert({
-    where: { email: 'patient@caresync.health' },
+    where: { email: 'patient@Arogyix.health' },
     update: { passwordHash, tenantId: tenant.id },
     create: {
-      email: 'patient@caresync.health',
+      email: 'patient@Arogyix.health',
       passwordHash,
       firstName: 'Robert',
       lastName: 'Johnson',

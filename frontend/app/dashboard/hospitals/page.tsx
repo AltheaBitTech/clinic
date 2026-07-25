@@ -58,7 +58,7 @@ export default function HospitalsListPage() {
       <div className="page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="page-title">Registered Hospitals</h1>
-          <p className="page-subtitle">View and manage all active hospital nodes deployed on CareSync.</p>
+          <p className="page-subtitle">View and manage all active hospital nodes deployed on Arogyix.</p>
         </div>
       </div>
 

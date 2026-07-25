@@ -77,7 +77,7 @@ export class AuthService {
       user = await this.prisma.user.create({
         data: {
           phone,
-          email: `${phone.replace('+', '')}@otp.caresync.health`,
+          email: `${phone.replace('+', '')}@otp.Arogyix.health`,
           firstName: 'Patient',
           lastName: '',
           otp,

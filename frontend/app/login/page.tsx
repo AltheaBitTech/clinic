@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -47,10 +48,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">CareSync</span>
+            <Image src="/arogyix-logo.svg" alt="Arogyix" width={42} height={42} className="drop-shadow-lg" />
+            <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Welcome back</h1>
           <p className="text-slate-400 mt-2 text-sm font-light">Sign in to manage your medical workflows</p>
@@ -133,7 +132,7 @@ export default function LoginPage() {
           <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-300">
             <div className="bg-white/[0.03] border border-white/5 rounded-xl p-2.5 hover:bg-white/[0.06] transition-colors">
               <div className="font-bold text-purple-400 mb-1 truncate">Super Admin</div>
-              <div className="truncate text-slate-400 mb-0.5" title="superadmin@caresync.com">superadmin@caresync.com</div>
+              <div className="truncate text-slate-400 mb-0.5" title="superadmin@Arogyix.com">superadmin@Arogyix.com</div>
               <div className="font-mono text-slate-500">admin123</div>
             </div>
             <div className="bg-white/[0.03] border border-white/5 rounded-xl p-2.5 hover:bg-white/[0.06] transition-colors">

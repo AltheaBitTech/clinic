@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -49,10 +50,8 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">CareSync</span>
+            <Image src="/arogyix-logo.svg" alt="Arogyix" width={42} height={42} className="drop-shadow-lg" />
+            <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Create your account</h1>
           <p className="text-slate-400 mt-2 text-sm font-light">Start your free 30-day trial</p>
