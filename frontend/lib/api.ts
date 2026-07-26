@@ -157,4 +157,12 @@ export const medicalCatalogApi = {
   delete: (id: string) => api.delete(`/medical-catalog/${id}`),
 };
 
+export const pharmaciesApi = {
+  create: (data: any) => api.post('/pharmacies', data),
+  getAll: (params?: any) => api.get('/pharmacies', { params }),
+  getOne: (id: string) => api.get(`/pharmacies/${id}`),
+  update: (id: string, data: any) => api.put(`/pharmacies/${id}`, data),
+  remove: (id: string) => api.delete(`/pharmacies/${id}`),
+};
+
 

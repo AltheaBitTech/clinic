@@ -19,6 +19,7 @@ import { TimelineModule } from './timeline/timeline.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { TenantRequestsModule } from './tenant-requests/tenant-requests.module';
 import { MedicalCatalogModule } from './medical-catalog/medical-catalog.module';
+import { PharmaciesModule } from './pharmacies/pharmacies.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { MedicalCatalogModule } from './medical-catalog/medical-catalog.module';
     RemindersModule,
     TenantRequestsModule,
     MedicalCatalogModule,
+    PharmaciesModule,
   ],
 })
 export class AppModule {}

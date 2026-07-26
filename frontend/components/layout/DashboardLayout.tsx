@@ -8,7 +8,7 @@ import Image from 'next/image';
 import {
   Activity, LayoutDashboard, Calendar, Users, FileText, Bell,
   MessageSquare, BarChart3, Receipt, Settings, LogOut, ChevronRight,
-  Stethoscope, Building2, UserCheck, Package, ClipboardList, Pill
+  Stethoscope, Building2, UserCheck, Package, ClipboardList, Pill, Store
 } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -29,6 +29,7 @@ const navItems: NavItem[] = [
   { label: 'Departments', href: '/dashboard/departments', icon: Package, roles: ['HOSPITAL_ADMIN'] },
   { label: 'Prescriptions', href: '/dashboard/prescriptions', icon: ClipboardList, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'PATIENT'] },
   { label: 'Medicines Catalog', href: '/dashboard/medicines', icon: Pill, roles: ['HOSPITAL_ADMIN', 'DOCTOR'] },
+  { label: 'Pharmacies', href: '/dashboard/pharmacies', icon: Store, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'PATIENT'] },
   { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare, roles: ['DOCTOR', 'PATIENT'] },
   { label: 'Billing', href: '/dashboard/billing', icon: Receipt, roles: ['HOSPITAL_ADMIN', 'RECEPTIONIST'] },

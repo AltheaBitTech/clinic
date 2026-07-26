@@ -115,6 +115,7 @@ model Tenant {
   invoices     Invoice[]
   invites      HospitalInvite[]
   medicalCatalogItems MedicalCatalogItem[]
+  pharmacies          Pharmacy[]
 
   @@map("tenants")
 }
@@ -554,3 +555,31 @@ model MedicalCatalogItem {
   @@map("medical_catalog_items")
 }
 
+// ─────────────────────────────────────────
+// PHARMACY
+// ─────────────────────────────────────────
+
+model Pharmacy {
+  id                    String   @id @default(cuid())
+  tenantId              String
+  name                  String
+  ownerName             String?
+  licenseNumber         String?
+  phone                 String
+  email                 String?
+  address               String
+  city                  String?
+  state                 String?
+  pincode               String?
+  openingHours          String?
+  closingHours          String?
+  homeDeliveryAvailable Boolean  @default(false)
+  notes                 String?
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("pharmacies")
+}
