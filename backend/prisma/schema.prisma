@@ -217,6 +217,7 @@ model Doctor {
   department   Department?  @relation(fields: [departmentId], references: [id])
   appointments Appointment[]
   prescriptions Prescription[]
+  chatRooms    ChatRoom[]
 
   @@map("doctors")
 }
@@ -253,6 +254,7 @@ model Patient {
   timeline      PatientTimeline[]
   reminders     MedicineReminder[]
   invoices      Invoice[]
+  chatRooms     ChatRoom[]
 
   @@map("patients")
 }
@@ -486,6 +488,8 @@ model ChatRoom {
   tenantId  String
   createdAt DateTime @default(now())
 
+  patient  Patient   @relation(fields: [patientId], references: [id])
+  doctor   Doctor    @relation(fields: [doctorId], references: [id])
   messages Message[]
 
   @@unique([patientId, doctorId])

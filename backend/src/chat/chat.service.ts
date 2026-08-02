@@ -50,6 +50,7 @@ export class ChatService {
       return this.prisma.chatRoom.findMany({
         where: { patientId: user.patient.id },
         include: {
+          doctor: { include: { user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } } },
           messages: { orderBy: { createdAt: 'desc' }, take: 1 },
         },
       });
@@ -59,6 +60,7 @@ export class ChatService {
       return this.prisma.chatRoom.findMany({
         where: { doctorId: user.doctor.id },
         include: {
+          patient: { include: { user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } } },
           messages: { orderBy: { createdAt: 'desc' }, take: 1 },
         },
       });
