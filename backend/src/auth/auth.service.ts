@@ -18,6 +18,12 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  private readonly userRelationsInclude = {
+    doctor: { include: { department: true } },
+    patient: true,
+    tenant: { select: { id: true, name: true, slug: true, logoUrl: true } },
+  };
+
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('Email already registered');
@@ -33,6 +39,7 @@ export class AuthService {
         passwordHash,
         isVerified: true, // For MVP, skip email verification
       },
+      include: this.userRelationsInclude,
     });
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);
@@ -45,7 +52,10 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      include: this.userRelationsInclude,
+    });
     if (!user || !user.passwordHash) throw new UnauthorizedException('Invalid credentials');
 
     const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
@@ -99,7 +109,10 @@ export class AuthService {
   }
 
   async verifyOtp(dto: VerifyOtpDto) {
-    const user = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    const user = await this.prisma.user.findUnique({
+      where: { phone: dto.phone },
+      include: this.userRelationsInclude,
+    });
     if (!user) throw new NotFoundException('User not found');
 
     if (!user.otp || user.otp !== dto.otp) throw new BadRequestException('Invalid OTP');
@@ -164,6 +177,7 @@ export class AuthService {
         tenantId: invite.tenantId,
         isVerified: true,
       },
+      include: this.userRelationsInclude,
     });
 
     await this.prisma.hospitalInvite.update({
@@ -180,11 +194,7 @@ export class AuthService {
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        doctor: { include: { department: true } },
-        patient: true,
-        tenant: { select: { id: true, name: true, slug: true, logoUrl: true } },
-      },
+      include: this.userRelationsInclude,
     });
     if (!user) throw new NotFoundException('User not found');
     return this.sanitizeUser(user);

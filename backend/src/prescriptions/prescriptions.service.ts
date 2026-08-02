@@ -33,7 +33,7 @@ export class PrescriptionsService {
       include: {
         medicines: true,
         patient: { include: { user: { select: { firstName: true, lastName: true, email: true } } } },
-        doctor: { include: { user: { select: { firstName: true, lastName: true } } } },
+        doctor: { include: { user: { select: { firstName: true, lastName: true } }, department: true } },
       },
     });
 
@@ -111,94 +111,149 @@ export class PrescriptionsService {
       const fileName = `prescription_${prescription.id}.pdf`;
       const filePath = path.join(uploadDir, fileName);
 
+      const tenant = await this.prisma.tenant.findUnique({
+        where: { id: prescription.doctor.tenantId },
+      });
+
       await new Promise<void>((resolve, reject) => {
-        const doc = new PDFDocument({ margin: 50 });
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
 
-        // Header
-        doc.fontSize(22).font('Helvetica-Bold').text('Arogyix', { align: 'center' });
-        doc.fontSize(10).font('Helvetica').text('Medical Prescription', { align: 'center' });
-        doc.moveDown();
+        const marginX = 50;
+        const contentWidth = doc.page.width - marginX * 2;
+        const drawDivider = () => {
+          doc.moveDown(0.4);
+          doc.strokeColor('#ccc').moveTo(marginX, doc.y).lineTo(marginX + contentWidth, doc.y).stroke();
+          doc.strokeColor('black');
+          doc.moveDown(0.5);
+        };
+        const sectionHeading = (title: string) => {
+          doc.fontSize(11).font('Helvetica-Bold').fillColor('#15803d').text(title);
+          doc.fillColor('black');
+          doc.moveDown(0.3);
+        };
+        const labelValueRow = (label: string, value: string) => {
+          doc.font('Helvetica-Bold').fontSize(10).text(label, marginX, doc.y, { continued: true });
+          doc.font('Helvetica').text(` : ${value}`);
+        };
 
-        // Divider
-        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-        doc.moveDown(0.5);
+        // ─── Header ───
+        const headerY = doc.y;
+        const headerHeight = 85;
+        const logoSize = 50;
+        const logoY = headerY + (headerHeight - logoSize) / 2;
 
-        // Doctor & Patient Info
-        doc.fontSize(11).font('Helvetica-Bold').text('Doctor:');
-        doc.font('Helvetica').text(
+        doc.roundedRect(marginX, headerY, contentWidth, headerHeight, 4).strokeColor('#16a34a').stroke();
+        doc.strokeColor('black');
+
+        const arogyixLogoPath = path.join(process.cwd(), 'assets', 'arogyix-logo.png');
+        if (fs.existsSync(arogyixLogoPath)) {
+          doc.image(arogyixLogoPath, marginX + 15, logoY, { width: logoSize, height: logoSize });
+        }
+
+        const tenantLogoPath = this.resolveTenantLogoPath(tenant?.logoUrl);
+        if (tenantLogoPath) {
+          doc.image(tenantLogoPath, marginX + contentWidth - logoSize - 15, logoY, {
+            width: logoSize,
+            height: logoSize,
+            fit: [logoSize, logoSize],
+          });
+        }
+
+        const titleX = marginX + 75;
+        const titleWidth = contentWidth - 150;
+        doc.fontSize(20).font('Helvetica-Bold').fillColor('#15803d')
+          .text('AROGYIX', titleX, headerY + 14, { width: titleWidth, align: 'center' });
+        doc.fontSize(12).font('Helvetica-Bold').fillColor('black')
+          .text(tenant?.name || 'Hospital', titleX, headerY + 40, { width: titleWidth, align: 'center' });
+        const addressLine = [tenant?.address, tenant?.city, tenant?.state].filter(Boolean).join(', ');
+        if (addressLine) {
+          doc.fontSize(8).font('Helvetica').fillColor('#666')
+            .text(addressLine, titleX, headerY + 58, { width: titleWidth, align: 'center' });
+        }
+        doc.fillColor('black');
+        doc.y = headerY + headerHeight + 15;
+
+        // ─── Doctor ───
+        doc.fontSize(12).font('Helvetica-Bold').text(
           `Dr. ${prescription.doctor.user.firstName} ${prescription.doctor.user.lastName}`,
         );
-        doc.moveDown(0.5);
+        const doctorSubLine = [prescription.doctor.qualification, prescription.doctor.specialization]
+          .filter(Boolean)
+          .join(' | ');
+        if (doctorSubLine) {
+          doc.fontSize(9).font('Helvetica').fillColor('#555').text(doctorSubLine);
+        }
+        if (prescription.doctor.registrationNo) {
+          doc.fontSize(9).font('Helvetica').fillColor('#555').text(`Reg No: ${prescription.doctor.registrationNo}`);
+        }
+        doc.fillColor('black');
+        drawDivider();
 
-        doc.font('Helvetica-Bold').text('Patient:');
-        doc.font('Helvetica').text(
-          `${prescription.patient.user.firstName} ${prescription.patient.user.lastName}`,
-        );
-        doc.moveDown(0.5);
+        // ─── Patient ───
+        const patientName = `${prescription.patient.user.firstName} ${prescription.patient.user.lastName}`;
+        const age = this.calculateAge(prescription.patient.dateOfBirth);
+        labelValueRow('Patient', patientName);
+        if (age !== null) labelValueRow('Age', `${age} Years`);
+        if (prescription.patient.gender) labelValueRow('Gender', this.toTitleCase(prescription.patient.gender));
+        labelValueRow('Date', new Date().toLocaleDateString('en-IN', {
+          day: '2-digit', month: 'short', year: 'numeric',
+        }));
+        drawDivider();
 
+        // ─── Diagnosis ───
         if (prescription.diagnosis) {
-          doc.font('Helvetica-Bold').text('Diagnosis:');
-          doc.font('Helvetica').text(prescription.diagnosis);
-          doc.moveDown(0.5);
+          sectionHeading('Diagnosis');
+          prescription.diagnosis
+            .split(/\r?\n/)
+            .map((line: string) => line.trim())
+            .filter(Boolean)
+            .forEach((line: string) => {
+              doc.fontSize(10).font('Helvetica').text(`•  ${line}`);
+            });
+          drawDivider();
         }
 
-        doc.font('Helvetica-Bold').text('Date:');
-        doc.font('Helvetica').text(new Date().toLocaleDateString('en-IN'));
-        doc.moveDown();
+        // ─── Rx ───
+        sectionHeading('Rx');
+        prescription.medicines.forEach((med: any, index: number) => {
+          doc.fontSize(10).font('Helvetica-Bold').text(`${index + 1}. ${med.name} ${med.dosage}`);
+          doc.fontSize(9).font('Helvetica').fillColor('#333');
+          doc.text(`   ${med.frequency}`);
+          doc.text(`   ${this.toTitleCase(med.timing)}`);
+          doc.text(`   ${med.duration}`);
+          if (med.type === 'OINTMENT') doc.text('   Topical / Ointment');
+          if (med.instructions) doc.text(`   Note: ${med.instructions}`);
+          doc.fillColor('black');
+          doc.moveDown(0.4);
+        });
+        drawDivider();
 
-        // Medicines
-        const oralMeds = prescription.medicines.filter((m: any) => m.type !== 'OINTMENT');
-        const topicalMeds = prescription.medicines.filter((m: any) => m.type === 'OINTMENT');
-
-        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-        doc.moveDown(0.5);
-
-        if (oralMeds.length > 0) {
-          doc.fontSize(13).font('Helvetica-Bold').text('Prescribed Medications', { underline: true });
-          doc.moveDown(0.5);
-          oralMeds.forEach((med: any, index: number) => {
-            doc.fontSize(11).font('Helvetica-Bold').text(`${index + 1}. ${med.name} — ${med.dosage}`);
-            doc.fontSize(10).font('Helvetica').text(
-              `   ${med.frequency} | ${med.duration} | ${med.timing.replace('_', ' ')}`,
-            );
-            if (med.instructions) {
-              doc.text(`   Note: ${med.instructions}`);
-            }
-            doc.moveDown(0.5);
-          });
-          doc.moveDown(0.5);
-        }
-
-        if (topicalMeds.length > 0) {
-          doc.fontSize(13).font('Helvetica-Bold').text('Prescribed Ointments & Topicals', { underline: true });
-          doc.moveDown(0.5);
-          topicalMeds.forEach((med: any, index: number) => {
-            doc.fontSize(11).font('Helvetica-Bold').text(`${index + 1}. ${med.name} — ${med.dosage}`);
-            doc.fontSize(10).font('Helvetica').text(
-              `   ${med.frequency} | ${med.duration} | ${med.timing.replace('_', ' ')}`,
-            );
-            if (med.instructions) {
-              doc.text(`   Note: ${med.instructions}`);
-            }
-            doc.moveDown(0.5);
-          });
-          doc.moveDown(0.5);
-        }
-
-        // Notes
+        // ─── Advice (from doctor notes) ───
         if (prescription.notes) {
-          doc.moveDown();
-          doc.fontSize(11).font('Helvetica-Bold').text('Doctor Notes:');
-          doc.font('Helvetica').text(prescription.notes);
+          sectionHeading('Advice');
+          prescription.notes
+            .split(/\r?\n|;/)
+            .map((line: string) => line.trim())
+            .filter(Boolean)
+            .forEach((line: string) => {
+              doc.fontSize(10).font('Helvetica').text(`•  ${line}`);
+            });
+          drawDivider();
         }
 
-        // Footer
-        doc.moveDown(2);
-        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-        doc.moveDown(0.5);
-        doc.fontSize(9).fillColor('gray').text(
+        // ─── Signature ───
+        doc.moveDown(1.5);
+        doc.fontSize(11).font('Helvetica-Bold').text(
+          `Dr. ${prescription.doctor.user.firstName} ${prescription.doctor.user.lastName}`,
+          { align: 'right' },
+        );
+        doc.fontSize(9).font('Helvetica-Oblique').fillColor('#555').text('Digital Signature', { align: 'right' });
+        doc.fillColor('black');
+        drawDivider();
+
+        doc.fontSize(8).fillColor('gray').text(
           `Generated by Arogyix — ${new Date().toISOString()}`,
           { align: 'center' },
         );
@@ -213,6 +268,27 @@ export class PrescriptionsService {
       console.error('PDF generation error:', error);
       return '';
     }
+  }
+
+  private calculateAge(dateOfBirth?: Date | string | null): number | null {
+    if (!dateOfBirth) return null;
+    const diffMs = Date.now() - new Date(dateOfBirth).getTime();
+    return Math.floor(diffMs / (365.25 * 24 * 60 * 60 * 1000));
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .replace(/_/g, ' ')
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  private resolveTenantLogoPath(logoUrl?: string | null): string | null {
+    if (!logoUrl || !logoUrl.startsWith('/uploads/')) return null;
+    const ext = path.extname(logoUrl).toLowerCase();
+    if (!['.png', '.jpg', '.jpeg'].includes(ext)) return null;
+    const filePath = path.join(process.cwd(), logoUrl.replace(/^\//, ''));
+    return fs.existsSync(filePath) ? filePath : null;
   }
 
   // ─── Create Medicine Reminders ────────────────────────────────────────────────

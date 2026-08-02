@@ -27,6 +27,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         isActive: true,
         isVerified: true,
         avatarUrl: true,
+        doctor: { include: { department: true } },
+        patient: true,
       },
     });
 

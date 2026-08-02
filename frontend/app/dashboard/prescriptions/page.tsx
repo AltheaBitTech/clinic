@@ -14,7 +14,7 @@ export default function PrescriptionsPage() {
     console.log('Current user:', user);  
   const { data, isLoading } = useQuery({
     queryKey: ['prescriptions', page],
-    queryFn: () => prescriptionsApi.getAll({ page, doctorId: user?.id }).then((r) => r.data),
+    queryFn: () => prescriptionsApi.getAll({ page, doctorId: user?.doctor?.id }).then((r) => r.data),
   });
 console.log('Fetched prescriptions data:', data);
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
