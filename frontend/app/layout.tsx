@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Arogyix — Run your clinic. Heal your patients.',
+  title: 'Arogyix — Healthcare management made simple.',
   description: 'Arogyix: All-in-one clinic management platform — appointments, prescriptions, reminders, and patient timelines.',
   keywords: 'clinic management, hospital software, patient portal, medical records, Arogyix',
 };

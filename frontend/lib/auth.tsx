@@ -25,6 +25,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   register: (data: any) => Promise<void>;
+  acceptInvite: (data: any) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -76,6 +77,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     redirectByRole(result.user.role);
   };
 
+  const acceptInvite = async (data: any) => {
+    const { data: result } = await authApi.acceptInvite(data);
+    localStorage.setItem('accessToken', result.accessToken);
+    localStorage.setItem('refreshToken', result.refreshToken);
+    setUser(result.user);
+    redirectByRole(result.user.role);
+  };
+
   const redirectByRole = (role: string) => {
     const routes: Record<string, string> = {
       SUPER_ADMIN: '/dashboard/super-admin',
@@ -88,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, refreshProfile }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, acceptInvite, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

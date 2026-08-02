@@ -34,6 +34,7 @@ export class TenantRequestsController {
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'Approve a tenant registration request [SuperAdmin]' })
   approve(@Param('id') id: string) {
+    console.log(`Approving tenant request with ID: ${id}`);
     return this.tenantRequestsService.approve(id);
   }
 

@@ -21,7 +21,7 @@ export default function HomePage() {
 
       {/* Nav */}
       <header className="sticky top-0 z-50 bg-slate-950/60 backdrop-blur-lg border-b border-white/5">
-        <nav className="flex items-center justify-between px-8 py-4 max-w-7xl mx-auto">
+        <nav className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-2.5">
             <Image src="/arogyix-logo.svg" alt="Arogyix" width={36} height={36} className="drop-shadow-md" />
             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
@@ -38,29 +38,29 @@ export default function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-8 pt-24 pb-28 text-center relative">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28 text-center relative">
         <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4.5 py-1.5 text-xs font-semibold text-indigo-300 mb-8 animate-fade-in">
           <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
           Multi-Tenant Hospital SaaS Platform
         </div>
         <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-4 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent tracking-tight">
-          Run your clinic.<br className="hidden md:inline" /> Heal your patients.
+          Healthcare management <br className="hidden md:inline" /> made simple.
         </h1>
         <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
           Appointments, digital prescriptions, medicine reminders, patient timelines, and real-time chat — unified in a single, high-performance platform.
         </p>
         <div className="flex items-center justify-center gap-4.5 flex-wrap animate-slide-up">
-          <Link href="/register" className="btn-primary flex items-center gap-2 text-base px-8 py-3.5 shadow-lg">
+          <Link href="/register" className="btn-primary flex items-center gap-2 text-base px-4 sm:px-6 lg:px-8 py-3.5 shadow-lg">
             Start for Free <ArrowRight className="w-4.5 h-4.5" />
           </Link>
-          <Link href="/login" className="btn-secondary text-base px-8 py-3.5 bg-white/5 text-white hover:bg-white/10 border border-white/15 backdrop-blur-sm">
+          <Link href="/login" className="btn-secondary text-base px-4 sm:px-6 lg:px-8 py-3.5 bg-white/5 text-white hover:bg-white/10 border border-white/15 backdrop-blur-sm">
             Sign In
           </Link>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-8 pb-28 relative">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 relative">
         <div className="absolute -left-20 top-40 w-80 h-80 bg-emerald-600/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
         <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 tracking-tight">Everything your clinic needs</h2>
         <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">From individual doctors to multi-speciality hospitals, Arogyix scales with your operation.</p>
@@ -88,7 +88,7 @@ export default function HomePage() {
       </section>
 
       {/* User Roles */}
-      <section className="max-w-7xl mx-auto px-8 pb-28 relative">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 relative">
         <h2 className="text-3xl font-extrabold text-center mb-12 tracking-tight">Built for every role</h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
           {[
@@ -110,13 +110,13 @@ export default function HomePage() {
       </section>
 
       {/* Partner Registration Form */}
-      <section className="max-w-7xl mx-auto px-8 pb-24 relative">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 relative">
         <div className="absolute right-0 bottom-10 w-96 h-96 bg-purple-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
         <ClinicRequestForm />
       </section>
 
       {/* CTA */}
-      <section className="max-w-4xl mx-auto px-8 pb-28 text-center">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 text-center">
         <div className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/20 rounded-3xl p-12 md:p-16 backdrop-blur-md relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
           <h2 className="text-3.5xl font-extrabold mb-4 tracking-tight">Ready to transform your practice?</h2>
@@ -140,7 +140,7 @@ export default function HomePage() {
           <Image src="/arogyix-logo.svg" alt="Arogyix" width={20} height={20} />
           <span className="font-bold text-white tracking-wider">Arogyix</span>
         </div>
-        <p className="font-light text-xs text-slate-500">© 2026 Arogyix. Run your clinic. Heal your patients.</p>
+        <p className="font-light text-xs text-slate-500">© 2026 Arogyix. Healthcare management made simple.</p>
       </footer>
     </div>
   );

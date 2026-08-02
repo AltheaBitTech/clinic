@@ -93,6 +93,7 @@ function NewPrescriptionContent() {
       setPatientSearch(`${paramPatientProfile.user.firstName} ${paramPatientProfile.user.lastName}`);
     }
   }, [paramPatientProfile]);
+     
 
   // Auto-populate doctor if user is DOCTOR
   useEffect(() => {
@@ -152,6 +153,7 @@ function NewPrescriptionContent() {
   const updateMedicine = (index: number, field: string, value: any) => {
     const updated = [...medicines];
     updated[index] = { ...updated[index], [field]: value };
+    console.log('Updated Medicines:', updated);
     setMedicines(updated);
   };
 
@@ -189,30 +191,47 @@ function NewPrescriptionContent() {
   };
 
   // Autocomplete fetchers
-  const fetchSuggestions = async (query: string, type: 'MEDICINE' | 'OINTMENT', index: number) => {
-    if (!query.trim()) {
-      if (type === 'MEDICINE') {
-        updateMedicine(index, 'suggestions', []);
-        updateMedicine(index, 'isSuggestionsOpen', false);
-      } else {
-        updateOintment(index, 'suggestions', []);
-        updateOintment(index, 'isSuggestionsOpen', false);
-      }
-      return;
-    }
-    try {
-      const { data } = await medicalCatalogApi.getAll({ type, search: query, limit: 5 });
-      if (type === 'MEDICINE') {
-        updateMedicine(index, 'suggestions', data);
-        updateMedicine(index, 'isSuggestionsOpen', true);
-      } else {
-        updateOintment(index, 'suggestions', data);
-        updateOintment(index, 'isSuggestionsOpen', true);
-      }
-    } catch {
-      // silent
-    }
-  };
+  const fetchSuggestions = async (
+  query: string,
+  type: 'MEDICINE' | 'OINTMENT',
+  index: number
+) => {
+  const updateItem = type === 'MEDICINE' ? setMedicines : setOintments;
+
+  if (!query.trim()) {
+    updateItem((items) =>
+      items.map((item, itemIndex) =>
+        itemIndex === index
+          ? { ...item, suggestions: [], isSuggestionsOpen: false }
+          : item
+      )
+    );
+    return;
+  }
+
+  try {
+    const response = await medicalCatalogApi.getAll({
+      type,
+      search: query,
+      limit: 5,
+    });
+
+    // API likely returns { data: [...] }, not the array directly.
+    const suggestions = Array.isArray(response.data)
+      ? response.data
+      : response.data?.data ?? [];
+
+    updateItem((items) =>
+      items.map((item, itemIndex) =>
+        itemIndex === index
+          ? { ...item, suggestions, isSuggestionsOpen: suggestions.length > 0 }
+          : item
+      )
+    );
+  } catch (error) {
+    console.error('Failed to fetch medicine catalog suggestions:', error);
+  }
+};;
 
   const selectSuggestion = (type: 'MEDICINE' | 'OINTMENT', index: number, item: any) => {
     if (type === 'MEDICINE') {
@@ -770,7 +789,6 @@ function NewPrescriptionContent() {
                         placeholder="Search or type name..."
                         className="input text-sm"
                       />
-
                       {/* Suggestions Dropdown */}
                       {med.isSuggestionsOpen && med.suggestions?.length > 0 && (
                         <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto divide-y divide-slate-50">
@@ -1188,6 +1206,7 @@ function NewPrescriptionContent() {
               {/* Doctor Details */}
               <div>
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Prescribing Doctor</span>
+
                 {selectedDoctor ? (
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">

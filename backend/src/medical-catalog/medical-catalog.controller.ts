@@ -24,13 +24,15 @@ export class MedicalCatalogController {
   @ApiQuery({ name: 'type', required: false, description: 'MEDICINE or OINTMENT' })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   findAll(
     @CurrentUser() user: any,
     @Query('type') type?: string,
     @Query('search') search?: string,
     @Query('page') page?: number,
+    @Query('limit') limit?: number,
   ) {
-    return this.svc.findAll(user.tenantId, type, search, page);
+    return this.svc.findAll(user.tenantId, type, search, page, limit);
   }
 
   @Delete(':id')

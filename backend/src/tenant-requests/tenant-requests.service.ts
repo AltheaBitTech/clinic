@@ -49,6 +49,7 @@ export class TenantRequestsService {
     const request = await this.prisma.tenantRequest.findUnique({
       where: { id },
     });
+    console.log(`Found tenant request: ${JSON.stringify(request)}`);
     if (!request) {
       throw new NotFoundException('Registration request not found');
     }

@@ -1,16 +1,17 @@
 'use client';
 import Image from 'next/image';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Activity, Loader2, User, Mail, Phone, Lock } from 'lucide-react';
+import { Loader2, User, Mail, Phone, Lock, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const schema = z.object({
+const selfSignupSchema = z.object({
   firstName: z.string().min(1, 'First name required'),
   lastName: z.string().min(1, 'Last name required'),
   email: z.string().email('Invalid email'),
@@ -18,21 +19,35 @@ const schema = z.object({
   phone: z.string().optional(),
 });
 
-type FormData = z.infer<typeof schema>;
+const inviteSchema = z.object({
+  firstName: z.string().min(1, 'First name required'),
+  lastName: z.string().min(1, 'Last name required'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
 
-export default function RegisterPage() {
-  const { register: authRegister } = useAuth();
+type SelfSignupData = z.infer<typeof selfSignupSchema>;
+type InviteData = z.infer<typeof inviteSchema>;
+
+function RegisterForm() {
+  const { register: authRegister, acceptInvite } = useAuth();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get('token');
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, formState: { errors } } = useForm<SelfSignupData | InviteData>({
+    resolver: zodResolver(inviteToken ? inviteSchema : selfSignupSchema),
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: SelfSignupData | InviteData) => {
     setLoading(true);
     try {
-      await authRegister(data);
-      toast.success('Account created!');
+      if (inviteToken) {
+        await acceptInvite({ ...data, token: inviteToken });
+        toast.success('Account activated!');
+      } else {
+        await authRegister(data);
+        toast.success('Account created!');
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Registration failed');
     } finally {
@@ -53,13 +68,24 @@ export default function RegisterPage() {
             <Image src="/arogyix-logo.svg" alt="Arogyix" width={42} height={42} className="drop-shadow-lg" />
             <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Create your account</h1>
-          <p className="text-slate-400 mt-2 text-sm font-light">Start your free 30-day trial</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
+            {inviteToken ? 'Activate your account' : 'Create your account'}
+          </h1>
+          <p className="text-slate-400 mt-2 text-sm font-light">
+            {inviteToken ? 'You were invited to join a hospital team' : 'Start your free 30-day trial'}
+          </p>
         </div>
 
         {/* Glass Card */}
         <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
+
+          {inviteToken && (
+            <div className="mb-5 flex items-start gap-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3.5 py-3 text-xs text-indigo-200">
+              <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>Set a password to activate the account for the email you were invited with. Your role and hospital are already assigned.</span>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -77,7 +103,7 @@ export default function RegisterPage() {
                 </div>
                 {errors.firstName && <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.firstName.message}</p>}
               </div>
-              
+
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Last name</label>
                 <div className="relative">
@@ -94,35 +120,39 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email address</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                  <Mail className="w-4 h-4" />
-                </span>
-                <input
-                  {...register('email')}
-                  type="email"
-                  placeholder="you@example.com"
-                  className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all font-light text-sm"
-                />
+            {!inviteToken && (
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email address</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                    <Mail className="w-4 h-4" />
+                  </span>
+                  <input
+                    {...register('email' as any)}
+                    type="email"
+                    placeholder="you@example.com"
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all font-light text-sm"
+                  />
+                </div>
+                {'email' in errors && errors.email && <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.email.message}</p>}
               </div>
-              {errors.email && <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.email.message}</p>}
-            </div>
+            )}
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Phone (optional)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                  <Phone className="w-4 h-4" />
-                </span>
-                <input
-                  {...register('phone')}
-                  placeholder="+91 98765 43210"
-                  className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all font-light text-sm"
-                />
+            {!inviteToken && (
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Phone (optional)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                    <Phone className="w-4 h-4" />
+                  </span>
+                  <input
+                    {...register('phone' as any)}
+                    placeholder="+91 98765 43210"
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all font-light text-sm"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Password</label>
@@ -148,10 +178,10 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4.5 h-4.5 animate-spin" />
-                  <span>Creating account...</span>
+                  <span>{inviteToken ? 'Activating account...' : 'Creating account...'}</span>
                 </>
               ) : (
-                <span>Create Account</span>
+                <span>{inviteToken ? 'Activate Account' : 'Create Account'}</span>
               )}
             </button>
           </form>
@@ -165,5 +195,17 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }

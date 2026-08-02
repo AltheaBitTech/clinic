@@ -31,12 +31,14 @@ export class PrescriptionsController {
     @Query('doctorId') doctorId?: string,
     @Query('page') page?: number,
   ) {
+    console.log(`Fetching prescriptions with patientId: ${patientId}, doctorId: ${doctorId}, page: ${page}`);
     return this.prescriptionsService.findAll({ patientId, doctorId }, page);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get prescription by ID' })
   findOne(@Param('id') id: string) {
+    console.log(`Fetching prescription with ID: ${id}`);
     return this.prescriptionsService.findOne(id);
   }
 }

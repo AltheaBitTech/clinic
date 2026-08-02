@@ -6,14 +6,17 @@ import { prescriptionsApi } from '@/lib/api';
 import { ClipboardList, Plus, FileText, Pill, ChevronRight, Stethoscope, ChevronLeft } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth';
 
 export default function PrescriptionsPage() {
   const [page, setPage] = useState(1);
+    const { user } = useAuth();
+    console.log('Current user:', user);  
   const { data, isLoading } = useQuery({
     queryKey: ['prescriptions', page],
-    queryFn: () => prescriptionsApi.getAll({ page }).then((r) => r.data),
+    queryFn: () => prescriptionsApi.getAll({ page, doctorId: user?.id }).then((r) => r.data),
   });
-
+console.log('Fetched prescriptions data:', data);
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
 
   const totalPages = data ? Math.ceil(data.total / data.limit) : 1;
