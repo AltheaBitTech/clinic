@@ -463,7 +463,7 @@ function NewPrescriptionContent() {
   const totalItemsCount = medicines.filter(m => m.name.trim()).length + ointments.filter(o => o.name.trim()).length;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       {/* Back Link */}
       <Link
         href="/dashboard/prescriptions"
@@ -473,9 +473,9 @@ function NewPrescriptionContent() {
         Back to Prescriptions
       </Link>
 
-      <div className="page-header mb-8">
+      <div className="page-header sm:mb-8">
         <h1 className="page-title flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse" />
+          <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse shrink-0" />
           Write New Prescription
         </h1>
         <p className="page-subtitle">Prescribe oral medications and topical ointments separately with catalog autocomplete assistance.</p>

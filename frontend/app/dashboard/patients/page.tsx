@@ -17,13 +17,13 @@ export default function PatientsPage() {
   });
 
   return (
-    <div className="p-8 animate-fade-in">
-      <div className="page-header flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title">Patients</h1>
           <p className="page-subtitle">Manage patient records and medical history</p>
         </div>
-        <Link href="/dashboard/patients/new" className="btn-primary flex items-center gap-2 text-sm">
+        <Link href="/dashboard/patients/new" className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Register Patient
         </Link>
       </div>

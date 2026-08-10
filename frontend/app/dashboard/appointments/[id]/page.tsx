@@ -204,22 +204,22 @@ export default function AppointmentDetailPage() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 animate-fade-in">
       {/* Top Navigation / Breadcrumbs */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-5">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/appointments" className="p-2 bg-white rounded-xl border border-slate-200 hover:border-slate-300 text-slate-500 hover:text-slate-800 transition-all shadow-sm">
+          <Link href="/dashboard/appointments" className="p-2 bg-white rounded-xl border border-slate-200 hover:border-slate-300 text-slate-500 hover:text-slate-800 transition-all shadow-sm shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+          <div className="min-w-0">
+            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400 font-medium">
               <Link href="/dashboard" className="hover:text-indigo-600">Home</Link>
               <ChevronRight className="w-3 h-3" />
               <Link href="/dashboard/appointments" className="hover:text-indigo-600">Appointments</Link>
               <ChevronRight className="w-3 h-3" />
               <span className="text-slate-500">Details</span>
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 mt-1">Appointment Details</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 sm:mt-1">Appointment Details</h1>
           </div>
         </div>
 

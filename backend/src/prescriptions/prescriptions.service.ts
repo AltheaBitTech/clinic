@@ -63,11 +63,17 @@ export class PrescriptionsService {
     return { ...prescription, pdfUrl: pdfPath };
   }
 
+  async getPatientIdForUser(userId: string): Promise<string | null> {
+    const patient = await this.prisma.patient.findFirst({ where: { userId }, select: { id: true } });
+    return patient?.id ?? null;
+  }
+
   async findAll(filters: any = {}, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const where: any = {};
     if (filters.patientId) where.patientId = filters.patientId;
     if (filters.doctorId) where.doctorId = filters.doctorId;
+    if (filters.tenantId) where.patient = { tenantId: filters.tenantId };
 
     const [data, total] = await Promise.all([
       this.prisma.prescription.findMany({
@@ -87,7 +93,7 @@ export class PrescriptionsService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, tenantId?: string) {
     const prescription = await this.prisma.prescription.findUnique({
       where: { id },
       include: {
@@ -97,6 +103,9 @@ export class PrescriptionsService {
       },
     });
     if (!prescription) throw new NotFoundException('Prescription not found');
+    if (tenantId && prescription.patient.tenantId !== tenantId) {
+      throw new NotFoundException('Prescription not found');
+    }
     return prescription;
   }
 

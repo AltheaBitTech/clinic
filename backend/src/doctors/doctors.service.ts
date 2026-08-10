@@ -123,7 +123,12 @@ export class DoctorsService {
     const endMin = endH * 60 + endM;
     const slots: string[] = [];
 
+    const now = new Date();
+    const isToday = now.toDateString() === new Date(date).toDateString();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+
     for (let min = startMin; min < endMin; min += doctor.slotDuration) {
+      if (isToday && min <= nowMin) continue;
       if (!bookedTimes.includes(min)) {
         const h = Math.floor(min / 60).toString().padStart(2, '0');
         const m = (min % 60).toString().padStart(2, '0');

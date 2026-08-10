@@ -98,16 +98,16 @@ export default function MedicinesCatalogPage() {
   }) || [];
 
   return (
-    <div className="p-8 animate-fade-in max-w-5xl mx-auto">
-      <div className="page-header flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-5xl mx-auto">
+      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <Pill className="w-6 h-6 text-indigo-600 animate-pulse" />
+            <Pill className="w-6 h-6 text-indigo-600 animate-pulse shrink-0" />
             Medicines & Ointments Catalog
           </h1>
           <p className="page-subtitle">Define preconfigured medicines and topical ointments for faster autocompleted prescription writing.</p>
         </div>
-        <button onClick={openCreateModal} className="btn-primary flex items-center gap-2 text-sm">
+        <button onClick={openCreateModal} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Add {activeTab === 'MEDICINE' ? 'Medicine' : 'Ointment'}
         </button>
       </div>

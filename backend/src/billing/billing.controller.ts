@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/billing.dto';
@@ -33,6 +34,13 @@ export class BillingController {
   @Get('invoices/:id')
   @ApiOperation({ summary: 'Get invoice by ID' })
   findOne(@Param('id') id: string) { return this.svc.findOne(id); }
+
+  @Get('invoices/:id/pdf')
+  @ApiOperation({ summary: 'Download invoice PDF' })
+  async downloadPdf(@Param('id') id: string, @Res() res: Response) {
+    const { filePath, fileName } = await this.svc.getInvoicePdfFile(id);
+    res.download(filePath, fileName);
+  }
 
   @Put('invoices/:id/pay')
   @Roles(UserRole.HOSPITAL_ADMIN, UserRole.RECEPTIONIST)

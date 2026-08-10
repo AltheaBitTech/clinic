@@ -6,12 +6,89 @@ import Link from 'next/link';
 import { patientsApi } from '@/lib/api';
 import {
   ArrowLeft, User, Mail, Phone, Calendar, Heart, Plus, X,
-  MapPin, ShieldAlert, FileText, Loader2, Sparkles, ChevronDown
+  MapPin, ShieldAlert, FileText, Loader2, Sparkles, ChevronDown,
+  Copy, CheckCircle2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+interface PatientCredentials {
+  email: string;
+  temporaryPassword: string;
+}
+
+function CredentialsModal({
+  credentials, onClose,
+}: { credentials: PatientCredentials | null; onClose: () => void }) {
+  if (!credentials) return null;
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard!`);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl border border-slate-100 overflow-hidden transform transition-all">
+        <div className="p-6 border-b border-slate-50 bg-indigo-50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Patient Registered!</h3>
+              <p className="text-xs text-indigo-700 font-medium">Patient Login Account Created</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Login Email</label>
+            <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-lg">
+              <span className="text-sm text-slate-700 font-medium truncate">{credentials.email}</span>
+              <button
+                onClick={() => handleCopy(credentials.email, 'Email')}
+                className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-700 transition"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Temporary Password</label>
+            <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-indigo-100 bg-indigo-50/20">
+              <span className="text-sm font-mono text-indigo-700 font-semibold">{credentials.temporaryPassword}</span>
+              <button
+                onClick={() => handleCopy(credentials.temporaryPassword, 'Password')}
+                className="p-1 hover:bg-indigo-100 rounded text-indigo-600 hover:text-indigo-800 transition"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">
+            <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-800 leading-relaxed font-medium">
+              Share these details with the patient now. For security reasons, the temporary password will not be shown again.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-slate-50 bg-slate-50/50 flex justify-end">
+          <button onClick={onClose} className="btn-primary">
+            Done & Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function NewPatientPage() {
   const router = useRouter();
+  const [credentials, setCredentials] = useState<PatientCredentials | null>(null);
 
   // Basic Details
   const [firstName, setFirstName] = useState('');
@@ -104,10 +181,14 @@ export default function NewPatientPage() {
         notes: notes || undefined,
       };
 
-      await patientsApi.create(payload);
+      const { data } = await patientsApi.create(payload);
       toast.success('Patient registered successfully!', { id: loadingToast });
-      router.push('/dashboard/patients');
-      router.refresh();
+      if (data?.temporaryPassword) {
+        setCredentials({ email: data.user?.email || email, temporaryPassword: data.temporaryPassword });
+      } else {
+        router.push('/dashboard/patients');
+        router.refresh();
+      }
     } catch (error: any) {
       const errMsg = error.response?.data?.message || 'Failed to register patient';
       toast.error(errMsg, { id: loadingToast });
@@ -119,16 +200,16 @@ export default function NewPatientPage() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="p-8 max-w-4xl mx-auto animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto animate-fade-in">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-5 sm:mb-8">
         <Link href="/dashboard/patients" className="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors mb-4 text-sm font-medium">
           <ArrowLeft className="w-4 h-4" /> Back to Patients
         </Link>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="page-title flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse" /> Register New Patient
+              <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse shrink-0" /> Register New Patient
             </h1>
             <p className="page-subtitle">Create a patient account and compile their clinical profile</p>
           </div>
@@ -449,6 +530,15 @@ export default function NewPatientPage() {
           </button>
         </div>
       </form>
+
+      <CredentialsModal
+        credentials={credentials}
+        onClose={() => {
+          setCredentials(null);
+          router.push('/dashboard/patients');
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

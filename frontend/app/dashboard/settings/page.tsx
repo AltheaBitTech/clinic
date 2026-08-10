@@ -28,6 +28,8 @@ export default function SettingsPage() {
   const [hospitalCity, setHospitalCity] = useState('');
   const [hospitalState, setHospitalState] = useState('');
   const [hospitalCountry, setHospitalCountry] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   // Populate fields on load
   useEffect(() => {
@@ -45,6 +47,7 @@ export default function SettingsPage() {
         setHospitalCity(user.tenant.city || '');
         setHospitalState(user.tenant.state || '');
         setHospitalCountry(user.tenant.country || '');
+        setLogoUrl(user.tenant.logoUrl || '');
       }
     }
   }, [user]);
@@ -102,16 +105,17 @@ export default function SettingsPage() {
       city: hospitalCity || undefined,
       state: hospitalState || undefined,
       country: hospitalCountry || undefined,
+      logoUrl,
     });
   };
 
   const isHospitalAdmin = user?.role === 'HOSPITAL_ADMIN';
 
   return (
-    <div className="p-8 max-w-4xl mx-auto animate-fade-in">
-      <div className="page-header mb-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto animate-fade-in">
+      <div className="page-header sm:mb-8">
         <h1 className="page-title flex items-center gap-2">
-          <Settings className="w-6 h-6 text-indigo-600" />
+          <Settings className="w-6 h-6 text-indigo-600 shrink-0" />
           Account & Portal Settings
         </h1>
         <p className="page-subtitle">Configure your personal login details, contact profile, and hospital branding settings.</p>
@@ -364,6 +368,100 @@ export default function SettingsPage() {
               placeholder="Arogyix Hospital & Research"
               className="input"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              Clinic Logo (Optional)
+            </label>
+            <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+              {/* Logo Preview */}
+              <div className="relative group shrink-0">
+                <div className="w-20 h-20 rounded-xl border-2 border-white shadow-md overflow-hidden bg-indigo-50 flex items-center justify-center text-indigo-700 text-2xl font-bold">
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl.startsWith('http') ? logoUrl : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001'}${logoUrl}`}
+                      alt="Clinic Logo Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>
+                      {hospitalName
+                        ? hospitalName.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
+                        : 'HC'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Upload Actions */}
+              <div className="flex-1 space-y-3 w-full">
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="btn-primary flex items-center gap-2 text-sm cursor-pointer py-2 px-4 shadow-sm hover:shadow transition-all bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">
+                    {isUploadingLogo ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        Upload Logo
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isUploadingLogo}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        if (!file.type.startsWith('image/')) {
+                          toast.error('Please upload an image file');
+                          return;
+                        }
+                        if (file.size > 2 * 1024 * 1024) {
+                          toast.error('Image size must be less than 2MB');
+                          return;
+                        }
+
+                        setIsUploadingLogo(true);
+                        const fd = new FormData();
+                        fd.append('file', file);
+
+                        try {
+                          const { data } = await tenantsApi.uploadLogo(user?.tenantId || '', fd);
+                          setLogoUrl(data.url);
+                          await refreshProfile();
+                          toast.success('Clinic logo uploaded successfully!');
+                        } catch (err: any) {
+                          const msg = err.response?.data?.message || 'Failed to upload clinic logo';
+                          toast.error(msg);
+                        } finally {
+                          setIsUploadingLogo(false);
+                        }
+                      }}
+                    />
+                  </label>
+
+                  {logoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLogoUrl('')}
+                      className="px-4 py-2 text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-slate-200 hover:border-rose-100 rounded-lg transition-all"
+                    >
+                      Remove Logo
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-xs text-slate-400">
+                  Supports JPG, PNG, GIF up to 2MB. Shown on prescriptions and portal branding. Without a logo, your clinic&apos;s initials are shown instead.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

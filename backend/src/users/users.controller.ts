@@ -1,6 +1,6 @@
 import { Controller, Get, Put, Post, Body, Param, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiBearerAuth, ApiConsumes, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiConsumes, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
@@ -39,8 +39,9 @@ export class UsersController {
   @Post('avatar')
   @UseInterceptors(FileInterceptor('file', { storage }))
   @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UploadAvatarDto })
   @ApiOperation({ summary: 'Upload profile avatar' })
-  uploadAvatar(@UploadedFile() file: Express.Multer.File, @Body() dto: UploadAvatarDto) {
+  uploadAvatar(@UploadedFile() file: Express.Multer.File) {
     return { url: `/uploads/avatars/${file.filename}` };
   }
 

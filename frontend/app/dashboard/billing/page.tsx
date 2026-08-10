@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { billingApi, patientsApi, doctorsApi } from '@/lib/api';
-import { 
-  Receipt, Plus, Search, CheckCircle2, ChevronDown, 
-  Loader2, DollarSign, Calendar, Clock, Sparkles, FileText, User
+import {
+  Receipt, Plus, Search, CheckCircle2, ChevronDown,
+  Loader2, DollarSign, Calendar, Clock, Sparkles, FileText, User,
+  Download, Mail, MessageCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getInitials, formatDate, formatCurrency } from '@/lib/utils';
@@ -71,6 +72,35 @@ export default function BillingPage() {
       toast.error(msg);
     }
   });
+
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (inv: any) => {
+    try {
+      setDownloadingId(inv.id);
+      const res = await billingApi.downloadInvoicePdf(inv.id);
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${inv.invoiceNo}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download invoice');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleEmailShare = (inv: any) => {
+    toast('Emailing invoices will be available soon.', { icon: '📧' });
+  };
+
+  const handleWhatsappShare = (inv: any) => {
+    toast('Sending invoices via WhatsApp will be available soon.', { icon: '💬' });
+  };
 
   const closeModal = () => {
     setIsInvoiceModalOpen(false);
@@ -138,16 +168,16 @@ export default function BillingPage() {
   const pendingCount = invoicesData?.data?.filter((inv: any) => inv.status === 'PENDING').length || 0;
 
   return (
-    <div className="p-8 animate-fade-in">
-      <div className="page-header flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <Receipt className="w-6 h-6 text-indigo-600" />
+            <Receipt className="w-6 h-6 text-indigo-600 shrink-0" />
             Billing & Invoices
           </h1>
           <p className="page-subtitle">Track patient billing records, generate clinic invoices, and record payments.</p>
         </div>
-        <button onClick={() => setIsInvoiceModalOpen(true)} className="btn-primary flex items-center gap-2 text-sm">
+        <button onClick={() => setIsInvoiceModalOpen(true)} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Create Invoice
         </button>
       </div>
@@ -249,17 +279,48 @@ export default function BillingPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-xs">
-                      {inv.status === 'PENDING' ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {inv.status === 'PENDING' ? (
+                          <button
+                            onClick={() => markPaidMutation.mutate(inv.id)}
+                            disabled={markPaidMutation.isPending}
+                            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-none rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                          >
+                            Mark Paid
+                          </button>
+                        ) : (
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Collected</span>
+                        )}
+
                         <button
-                          onClick={() => markPaidMutation.mutate(inv.id)}
-                          disabled={markPaidMutation.isPending}
-                          className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-none rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                          onClick={() => handleDownload(inv)}
+                          disabled={downloadingId === inv.id}
+                          title="Download invoice PDF"
+                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border-none rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                         >
-                          Mark Paid
+                          {downloadingId === inv.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Download className="w-3.5 h-3.5" />
+                          )}
                         </button>
-                      ) : (
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Collected</span>
-                      )}
+
+                        <button
+                          onClick={() => handleEmailShare(inv)}
+                          title="Send invoice via email"
+                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border-none rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          onClick={() => handleWhatsappShare(inv)}
+                          title="Send invoice via WhatsApp"
+                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 border-none rounded-lg transition-colors cursor-pointer"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

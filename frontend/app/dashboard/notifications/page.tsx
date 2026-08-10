@@ -26,14 +26,14 @@ export default function NotificationsPage() {
   });
 
   return (
-    <div className="p-8 animate-fade-in">
-      <div className="page-header flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title">Notifications</h1>
           <p className="page-subtitle">{data?.unread || 0} unread notifications</p>
         </div>
         {data?.unread > 0 && (
-          <button onClick={() => markAllRead.mutate()} className="btn-secondary flex items-center gap-2 text-sm">
+          <button onClick={() => markAllRead.mutate()} className="btn-secondary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
             <CheckCheck className="w-4 h-4" /> Mark all read
           </button>
         )}

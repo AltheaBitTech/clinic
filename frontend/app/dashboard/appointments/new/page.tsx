@@ -115,16 +115,21 @@ export default function NewAppointmentPage() {
       return;
     }
 
+    // Construct scheduledAt DateTime ISO string
+    // selectedDate is 'YYYY-MM-DD', selectedSlot is 'HH:MM'
+    const [hours, minutes] = selectedSlot.split(':').map(Number);
+    const scheduledDateTime = new Date(selectedDate);
+    scheduledDateTime.setHours(hours, minutes, 0, 0);
+
+    if (scheduledDateTime.getTime() < Date.now()) {
+      toast.error('Cannot book an appointment in the past. Please pick a future date or time.');
+      return;
+    }
+
     setIsSubmitting(true);
     const loadingToast = toast.loading('Booking appointment...');
 
     try {
-      // Construct scheduledAt DateTime ISO string
-      // selectedDate is 'YYYY-MM-DD', selectedSlot is 'HH:MM'
-      const [hours, minutes] = selectedSlot.split(':').map(Number);
-      const scheduledDateTime = new Date(selectedDate);
-      scheduledDateTime.setHours(hours, minutes, 0, 0);
-
       const payload = {
         patientId: selectedPatient.id,
         doctorId: selectedDoctor.id,
@@ -200,7 +205,7 @@ export default function NewAppointmentPage() {
   const totalCost = consultationFee + serviceTax;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       {/* Back Link */}
       <Link
         href="/dashboard/appointments"
@@ -210,9 +215,9 @@ export default function NewAppointmentPage() {
         Back to Appointments
       </Link>
 
-      <div className="page-header mb-8">
+      <div className="page-header sm:mb-8">
         <h1 className="page-title flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse" />
+          <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse shrink-0" />
           Schedule New Appointment
         </h1>
         <p className="page-subtitle">Set up a consultation slot with one of our specialized clinic doctors</p>

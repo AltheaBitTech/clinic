@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pharmaciesApi } from '@/lib/api';
-import { useRouter } from 'next/navigation';
 import {
   Store, Phone, Mail, MapPin, Clock, Truck, FileText,
   User, ChevronLeft, Check, AlertCircle, Building2,
@@ -43,22 +43,49 @@ const INITIAL: FormData = {
   notes: '',
 };
 
-export default function NewPharmacyPage() {
+export default function EditPharmacyPage() {
+  const { id } = useParams() as { id: string };
   const [form, setForm] = useState<FormData>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  const { data: pharmacy, isLoading, isError } = useQuery({
+    queryKey: ['pharmacy', id],
+    queryFn: () => pharmaciesApi.getOne(id).then((r) => r.data),
+    enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (!pharmacy) return;
+    setForm({
+      name: pharmacy.name ?? '',
+      ownerName: pharmacy.ownerName ?? '',
+      licenseNumber: pharmacy.licenseNumber ?? '',
+      phone: pharmacy.phone ?? '',
+      email: pharmacy.email ?? '',
+      address: pharmacy.address ?? '',
+      city: pharmacy.city ?? '',
+      state: pharmacy.state ?? '',
+      pincode: pharmacy.pincode ?? '',
+      openingHours: pharmacy.openingHours ?? '09:00',
+      closingHours: pharmacy.closingHours ?? '21:00',
+      homeDeliveryAvailable: !!pharmacy.homeDeliveryAvailable,
+      notes: pharmacy.notes ?? '',
+    });
+  }, [pharmacy]);
+
   const mutation = useMutation({
-    mutationFn: (data: FormData) => pharmaciesApi.create(data),
+    mutationFn: (data: FormData) => pharmaciesApi.update(id, data),
     onSuccess: () => {
-      toast.success('Pharmacy added successfully!');
+      toast.success('Pharmacy updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['pharmacies'] });
+      queryClient.invalidateQueries({ queryKey: ['pharmacy', id] });
       router.push('/dashboard/pharmacies');
     },
     onError: (err: any) => {
       toast.error(
-        err?.response?.data?.message || 'Failed to add pharmacy. Please try again.',
+        err?.response?.data?.message || 'Failed to update pharmacy. Please try again.',
       );
     },
   });
@@ -84,12 +111,45 @@ export default function NewPharmacyPage() {
     e.preventDefault();
     if (!validate()) return;
     const payload: any = { ...form };
-    // Remove empty optional strings
     Object.keys(payload).forEach((k) => {
       if (payload[k] === '') delete payload[k];
     });
     mutation.mutate(payload);
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto animate-fade-in">
+        <div className="h-6 w-40 bg-slate-100 rounded animate-pulse mb-6" />
+        <div className="space-y-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="card h-32 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !pharmacy) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto animate-fade-in">
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+            <AlertCircle className="w-8 h-8 text-red-300" />
+          </div>
+          <h3 className="text-slate-700 font-semibold text-lg mb-1">
+            Pharmacy not found
+          </h3>
+          <p className="text-slate-400 text-sm mb-6 max-w-xs">
+            We couldn't load this pharmacy. It may have been removed.
+          </p>
+          <Link href="/dashboard/pharmacies" className="btn-primary text-sm">
+            Back to Pharmacies
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto animate-fade-in">
@@ -108,14 +168,14 @@ export default function NewPharmacyPage() {
           <Store className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Add New Pharmacy</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Edit Pharmacy</h1>
           <p className="text-slate-500 text-sm mt-0.5">
-            Register a pharmacy to your clinic's network
+            Update details for {pharmacy.name}
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6" id="add-pharmacy-form">
+      <form onSubmit={handleSubmit} className="space-y-6" id="edit-pharmacy-form">
         {/* ── Section 1: Basic Info ── */}
         <FormSection
           icon={Store}
@@ -372,7 +432,7 @@ export default function NewPharmacyPage() {
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                Add Pharmacy
+                Save Changes
               </>
             )}
           </button>

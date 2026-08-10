@@ -48,10 +48,10 @@ export default function AnalyticsPage() {
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444'];
 
   return (
-    <div className="p-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="page-header">
         <h1 className="page-title flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-indigo-600" />
+          <BarChart3 className="w-6 h-6 text-indigo-600 shrink-0" />
           Analytics Dashboard
         </h1>
         <p className="page-subtitle">Real-time clinical metrics, revenue performance reports, and appointment volumes.</p>

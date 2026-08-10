@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 async function bootstrap() {
     console.log('Starting NestJS application...');
@@ -27,6 +28,10 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
+  // Translate raw Prisma errors (e.g. unique constraint violations) into
+  // user-readable HTTP responses instead of a generic 500
+  app.useGlobalFilters(new PrismaExceptionFilter());
 
   // Static file serving (uploads)
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });

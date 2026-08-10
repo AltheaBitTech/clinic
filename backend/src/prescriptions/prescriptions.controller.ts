@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Res, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PrescriptionsService } from './prescriptions.service';
 import { CreatePrescriptionDto } from './dto/prescription.dto';
@@ -26,19 +26,33 @@ export class PrescriptionsController {
   @ApiQuery({ name: 'patientId', required: false })
   @ApiQuery({ name: 'doctorId', required: false })
   @ApiQuery({ name: 'page', required: false })
-  findAll(
+  async findAll(
+    @CurrentUser() user: any,
     @Query('patientId') patientId?: string,
     @Query('doctorId') doctorId?: string,
     @Query('page') page?: number,
   ) {
-    console.log(`Fetching prescriptions with patientId: ${patientId}, doctorId: ${doctorId}, page: ${page}`);
-    return this.prescriptionsService.findAll({ patientId, doctorId }, page);
+    let effectivePatientId = patientId;
+
+    if (user.role === UserRole.PATIENT) {
+      const ownPatientId = await this.prescriptionsService.getPatientIdForUser(user.id);
+      if (!ownPatientId) return { data: [], total: 0, page: page || 1, limit: 20 };
+      effectivePatientId = ownPatientId;
+    }
+
+    return this.prescriptionsService.findAll(
+      { patientId: effectivePatientId, doctorId, tenantId: user.tenantId },
+      page,
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get prescription by ID' })
-  findOne(@Param('id') id: string) {
-    console.log(`Fetching prescription with ID: ${id}`);
-    return this.prescriptionsService.findOne(id);
+  async findOne(@CurrentUser() user: any, @Param('id') id: string) {
+    const prescription = await this.prescriptionsService.findOne(id, user.tenantId);
+    if (user.role === UserRole.PATIENT && prescription.patient.userId !== user.id) {
+      throw new ForbiddenException('You are not authorized to view this prescription');
+    }
+    return prescription;
   }
 }

@@ -467,6 +467,7 @@ model Invoice {
   status        PaymentStatus @default(PENDING)
   paidAt        DateTime?
   notes         String?
+  pdfUrl        String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 

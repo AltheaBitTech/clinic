@@ -28,6 +28,9 @@ export class AppointmentsService {
     }
 
     const scheduledAt = new Date(dto.scheduledAt);
+    if (scheduledAt.getTime() < Date.now()) {
+      throw new BadRequestException('Cannot book an appointment in the past');
+    }
     const endsAt = new Date(scheduledAt.getTime() + 30 * 60 * 1000); // 30 min slot
 
     const appointment = await this.prisma.appointment.create({
@@ -148,7 +151,12 @@ export class AppointmentsService {
     const appointment = await this.findOne(id);
 
     const data: any = { ...dto };
-    if (dto.scheduledAt) data.scheduledAt = new Date(dto.scheduledAt);
+    if (dto.scheduledAt) {
+      data.scheduledAt = new Date(dto.scheduledAt);
+      if (data.scheduledAt.getTime() < Date.now()) {
+        throw new BadRequestException('Cannot reschedule an appointment to the past');
+      }
+    }
     if (dto.followUpDate) data.followUpDate = new Date(dto.followUpDate);
     if (dto.status === 'COMPLETED') data.completedAt = new Date();
     if (dto.status === 'CANCELLED') data.cancelledAt = new Date();

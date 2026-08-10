@@ -61,6 +61,7 @@ export const tenantsApi = {
   getMyStats: () => api.get('/tenants/my/stats'),
   update: (id: string, data: any) => api.put(`/tenants/${id}`, data),
   invite: (id: string, data: any) => api.post(`/tenants/${id}/invite`, data),
+  uploadLogo: (id: string, formData: FormData) => api.post(`/tenants/${id}/logo`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
 export const patientsApi = {
@@ -135,6 +136,7 @@ export const billingApi = {
   getInvoices: (params?: any) => api.get('/billing/invoices', { params }),
   getOne: (id: string) => api.get(`/billing/invoices/${id}`),
   markPaid: (id: string) => api.put(`/billing/invoices/${id}/pay`),
+  downloadInvoicePdf: (id: string) => api.get(`/billing/invoices/${id}/pdf`, { responseType: 'blob' }),
 };
 
 export const tenantRequestsApi = {

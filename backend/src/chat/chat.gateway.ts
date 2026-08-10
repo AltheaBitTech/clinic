@@ -50,7 +50,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
   ) {
     try {
-      let room = await this.prisma.chatRoom.findUnique({ where: { id: data.chatRoomId } });
+      let room = await this.prisma.chatRoom.findUnique({
+        where: { id: data.chatRoomId },
+        include: {
+          patient: { select: { userId: true } },
+          doctor: { select: { userId: true } },
+        },
+      });
 
       if (!room) {
         return client.emit('error', { message: 'Chat room not found' });
@@ -68,6 +74,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
 
       this.server.to(data.chatRoomId).emit('new_message', message);
+
+      const recipientUserId =
+        room.patient.userId === data.senderId ? room.doctor.userId : room.patient.userId;
+      const senderName = `${message.sender.firstName} ${message.sender.lastName}`.trim();
+
+      const notification = await this.prisma.notification.create({
+        data: {
+          userId: recipientUserId,
+          title: `New message from ${senderName}`,
+          body: data.content.length > 120 ? `${data.content.slice(0, 120)}…` : data.content,
+          channel: 'PUSH',
+          scheduledAt: new Date(),
+        },
+      });
+
+      const recipientSocketId = this.connectedUsers.get(recipientUserId);
+      if (recipientSocketId) {
+        this.server.to(recipientSocketId).emit('new_notification', notification);
+      }
     } catch (err) {
       client.emit('error', { message: 'Failed to send message' });
     }

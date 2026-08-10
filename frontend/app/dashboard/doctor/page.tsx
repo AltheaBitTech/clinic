@@ -14,8 +14,8 @@ export default function DoctorDashboard() {
   });
 
   const statusColors: Record<string, string> = {
-    SCHEDULED: 'bg-blue-100 text-blue-700',
     CONFIRMED: 'bg-indigo-100 text-indigo-700',
+    SCHEDULED: 'bg-blue-100 text-blue-700',
     IN_PROGRESS: 'bg-yellow-100 text-yellow-700',
     COMPLETED: 'bg-emerald-100 text-emerald-700',
     CANCELLED: 'bg-red-100 text-red-700',

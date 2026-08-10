@@ -1,10 +1,27 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiConsumes } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto, UpdateTenantDto, InviteUserDto } from './dto/tenant.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
+
+const logoUploadDir = './uploads/logos';
+if (!existsSync(logoUploadDir)) {
+  mkdirSync(logoUploadDir, { recursive: true });
+}
+
+const logoStorage = diskStorage({
+  destination: logoUploadDir,
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+  },
+});
 
 @ApiTags('tenants')
 @ApiBearerAuth()
@@ -54,6 +71,17 @@ export class TenantsController {
   @ApiOperation({ summary: 'Update tenant [SuperAdmin, HospitalAdmin]' })
   update(@Param('id') id: string, @Body() dto: UpdateTenantDto) {
     return this.tenantsService.update(id, dto);
+  }
+
+  @Post(':id/logo')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HOSPITAL_ADMIN)
+  @UseInterceptors(FileInterceptor('file', { storage: logoStorage }))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload hospital/clinic logo [SuperAdmin, HospitalAdmin]' })
+  async uploadLogo(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    const url = `/uploads/logos/${file.filename}`;
+    await this.tenantsService.update(id, { logoUrl: url });
+    return { url };
   }
 
   @Delete(':id')

@@ -7,7 +7,7 @@ import { Calendar, Plus, Clock, ChevronRight, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { cn, formatDateTime, getStatusColor } from '@/lib/utils';
 
-const STATUS_OPTIONS = ['All', 'SCHEDULED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+const STATUS_OPTIONS = ['All', 'CONFIRMED', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
 
 export default function AppointmentsPage() {
   const [status, setStatus] = useState('');
@@ -19,26 +19,43 @@ export default function AppointmentsPage() {
     queryFn: () => appointmentsApi.getAll({ status: status || undefined, date: date || undefined, page }).then((r) => r.data),
   });
 
+  const STATUS_PRIORITY: Record<string, number> = {
+    CONFIRMED: 0,
+    SCHEDULED: 1,
+    IN_PROGRESS: 2,
+    COMPLETED: 3,
+    CANCELLED: 4,
+  };
+
+  const sortedAppointments = data?.data
+    ? [...data.data].sort((a: any, b: any) => {
+        const aPriority = STATUS_PRIORITY[a.status] ?? 5;
+        const bPriority = STATUS_PRIORITY[b.status] ?? 5;
+        if (aPriority !== bPriority) return aPriority - bPriority;
+        return new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
+      })
+    : [];
+
   return (
-    <div className="p-8 animate-fade-in">
-      <div className="page-header flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title">Appointments</h1>
           <p className="page-subtitle">Manage and track all patient appointments</p>
         </div>
-        <Link href="/dashboard/appointments/new" className="btn-primary flex items-center gap-2 text-sm">
+        <Link href="/dashboard/appointments/new" className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
           <Plus className="w-4 h-4" /> New Appointment
         </Link>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="flex items-center gap-2 bg-white rounded-xl border border-slate-200 p-1">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+        <div className="flex items-center gap-2 bg-white rounded-xl border border-slate-200 p-1 overflow-x-auto max-w-full">
           {STATUS_OPTIONS.map((s) => (
             <button
               key={s}
               onClick={() => setStatus(s === 'All' ? '' : s)}
-              className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+              className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 whitespace-nowrap',
                 (s === 'All' ? !status : status === s)
                   ? 'bg-indigo-600 text-white'
                   : 'text-slate-600 hover:bg-slate-50'
@@ -48,17 +65,19 @@ export default function AppointmentsPage() {
             </button>
           ))}
         </div>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="input w-auto text-sm"
-        />
-        {(status || date) && (
-          <button onClick={() => { setStatus(''); setDate(''); }} className="text-sm text-indigo-600 hover:text-indigo-700">
-            Clear filters
-          </button>
-        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="input w-auto text-sm"
+          />
+          {(status || date) && (
+            <button onClick={() => { setStatus(''); setDate(''); }} className="text-sm text-indigo-600 hover:text-indigo-700 shrink-0">
+              Clear filters
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Appointments List */}
@@ -73,42 +92,42 @@ export default function AppointmentsPage() {
               </div>
             </div>
           ))
-        ) : data?.data?.length === 0 ? (
+        ) : sortedAppointments.length === 0 ? (
           <div className="card text-center py-16">
             <Calendar className="w-12 h-12 text-slate-200 mx-auto mb-4" />
             <p className="text-slate-400 font-medium">No appointments found</p>
             <p className="text-slate-300 text-sm mt-1">Try adjusting your filters or create a new appointment</p>
           </div>
         ) : (
-          data?.data?.map((appt: any) => (
+          sortedAppointments.map((appt: any) => (
             <Link key={appt.id} href={`/dashboard/appointments/${appt.id}`}
-              className="card card-hover flex items-center gap-4 group">
+              className="card card-hover flex items-center gap-3 sm:gap-4 group">
               {/* Time Block */}
-              <div className="w-14 h-14 rounded-xl bg-indigo-50 flex flex-col items-center justify-center shrink-0">
-                <span className="text-lg font-bold text-indigo-600">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-indigo-50 flex flex-col items-center justify-center shrink-0">
+                <span className="text-sm sm:text-lg font-bold text-indigo-600">
                   {new Date(appt.scheduledAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })}
                 </span>
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="font-semibold text-slate-800">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <p className="font-semibold text-slate-800 truncate max-w-full">
                     {appt.patient.user.firstName} {appt.patient.user.lastName}
                   </p>
-                  <span className={cn('badge text-xs', getStatusColor(appt.status))}>{appt.status}</span>
+                  <span className={cn('badge text-xs shrink-0', getStatusColor(appt.status))}>{appt.status}</span>
                 </div>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 truncate">
                   Dr. {appt.doctor.user.firstName} {appt.doctor.user.lastName}
                   {appt.reason ? ` · ${appt.reason}` : ''}
                 </p>
-                <div className="flex items-center gap-1 mt-1 text-xs text-slate-400">
-                  <Clock className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1 mt-1 text-xs text-slate-400 truncate">
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
                   {formatDateTime(appt.scheduledAt)}
                 </div>
               </div>
 
-              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
+              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors shrink-0" />
             </Link>
           ))
         )}
@@ -116,7 +135,7 @@ export default function AppointmentsPage() {
 
       {/* Pagination */}
       {data && data.pages > 1 && (
-        <div className="flex items-center justify-between mt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
           <p className="text-sm text-slate-500">{data.total} appointments total</p>
           <div className="flex items-center gap-2">
             <button disabled={page === 1} onClick={() => setPage(p => p - 1)}

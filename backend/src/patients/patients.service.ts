@@ -10,7 +10,8 @@ export class PatientsService {
   async create(tenantId: string, dto: CreatePatientDto) {
     // Check if user already exists
     let user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    
+    let temporaryPassword: string | undefined;
+
     if (user) {
       // Check if already a patient at this tenant
       const existing = await this.prisma.patient.findFirst({
@@ -19,8 +20,8 @@ export class PatientsService {
       if (existing) throw new ConflictException('Patient already registered at this hospital');
     } else {
       // Create user account
-      const tempPassword = Math.random().toString(36).slice(-8);
-      const passwordHash = await bcrypt.hash(tempPassword, 12);
+      temporaryPassword = Math.random().toString(36).slice(-8);
+      const passwordHash = await bcrypt.hash(temporaryPassword, 12);
       user = await this.prisma.user.create({
         data: {
           email: dto.email,
@@ -67,7 +68,7 @@ export class PatientsService {
       },
     });
 
-    return patient;
+    return temporaryPassword ? { ...patient, temporaryPassword } : patient;
   }
 
   async findAll(tenantId: string, search?: string, page = 1, limit = 20) {

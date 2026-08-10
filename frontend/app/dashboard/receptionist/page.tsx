@@ -254,8 +254,8 @@ export default function ReceptionistDashboard() {
               className="input appearance-none text-xs py-1.5 w-full sm:w-40"
             >
               <option value="ALL">All Statuses</option>
-              <option value="SCHEDULED">Scheduled</option>
               <option value="CONFIRMED">Confirmed</option>
+              <option value="SCHEDULED">Scheduled</option>
               <option value="IN_PROGRESS">Checked-In / In-Progress</option>
               <option value="COMPLETED">Completed</option>
               <option value="CANCELLED">Cancelled</option>

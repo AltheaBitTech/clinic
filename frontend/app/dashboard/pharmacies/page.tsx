@@ -38,9 +38,9 @@ export default function PharmaciesPage() {
   const isAdmin = user?.role === 'HOSPITAL_ADMIN';
 
   return (
-    <div className="p-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       {/* Header */}
-      <div className="page-header flex items-center justify-between">
+      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title">Pharmacies</h1>
           <p className="page-subtitle">
@@ -50,7 +50,7 @@ export default function PharmaciesPage() {
         <Link
           href="/dashboard/pharmacies/new"
           id="add-pharmacy-btn"
-          className="btn-primary flex items-center gap-2 text-sm"
+          className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
         >
           <Plus className="w-4 h-4" />
           Add Pharmacy

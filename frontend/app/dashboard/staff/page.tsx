@@ -113,16 +113,16 @@ export default function StaffPage() {
   };
 
   return (
-    <div className="p-8 animate-fade-in">
-      <div className="page-header flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <UserCheck className="w-6 h-6 text-indigo-600" />
+            <UserCheck className="w-6 h-6 text-indigo-600 shrink-0" />
             Staff & Access Control
           </h1>
           <p className="page-subtitle">Manage clinic user accounts, access roles, and invite new staff members.</p>
         </div>
-        <button onClick={() => setIsInviteModalOpen(true)} className="btn-primary flex items-center gap-2 text-sm">
+        <button onClick={() => setIsInviteModalOpen(true)} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Invite Staff
         </button>
       </div>

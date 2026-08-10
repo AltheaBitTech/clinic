@@ -10,27 +10,34 @@ import { useAuth } from '@/lib/auth';
 
 export default function PrescriptionsPage() {
   const [page, setPage] = useState(1);
-    const { user } = useAuth();
-    console.log('Current user:', user);  
+  const { user } = useAuth();
+  const isPatient = user?.role === 'PATIENT';
   const { data, isLoading } = useQuery({
-    queryKey: ['prescriptions', page],
-    queryFn: () => prescriptionsApi.getAll({ page, doctorId: user?.doctor?.id }).then((r) => r.data),
+    queryKey: ['prescriptions', page, user?.id],
+    queryFn: () =>
+      prescriptionsApi
+        .getAll(isPatient ? { page } : { page, doctorId: user?.doctor?.id })
+        .then((r) => r.data),
+    enabled: !!user,
   });
-console.log('Fetched prescriptions data:', data);
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
 
   const totalPages = data ? Math.ceil(data.total / data.limit) : 1;
 
   return (
-    <div className="p-8 animate-fade-in">
-      <div className="page-header flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="page-title">Prescriptions</h1>
-          <p className="page-subtitle">Digital prescriptions with auto-generated PDFs</p>
+          <h1 className="page-title">{isPatient ? 'My Prescriptions' : 'Prescriptions'}</h1>
+          <p className="page-subtitle">
+            {isPatient ? 'Prescriptions issued to you, with downloadable PDFs' : 'Digital prescriptions with auto-generated PDFs'}
+          </p>
         </div>
-        <Link href="/dashboard/prescriptions/new" className="btn-primary flex items-center gap-2 text-sm">
-          <Plus className="w-4 h-4" /> Write Prescription
-        </Link>
+        {!isPatient && (
+          <Link href="/dashboard/prescriptions/new" className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
+            <Plus className="w-4 h-4" /> Write Prescription
+          </Link>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -48,9 +55,11 @@ console.log('Fetched prescriptions data:', data);
           <div className="card text-center py-16">
             <ClipboardList className="w-12 h-12 text-slate-200 mx-auto mb-4" />
             <p className="text-slate-400">No prescriptions found</p>
-            <Link href="/dashboard/prescriptions/new" className="btn-primary mt-4 inline-flex items-center gap-2 text-sm">
-              <Plus className="w-4 h-4" /> Write First Prescription
-            </Link>
+            {!isPatient && (
+              <Link href="/dashboard/prescriptions/new" className="btn-primary mt-4 inline-flex items-center gap-2 text-sm">
+                <Plus className="w-4 h-4" /> Write First Prescription
+              </Link>
+            )}
           </div>
         ) : (
           data?.data?.map((rx: any) => {
@@ -63,10 +72,14 @@ console.log('Fetched prescriptions data:', data);
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-slate-800">
-                      {rx.patient?.user?.firstName} {rx.patient?.user?.lastName}
+                      {isPatient
+                        ? `Dr. ${rx.doctor?.user?.firstName} ${rx.doctor?.user?.lastName}`
+                        : `${rx.patient?.user?.firstName} ${rx.patient?.user?.lastName}`}
                     </h3>
                     <p className="text-sm text-slate-500 mt-0.5">
-                      Dr. {rx.doctor?.user?.firstName} {rx.doctor?.user?.lastName} · {formatDate(rx.createdAt)}
+                      {isPatient
+                        ? formatDate(rx.createdAt)
+                        : <>Dr. {rx.doctor?.user?.firstName} {rx.doctor?.user?.lastName} · {formatDate(rx.createdAt)}</>}
                     </p>
                     {rx.diagnosis && <p className="text-xs text-slate-400 mt-1 italic">{rx.diagnosis}</p>}
                   </div>

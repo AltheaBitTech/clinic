@@ -158,9 +158,9 @@ export default function PatientDetailPage() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-5 sm:mb-8">
         <Link href="/dashboard/patients" className="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors mb-4 text-sm font-medium">
           <ArrowLeft className="w-4 h-4" /> Back to Registry
         </Link>

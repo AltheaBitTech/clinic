@@ -9,8 +9,10 @@ export class CreateTenantDto {
   @ApiPropertyOptional() @IsOptional() @IsString() address?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() city?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() state?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() country?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() website?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() licenseNumber?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() logoUrl?: string;
 }
 
 export class UpdateTenantDto extends PartialType(CreateTenantDto) {}

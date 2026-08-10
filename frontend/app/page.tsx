@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle, Activity } from 'lucide-react';
+import { Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle, Activity, Sparkles } from 'lucide-react';
 import ClinicRequestForm from '@/components/ClinicRequestForm';
 
 const featureColorMap: Record<string, { bg: string; text: string; border: string }> = {
@@ -27,6 +27,9 @@ export default function HomePage() {
             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
           </div>
           <div className="flex items-center gap-5">
+            <a href="#pricing" className="hidden sm:inline text-slate-300 hover:text-white transition-colors text-sm font-semibold">
+              Pricing
+            </a>
             <Link href="/login" className="text-slate-300 hover:text-white transition-colors text-sm font-semibold">
               Sign In
             </Link>
@@ -109,6 +112,111 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 relative scroll-mt-24">
+        <div className="absolute -right-20 top-20 w-80 h-80 bg-indigo-600/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+        <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 tracking-tight">Simple, transparent pricing</h2>
+        <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">Start free, then pick the plan that fits your clinic. No hidden fees.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+          {[
+            {
+              name: 'Free Trial',
+              price: '₹0',
+              period: '/ 15 days',
+              tagline: 'Try every feature, no card required',
+              icon: Sparkles,
+              color: 'emerald',
+              popular: false,
+              cta: 'Start Free Trial',
+              features: [
+                'Full access for 15 days',
+                'Up to 2 doctors & 50 patients',
+                'Appointments & prescriptions',
+                'Email support',
+              ],
+            },
+            {
+              name: 'Professional',
+              price: '₹2,999',
+              period: '/ month',
+              tagline: 'For growing clinics & hospitals',
+              icon: Activity,
+              color: 'indigo',
+              popular: true,
+              cta: 'Get Started',
+              features: [
+                'Unlimited doctors & patients',
+                'Digital prescriptions & PDF sharing',
+                'Medicine & appointment reminders',
+                'Real-time chat support',
+                'Priority email & chat support',
+              ],
+            },
+            {
+              name: 'Enterprise',
+              price: 'Custom',
+              period: 'contact us',
+              tagline: 'For multi-branch hospital networks',
+              icon: Shield,
+              color: 'purple',
+              popular: false,
+              cta: 'Contact Sales',
+              features: [
+                'Everything in Professional',
+                'Multi-branch tenant management',
+                'Custom integrations & SLAs',
+                'Dedicated account manager',
+              ],
+            },
+          ].map(({ name, price, period, tagline, icon: Icon, color, popular, cta, features }) => {
+            const mapped = featureColorMap[color] || featureColorMap.indigo;
+            return (
+              <div
+                key={name}
+                className={`relative rounded-2xl p-7 border transition-all duration-300 ${
+                  popular
+                    ? 'bg-white/[0.05] border-indigo-500/40 shadow-lg shadow-indigo-600/10 md:-translate-y-3'
+                    : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.06] hover:border-white/20 hover:-translate-y-1.5'
+                }`}
+              >
+                {popular && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-bold px-3.5 py-1 rounded-full shadow-md">
+                    Most Popular
+                  </span>
+                )}
+                <div className={`w-11 h-11 rounded-xl ${mapped.bg} ${mapped.border} border flex items-center justify-center mb-5`}>
+                  <Icon className={`w-5 h-5 ${mapped.text}`} />
+                </div>
+                <h3 className="font-bold text-xl mb-1 text-slate-100">{name}</h3>
+                <p className="text-slate-400 text-sm mb-5 font-light">{tagline}</p>
+                <div className="flex items-baseline gap-1.5 mb-6">
+                  <span className="text-3.5xl font-extrabold text-white">{price}</span>
+                  <span className="text-slate-400 text-sm font-light">{period}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {features.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-slate-300 font-light">
+                      <CheckCircle className={`w-4 h-4 ${mapped.text} mt-0.5 shrink-0`} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/register"
+                  className={`w-full flex items-center justify-center gap-2 text-sm font-semibold px-5 py-3 rounded-xl transition-all ${
+                    popular
+                      ? 'btn-primary shadow-md'
+                      : 'bg-white/5 text-white hover:bg-white/10 border border-white/15 backdrop-blur-sm'
+                  }`}
+                >
+                  {cta} <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Partner Registration Form */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 relative">
         <div className="absolute right-0 bottom-10 w-96 h-96 bg-purple-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
@@ -125,7 +233,7 @@ export default function HomePage() {
             Get Started Free <ArrowRight className="w-4.5 h-4.5" />
           </Link>
           <div className="flex items-center justify-center gap-6 mt-10 text-xs text-slate-400 flex-wrap">
-            {['No credit card required', 'Free 30-day trial', 'Cancel anytime'].map((t) => (
+            {['No credit card required', 'Free 15-day trial', 'Cancel anytime'].map((t) => (
               <span key={t} className="flex items-center gap-1.5 font-medium">
                 <CheckCircle className="w-4 h-4 text-emerald-400" /> {t}
               </span>
