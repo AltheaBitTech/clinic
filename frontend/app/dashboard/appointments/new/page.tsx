@@ -209,7 +209,7 @@ export default function NewAppointmentPage() {
       {/* Back Link */}
       <Link
         href="/dashboard/appointments"
-        className="inline-flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 text-sm font-medium mb-5 transition-colors group"
+        className="inline-flex items-center gap-1.5 text-slate-500 hover:text-cyan-600 text-sm font-medium mb-5 transition-colors group"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Back to Appointments
@@ -217,7 +217,7 @@ export default function NewAppointmentPage() {
 
       <div className="page-header sm:mb-8">
         <h1 className="page-title flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse shrink-0" />
+          <Sparkles className="w-6 h-6 text-cyan-600 animate-pulse shrink-0" />
           Schedule New Appointment
         </h1>
         <p className="page-subtitle">Set up a consultation slot with one of our specialized clinic doctors</p>
@@ -231,14 +231,14 @@ export default function NewAppointmentPage() {
           <div className="card space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
               <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0">1</span>
+                <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0">1</span>
                 <h3 className="font-semibold text-slate-800">Patient Information</h3>
               </div>
               {!isPatient && (
                 <button
                   type="button"
                   onClick={() => setIsRegModalOpen(true)}
-                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50/50 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition-colors border-none cursor-pointer"
+                  className="text-xs font-semibold text-cyan-600 hover:text-cyan-700 flex items-center gap-1 bg-cyan-50/50 hover:bg-cyan-50 px-2.5 py-1.5 rounded-lg transition-colors border-none cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Register New Patient
                 </button>
@@ -247,7 +247,7 @@ export default function NewAppointmentPage() {
 
             {isPatient ? (
               <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-cyan-100 text-cyan-700 text-sm font-bold flex items-center justify-center">
                   {selectedPatient ? getInitials(selectedPatient.user.firstName, selectedPatient.user.lastName) : '...'}
                 </div>
                 <div>
@@ -256,7 +256,7 @@ export default function NewAppointmentPage() {
                   </p>
                   <p className="text-xs text-slate-500">{selectedPatient?.user?.email} · {selectedPatient?.patientCode || 'Loading...'}</p>
                 </div>
-                <span className="badge bg-indigo-100 text-indigo-800 text-xs ml-auto">Your Profile</span>
+                <span className="badge bg-cyan-100 text-cyan-800 text-xs ml-auto">Your Profile</span>
               </div>
             ) : (
               <div className="relative">
@@ -295,7 +295,7 @@ export default function NewAppointmentPage() {
                   <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-60 overflow-y-auto divide-y divide-slate-50">
                     {isLoadingPatients ? (
                       <div className="p-4 text-center text-sm text-slate-400 flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> Searching...
+                        <Loader2 className="w-4 h-4 animate-spin text-cyan-500" /> Searching...
                       </div>
                     ) : patientsData?.data?.length === 0 ? (
                       <div className="p-4 text-center text-sm text-slate-400">
@@ -306,7 +306,7 @@ export default function NewAppointmentPage() {
                             setIsPatientDropdownOpen(false);
                             setIsRegModalOpen(true);
                           }}
-                          className="text-indigo-600 hover:underline font-semibold ml-1 block w-full mt-1.5"
+                          className="text-cyan-600 hover:underline font-semibold ml-1 block w-full mt-1.5"
                         >
                           Register this patient
                         </button>
@@ -350,7 +350,7 @@ export default function NewAppointmentPage() {
           {/* STEP 2: SELECT DOCTOR */}
           <div className="card space-y-4">
             <div className="flex items-center border-b border-slate-100 pb-3 mb-2">
-              <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">2</span>
+              <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">2</span>
               <h3 className="font-semibold text-slate-800">Select Doctor</h3>
             </div>
 
@@ -390,7 +390,7 @@ export default function NewAppointmentPage() {
                 <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-60 overflow-y-auto divide-y divide-slate-50">
                   {isLoadingDoctors ? (
                     <div className="p-4 text-center text-sm text-slate-400 flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> Loading doctors...
+                      <Loader2 className="w-4 h-4 animate-spin text-cyan-500" /> Loading doctors...
                     </div>
                   ) : filteredDoctors.length === 0 ? (
                     <div className="p-4 text-center text-sm text-slate-400">No doctors match your search.</div>
@@ -406,7 +406,7 @@ export default function NewAppointmentPage() {
                         className="flex items-center justify-between p-3.5 hover:bg-slate-50 cursor-pointer transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold flex items-center justify-center shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-cyan-50 text-cyan-700 text-xs font-semibold flex items-center justify-center shrink-0">
                             {getInitials(doc.user.firstName, doc.user.lastName)}
                           </div>
                           <div className="text-left">
@@ -416,7 +416,7 @@ export default function NewAppointmentPage() {
                             </p>
                           </div>
                         </div>
-                        <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg shrink-0">
+                        <span className="text-xs font-semibold text-cyan-600 bg-cyan-50 px-2 py-1 rounded-lg shrink-0">
                           {formatCurrency(doc.consultationFee)}
                         </span>
                       </div>
@@ -431,8 +431,8 @@ export default function NewAppointmentPage() {
             </div>
 
             {selectedDoctor && (
-              <div className="flex items-start gap-3 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100/50 mt-3 animate-fade-in">
-                <Stethoscope className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-4 bg-cyan-50/50 rounded-xl border border-cyan-100/50 mt-3 animate-fade-in">
+                <Stethoscope className="w-5 h-5 text-cyan-600 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-slate-800 text-sm">Selected Doctor Info</h4>
                   <p className="text-xs text-slate-600 mt-1">
@@ -444,7 +444,7 @@ export default function NewAppointmentPage() {
                   <p className="text-xs text-slate-600">
                     <span className="font-medium text-slate-700">Consultation Fee:</span> {formatCurrency(selectedDoctor.consultationFee)}
                   </p>
-                  <p className="text-xs text-indigo-600 font-medium mt-1">
+                  <p className="text-xs text-cyan-600 font-medium mt-1">
                     Available: {selectedDoctor.availableDays.join(', ')} ({selectedDoctor.consultationStart} - {selectedDoctor.consultationEnd})
                   </p>
                 </div>
@@ -455,7 +455,7 @@ export default function NewAppointmentPage() {
           {/* STEP 3: SCHEDULE DATE & TIME */}
           <div className="card space-y-4">
             <div className="flex items-center border-b border-slate-100 pb-3 mb-2">
-              <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">3</span>
+              <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">3</span>
               <h3 className="font-semibold text-slate-800">Select Date & Time</h3>
             </div>
 
@@ -486,7 +486,7 @@ export default function NewAppointmentPage() {
 
                 {isLoadingSlots ? (
                   <div className="flex items-center gap-2 text-slate-400 py-6 justify-center">
-                    <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                    <Loader2 className="w-5 h-5 animate-spin text-cyan-600" />
                     <span className="text-sm font-medium">Fetching doctor availability slots...</span>
                   </div>
                 ) : slotsData?.available === false ? (
@@ -508,8 +508,8 @@ export default function NewAppointmentPage() {
                         onClick={() => setSelectedSlot(slot)}
                         className={`flex items-center justify-center py-2.5 px-3 rounded-xl border text-sm font-medium transition-all cursor-pointer ${
                           selectedSlot === slot
-                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200 scale-[1.03]'
-                            : 'bg-white border-slate-200 text-slate-700 hover:border-indigo-400 hover:bg-indigo-50/30'
+                            ? 'bg-cyan-600 border-cyan-600 text-white shadow-md shadow-cyan-200 scale-[1.03]'
+                            : 'bg-white border-slate-200 text-slate-700 hover:border-cyan-400 hover:bg-cyan-50/30'
                         }`}
                       >
                         <Clock className={`w-3.5 h-3.5 mr-1.5 ${selectedSlot === slot ? 'text-white' : 'text-slate-400'}`} />
@@ -525,7 +525,7 @@ export default function NewAppointmentPage() {
           {/* STEP 4: VISIT DETAILS */}
           <div className="card space-y-4">
             <div className="flex items-center border-b border-slate-100 pb-3 mb-2">
-              <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">4</span>
+              <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">4</span>
               <h3 className="font-semibold text-slate-800">Visit Details</h3>
             </div>
 
@@ -582,7 +582,7 @@ export default function NewAppointmentPage() {
         <div className="lg:col-span-1">
           <div className="card sticky top-6 border border-slate-100 shadow-md space-y-6">
             <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 pb-3 border-b border-slate-100">
-              <FileText className="w-5 h-5 text-indigo-600" />
+              <FileText className="w-5 h-5 text-cyan-600" />
               Booking Summary
             </h3>
 
@@ -613,7 +613,7 @@ export default function NewAppointmentPage() {
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Doctor</span>
                 {selectedDoctor ? (
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-cyan-50 text-cyan-700 text-xs font-bold flex items-center justify-center shrink-0">
                       Dr
                     </div>
                     <div className="min-w-0">
@@ -632,13 +632,13 @@ export default function NewAppointmentPage() {
               <div>
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Scheduled For</span>
                 {selectedDate && selectedSlot ? (
-                  <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                  <div className="p-3 bg-cyan-50/50 rounded-xl border border-cyan-100/50 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0">
                       <Calendar className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-semibold text-indigo-900 text-sm">{selectedDate}</p>
-                      <p className="text-xs text-indigo-700 font-medium">Slot Time: {selectedSlot}</p>
+                      <p className="font-semibold text-cyan-900 text-sm">{selectedDate}</p>
+                      <p className="text-xs text-cyan-700 font-medium">Slot Time: {selectedSlot}</p>
                     </div>
                   </div>
                 ) : (
@@ -661,7 +661,7 @@ export default function NewAppointmentPage() {
                 </div>
                 <div className="flex items-center justify-between font-bold text-slate-800 text-base border-t border-slate-100 pt-2 mt-1">
                   <span>Total Payable</span>
-                  <span className="text-indigo-600">{formatCurrency(totalCost)}</span>
+                  <span className="text-cyan-600">{formatCurrency(totalCost)}</span>
                 </div>
               </div>
             )}
@@ -670,7 +670,7 @@ export default function NewAppointmentPage() {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !selectedPatient || !selectedDoctor || !selectedDate || !selectedSlot}
-              className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 font-bold"
+              className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 shadow-lg shadow-cyan-100 font-bold"
             >
               {isSubmitting ? (
                 <>
@@ -691,7 +691,7 @@ export default function NewAppointmentPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-              <User className="w-5 h-5 text-indigo-600" />
+              <User className="w-5 h-5 text-cyan-600" />
               Register Patient Profile
             </h3>
 

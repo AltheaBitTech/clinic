@@ -29,14 +29,14 @@ function CredentialsModal({
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-white rounded-2xl max-w-md w-full shadow-xl border border-slate-100 overflow-hidden transform transition-all">
-        <div className="p-6 border-b border-slate-50 bg-indigo-50">
+        <div className="p-6 border-b border-slate-50 bg-cyan-50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+            <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900">Patient Registered!</h3>
-              <p className="text-xs text-indigo-700 font-medium">Patient Login Account Created</p>
+              <p className="text-xs text-cyan-700 font-medium">Patient Login Account Created</p>
             </div>
           </div>
         </div>
@@ -57,11 +57,11 @@ function CredentialsModal({
 
           <div className="space-y-1">
             <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Temporary Password</label>
-            <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-indigo-100 bg-indigo-50/20">
-              <span className="text-sm font-mono text-indigo-700 font-semibold">{credentials.temporaryPassword}</span>
+            <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-cyan-100 bg-cyan-50/20">
+              <span className="text-sm font-mono text-cyan-700 font-semibold">{credentials.temporaryPassword}</span>
               <button
                 onClick={() => handleCopy(credentials.temporaryPassword, 'Password')}
-                className="p-1 hover:bg-indigo-100 rounded text-indigo-600 hover:text-indigo-800 transition"
+                className="p-1 hover:bg-cyan-100 rounded text-cyan-600 hover:text-cyan-800 transition"
               >
                 <Copy className="w-4 h-4" />
               </button>
@@ -209,7 +209,7 @@ export default function NewPatientPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="page-title flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse shrink-0" /> Register New Patient
+              <Sparkles className="w-6 h-6 text-cyan-600 animate-pulse shrink-0" /> Register New Patient
             </h1>
             <p className="page-subtitle">Create a patient account and compile their clinical profile</p>
           </div>
@@ -220,7 +220,7 @@ export default function NewPatientPage() {
         {/* Section 1: Account Information */}
         <div className="card">
           <h2 className="text-base font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-100 pb-3">
-            <User className="w-5 h-5 text-indigo-500" /> Account Information
+            <User className="w-5 h-5 text-cyan-500" /> Account Information
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -439,7 +439,7 @@ export default function NewPatientPage() {
         {/* Section 4: Clinical History */}
         <div className="card">
           <h2 className="text-base font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-100 pb-3">
-            <FileText className="w-5 h-5 text-indigo-500" /> Clinical History & Notes
+            <FileText className="w-5 h-5 text-cyan-500" /> Clinical History & Notes
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

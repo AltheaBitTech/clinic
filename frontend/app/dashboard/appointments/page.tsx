@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { appointmentsApi } from '@/lib/api';
-import { Calendar, Plus, Clock, ChevronRight, Filter } from 'lucide-react';
+import { Calendar, Plus, Clock, ChevronRight, Filter, AlertTriangle, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { cn, formatDateTime, getStatusColor } from '@/lib/utils';
 
@@ -14,7 +14,7 @@ export default function AppointmentsPage() {
   const [date, setDate] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['appointments', status, date, page],
     queryFn: () => appointmentsApi.getAll({ status: status || undefined, date: date || undefined, page }).then((r) => r.data),
   });
@@ -57,7 +57,7 @@ export default function AppointmentsPage() {
               onClick={() => setStatus(s === 'All' ? '' : s)}
               className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 whitespace-nowrap',
                 (s === 'All' ? !status : status === s)
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-cyan-600 text-white'
                   : 'text-slate-600 hover:bg-slate-50'
               )}
             >
@@ -73,7 +73,7 @@ export default function AppointmentsPage() {
             className="input w-auto text-sm"
           />
           {(status || date) && (
-            <button onClick={() => { setStatus(''); setDate(''); }} className="text-sm text-indigo-600 hover:text-indigo-700 shrink-0">
+            <button onClick={() => { setStatus(''); setDate(''); }} className="text-sm text-cyan-600 hover:text-cyan-700 shrink-0">
               Clear filters
             </button>
           )}
@@ -92,6 +92,15 @@ export default function AppointmentsPage() {
               </div>
             </div>
           ))
+        ) : isError ? (
+          <div className="card text-center py-16">
+            <AlertTriangle className="w-12 h-12 text-red-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">Couldn&apos;t load appointments</p>
+            <p className="text-slate-400 text-sm mt-1">Something went wrong. Please try again.</p>
+            <button onClick={() => refetch()} className="btn-secondary mt-4 inline-flex items-center gap-2 text-sm">
+              <RefreshCw className="w-4 h-4" /> Retry
+            </button>
+          </div>
         ) : sortedAppointments.length === 0 ? (
           <div className="card text-center py-16">
             <Calendar className="w-12 h-12 text-slate-200 mx-auto mb-4" />
@@ -103,8 +112,8 @@ export default function AppointmentsPage() {
             <Link key={appt.id} href={`/dashboard/appointments/${appt.id}`}
               className="card card-hover flex items-center gap-3 sm:gap-4 group">
               {/* Time Block */}
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-indigo-50 flex flex-col items-center justify-center shrink-0">
-                <span className="text-sm sm:text-lg font-bold text-indigo-600">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-cyan-50 flex flex-col items-center justify-center shrink-0">
+                <span className="text-sm sm:text-lg font-bold text-cyan-600">
                   {new Date(appt.scheduledAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })}
                 </span>
               </div>
@@ -127,7 +136,7 @@ export default function AppointmentsPage() {
                 </div>
               </div>
 
-              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors shrink-0" />
+              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-cyan-500 transition-colors shrink-0" />
             </Link>
           ))
         )}

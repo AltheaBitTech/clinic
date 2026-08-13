@@ -36,7 +36,7 @@ export default function HospitalsListPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 animate-fade-in">
+      <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
         <div className="page-header flex justify-between items-center">
           <div className="w-48 h-8 bg-slate-200 animate-pulse rounded" />
         </div>
@@ -53,7 +53,7 @@ export default function HospitalsListPage() {
   );
 
   return (
-    <div className="p-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       {/* Header */}
       <div className="page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -99,7 +99,7 @@ export default function HospitalsListPage() {
                 <tr key={tenant.id}>
                   <td>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 font-bold shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-700 font-bold shrink-0">
                         {tenant.name.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
@@ -148,7 +148,7 @@ export default function HospitalsListPage() {
                       'badge text-[10px] uppercase font-semibold px-2 py-0.5',
                       tenant.subscriptionPlan === 'FREE' && 'bg-slate-100 text-slate-700 border border-slate-200/50',
                       tenant.subscriptionPlan === 'BASIC' && 'bg-blue-50 text-blue-700 border border-blue-200/50',
-                      tenant.subscriptionPlan === 'PROFESSIONAL' && 'bg-indigo-50 text-indigo-700 border border-indigo-200/50',
+                      tenant.subscriptionPlan === 'PROFESSIONAL' && 'bg-cyan-50 text-cyan-700 border border-cyan-200/50',
                       tenant.subscriptionPlan === 'ENTERPRISE' && 'bg-purple-50 text-purple-700 border border-purple-200/50'
                     )}>
                       {tenant.subscriptionPlan}

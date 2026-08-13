@@ -4,7 +4,7 @@ import { Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle, Activ
 import ClinicRequestForm from '@/components/ClinicRequestForm';
 
 const featureColorMap: Record<string, { bg: string; text: string; border: string }> = {
-  indigo: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20' },
+  cyan: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20' },
   emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
   amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
   purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
@@ -14,10 +14,10 @@ const featureColorMap: Record<string, { bg: string; text: string; border: string
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white overflow-x-hidden relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-900 text-white overflow-x-hidden relative">
       {/* Visual Ambient Glows */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 right-1/4 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute top-40 right-1/4 w-[400px] h-[400px] bg-emerald-600/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {/* Nav */}
       <header className="sticky top-0 z-50 bg-slate-950/60 backdrop-blur-lg border-b border-white/5">
@@ -42,11 +42,11 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28 text-center relative">
-        <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4.5 py-1.5 text-xs font-semibold text-indigo-300 mb-8 animate-fade-in">
-          <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
+        <div className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full px-4.5 py-1.5 text-xs font-semibold text-cyan-300 mb-8 animate-fade-in">
+          <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
           Multi-Tenant Hospital SaaS Platform
         </div>
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-4 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent tracking-tight">
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-4 bg-gradient-to-r from-white via-cyan-100 to-emerald-200 bg-clip-text text-transparent tracking-tight">
           Healthcare management <br className="hidden md:inline" /> made simple.
         </h1>
         <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
@@ -69,14 +69,14 @@ export default function HomePage() {
         <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">From individual doctors to multi-speciality hospitals, Arogyix scales with your operation.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { icon: Calendar, color: 'indigo', title: 'Smart Appointments', desc: 'Book, reschedule, and track appointments. Automatic reminders 24h before.' },
+            { icon: Calendar, color: 'cyan', title: 'Smart Appointments', desc: 'Book, reschedule, and track appointments. Automatic reminders 24h before.' },
             { icon: FileText, color: 'emerald', title: 'Digital Prescriptions', desc: 'Write prescriptions digitally. PDFs auto-generated and shared via WhatsApp & email.' },
             { icon: Bell, color: 'amber', title: 'Medicine Reminders', desc: 'Push, SMS, WhatsApp, and email reminders for every medicine schedule.' },
             { icon: Activity, color: 'purple', title: 'Patient Timeline', desc: 'Chronological view of every visit, prescription, test, and follow-up.' },
             { icon: Shield, color: 'blue', title: 'Multi-Tenant Security', desc: 'Every hospital is fully isolated. RBAC with 5 roles. JWT auth.' },
             { icon: Users, color: 'rose', title: 'Family Health Records', desc: 'Patients can manage health records for their entire family.' },
           ].map(({ icon: Icon, color, title, desc }) => {
-            const mapped = featureColorMap[color] || featureColorMap.indigo;
+            const mapped = featureColorMap[color] || featureColorMap.cyan;
             return (
               <div key={title} className="bg-white/[0.02] border border-white/10 rounded-2xl p-6.5 hover:bg-white/[0.06] hover:border-white/20 hover:-translate-y-1.5 transition-all duration-300 group">
                 <div className={`w-11 h-11 rounded-xl ${mapped.bg} ${mapped.border} border flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
@@ -101,7 +101,7 @@ export default function HomePage() {
             { role: 'Receptionist', desc: 'Registration & billing', color: 'amber' },
             { role: 'Patient', desc: 'Health portal', color: 'rose' },
           ].map(({ role, desc, color }) => {
-            const mapped = featureColorMap[color] || featureColorMap.indigo;
+            const mapped = featureColorMap[color] || featureColorMap.cyan;
             return (
               <div key={role} className={`${mapped.bg} ${mapped.border} border rounded-2xl p-5.5 text-center hover:bg-white/[0.02] transition-colors duration-300`}>
                 <div className={`${mapped.text} font-bold text-base mb-1.5`}>{role}</div>
@@ -114,7 +114,7 @@ export default function HomePage() {
 
       {/* Pricing */}
       <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 relative scroll-mt-24">
-        <div className="absolute -right-20 top-20 w-80 h-80 bg-indigo-600/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+        <div className="absolute -right-20 top-20 w-80 h-80 bg-cyan-600/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
         <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 tracking-tight">Simple, transparent pricing</h2>
         <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">Start free, then pick the plan that fits your clinic. No hidden fees.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
@@ -141,7 +141,7 @@ export default function HomePage() {
               period: '/ month',
               tagline: 'For growing clinics & hospitals',
               icon: Activity,
-              color: 'indigo',
+              color: 'cyan',
               popular: true,
               cta: 'Get Started',
               features: [
@@ -169,18 +169,18 @@ export default function HomePage() {
               ],
             },
           ].map(({ name, price, period, tagline, icon: Icon, color, popular, cta, features }) => {
-            const mapped = featureColorMap[color] || featureColorMap.indigo;
+            const mapped = featureColorMap[color] || featureColorMap.cyan;
             return (
               <div
                 key={name}
                 className={`relative rounded-2xl p-7 border transition-all duration-300 ${
                   popular
-                    ? 'bg-white/[0.05] border-indigo-500/40 shadow-lg shadow-indigo-600/10 md:-translate-y-3'
+                    ? 'bg-white/[0.05] border-cyan-500/40 shadow-lg shadow-cyan-600/10 md:-translate-y-3'
                     : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.06] hover:border-white/20 hover:-translate-y-1.5'
                 }`}
               >
                 {popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-bold px-3.5 py-1 rounded-full shadow-md">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white text-xs font-bold px-3.5 py-1 rounded-full shadow-md">
                     Most Popular
                   </span>
                 )}
@@ -219,17 +219,17 @@ export default function HomePage() {
 
       {/* Partner Registration Form */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 relative">
-        <div className="absolute right-0 bottom-10 w-96 h-96 bg-purple-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
+        <div className="absolute right-0 bottom-10 w-96 h-96 bg-emerald-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
         <ClinicRequestForm />
       </section>
 
       {/* CTA */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 text-center">
-        <div className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/20 rounded-3xl p-12 md:p-16 backdrop-blur-md relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="bg-gradient-to-r from-cyan-900/40 to-emerald-900/40 border border-cyan-500/20 rounded-3xl p-12 md:p-16 backdrop-blur-md relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
           <h2 className="text-3.5xl font-extrabold mb-4 tracking-tight">Ready to transform your practice?</h2>
           <p className="text-slate-300 mb-8 max-w-lg mx-auto font-light leading-relaxed">Join progressive clinics and hospitals utilizing Arogyix to streamline care delivery.</p>
-          <Link href="/register" className="btn-primary text-base px-10 py-4 inline-flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+          <Link href="/register" className="btn-primary text-base px-10 py-4 inline-flex items-center gap-2 shadow-lg shadow-cyan-600/20">
             Get Started Free <ArrowRight className="w-4.5 h-4.5" />
           </Link>
           <div className="flex items-center justify-center gap-6 mt-10 text-xs text-slate-400 flex-wrap">

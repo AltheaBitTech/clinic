@@ -56,10 +56,10 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center px-4 py-16 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-900 flex items-center justify-center px-4 py-16 relative overflow-hidden">
       {/* Background Ambience */}
-      <div className="absolute top-1/4 left-1/4 w-[350px] h-[350px] bg-indigo-600/10 rounded-full blur-[90px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-purple-600/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[350px] h-[350px] bg-cyan-600/10 rounded-full blur-[90px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-emerald-600/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
 
       <div className="w-full max-w-md animate-slide-up relative z-10">
         {/* Logo */}
@@ -78,10 +78,10 @@ function RegisterForm() {
 
         {/* Glass Card */}
         <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
 
           {inviteToken && (
-            <div className="mb-5 flex items-start gap-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3.5 py-3 text-xs text-indigo-200">
+            <div className="mb-5 flex items-start gap-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-xl px-3.5 py-3 text-xs text-cyan-200">
               <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
               <span>Set a password to activate the account for the email you were invited with. Your role and hospital are already assigned.</span>
             </div>
@@ -98,7 +98,7 @@ function RegisterForm() {
                   <input
                     {...register('firstName')}
                     placeholder="John"
-                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-10 pr-3 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all font-light text-sm"
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-10 pr-3 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
                   />
                 </div>
                 {errors.firstName && <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.firstName.message}</p>}
@@ -113,7 +113,7 @@ function RegisterForm() {
                   <input
                     {...register('lastName')}
                     placeholder="Doe"
-                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-10 pr-3 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all font-light text-sm"
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-10 pr-3 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
                   />
                 </div>
                 {errors.lastName && <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.lastName.message}</p>}
@@ -131,7 +131,7 @@ function RegisterForm() {
                     {...register('email' as any)}
                     type="email"
                     placeholder="you@example.com"
-                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all font-light text-sm"
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
                   />
                 </div>
                 {'email' in errors && errors.email && <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.email.message}</p>}
@@ -148,7 +148,7 @@ function RegisterForm() {
                   <input
                     {...register('phone' as any)}
                     placeholder="+91 98765 43210"
-                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all font-light text-sm"
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
                   />
                 </div>
               </div>
@@ -164,7 +164,7 @@ function RegisterForm() {
                   {...register('password')}
                   type="password"
                   placeholder="Min 8 characters"
-                  className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all font-light text-sm"
+                  className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
                 />
               </div>
               {errors.password && <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.password.message}</p>}
@@ -173,7 +173,7 @@ function RegisterForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 mt-4 shadow-lg shadow-indigo-600/10 cursor-pointer active:scale-[0.98]"
+              className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-semibold py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 mt-4 shadow-lg shadow-cyan-600/10 cursor-pointer active:scale-[0.98]"
             >
               {loading ? (
                 <>
@@ -188,7 +188,7 @@ function RegisterForm() {
 
           <p className="mt-6 text-center text-sm text-slate-400 font-light">
             Already have an account?{' '}
-            <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
+            <Link href="/login" className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
               Sign in
             </Link>
           </p>
@@ -201,8 +201,8 @@ function RegisterForm() {
 export default function RegisterPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
       </div>
     }>
       <RegisterForm />

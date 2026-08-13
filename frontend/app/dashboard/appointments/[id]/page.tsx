@@ -117,7 +117,7 @@ export default function AppointmentDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-cyan-600 animate-spin" />
         <span className="text-slate-500 font-medium animate-pulse">Loading appointment details...</span>
       </div>
     );
@@ -213,9 +213,9 @@ export default function AppointmentDetailPage() {
           </Link>
           <div className="min-w-0">
             <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400 font-medium">
-              <Link href="/dashboard" className="hover:text-indigo-600">Home</Link>
+              <Link href="/dashboard" className="hover:text-cyan-600">Home</Link>
               <ChevronRight className="w-3 h-3" />
-              <Link href="/dashboard/appointments" className="hover:text-indigo-600">Appointments</Link>
+              <Link href="/dashboard/appointments" className="hover:text-cyan-600">Appointments</Link>
               <ChevronRight className="w-3 h-3" />
               <span className="text-slate-500">Details</span>
             </div>
@@ -242,7 +242,7 @@ export default function AppointmentDetailPage() {
           {/* Appointment Schedule Box */}
           <div className="card bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-inner">
+              <div className="w-12 h-12 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 shadow-inner">
                 <Calendar className="w-6 h-6" />
               </div>
               <div>
@@ -261,18 +261,18 @@ export default function AppointmentDetailPage() {
           <div className="card bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-5">
             <div className="flex items-center justify-between border-b border-slate-50 pb-4">
               <div className="flex items-center gap-2">
-                <User className="w-5 h-5 text-indigo-600" />
+                <User className="w-5 h-5 text-cyan-600" />
                 <h3 className="font-bold text-slate-800">Patient Registry Info</h3>
               </div>
               {isStaff && (
-                <Link href={`/dashboard/patients/${appt.patient?.id}`} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                <Link href={`/dashboard/patients/${appt.patient?.id}`} className="text-xs font-semibold text-cyan-600 hover:text-cyan-700 flex items-center gap-1">
                   View Full File <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               )}
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-xl shadow-inner">
+              <div className="w-14 h-14 rounded-2xl bg-cyan-100 flex items-center justify-center font-bold text-cyan-700 text-xl shadow-inner">
                 {appt.patient?.user ? `${appt.patient.user.firstName[0]}${appt.patient.user.lastName[0]}`.toUpperCase() : 'P'}
               </div>
               <div>
@@ -321,7 +321,7 @@ export default function AppointmentDetailPage() {
           {/* Doctor Info Section */}
           <div className="card bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-50 pb-4">
-              <Stethoscope className="w-5 h-5 text-indigo-600" />
+              <Stethoscope className="w-5 h-5 text-cyan-600" />
               <h3 className="font-bold text-slate-800">Assigned Practitioner</h3>
             </div>
             <div className="flex items-center gap-4">
@@ -330,7 +330,7 @@ export default function AppointmentDetailPage() {
               </div>
               <div>
                 <h4 className="font-bold text-slate-800">Dr. {appt.doctor?.user?.firstName} {appt.doctor?.user?.lastName}</h4>
-                <p className="text-xs font-semibold text-indigo-600">{appt.doctor?.department?.name || 'General Medicine'}</p>
+                <p className="text-xs font-semibold text-cyan-600">{appt.doctor?.department?.name || 'General Medicine'}</p>
               </div>
             </div>
           </div>
@@ -338,7 +338,7 @@ export default function AppointmentDetailPage() {
           {/* Reason for Visit & Clinical Notes */}
           <div className="card bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-5">
             <div className="flex items-center gap-2 border-b border-slate-50 pb-4">
-              <FileText className="w-5 h-5 text-indigo-600" />
+              <FileText className="w-5 h-5 text-cyan-600" />
               <h3 className="font-bold text-slate-800">Visit Purpose & Clinical Information</h3>
             </div>
 
@@ -357,7 +357,7 @@ export default function AppointmentDetailPage() {
                   <button
                     onClick={() => saveNotesMutation.mutate(clinicalNotes)}
                     disabled={saveNotesMutation.isPending}
-                    className="text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all disabled:opacity-50"
+                    className="text-xs font-bold bg-cyan-600 hover:bg-cyan-700 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all disabled:opacity-50"
                   >
                     {saveNotesMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                     Save Notes
@@ -373,7 +373,7 @@ export default function AppointmentDetailPage() {
                     setIsNotesChanged(true);
                   }}
                   placeholder="Enter diagnosis, clinical observations, and vital summaries..."
-                  className="w-full min-h-[140px] text-sm input p-4 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder-slate-300 resize-y"
+                  className="w-full min-h-[140px] text-sm input p-4 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-300 resize-y"
                 />
               ) : (
                 <p className={cn(
@@ -390,7 +390,7 @@ export default function AppointmentDetailPage() {
           <div className="card bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-50 pb-4">
               <div className="flex items-center gap-2">
-                <HeartPulse className="w-5 h-5 text-indigo-600" />
+                <HeartPulse className="w-5 h-5 text-cyan-600" />
                 <h3 className="font-bold text-slate-800">Prescribed Medications</h3>
               </div>
 
@@ -410,7 +410,7 @@ export default function AppointmentDetailPage() {
                   <div key={pres.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-bold text-indigo-600">Diagnosis</p>
+                        <p className="text-xs font-bold text-cyan-600">Diagnosis</p>
                         <p className="text-sm font-bold text-slate-800">{pres.diagnosis || 'General follow-up'}</p>
                       </div>
                       {pres.validUntil && (
@@ -439,7 +439,7 @@ export default function AppointmentDetailPage() {
                                 <span className="text-slate-500">{med.dosage}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded font-semibold">{med.frequency}</span>
+                                <span className="bg-cyan-50 text-cyan-600 px-2 py-0.5 rounded font-semibold">{med.frequency}</span>
                                 <span className="bg-slate-50 text-slate-500 px-2 py-0.5 rounded border border-slate-100">{med.duration}</span>
                                 <span className="text-slate-400 font-medium italic capitalize">{med.timing.toLowerCase().replace('_', ' ')}</span>
                               </div>
@@ -476,7 +476,7 @@ export default function AppointmentDetailPage() {
             <div className="space-y-3">
               {updateStatusMutation.isPending && (
                 <div className="flex justify-center py-2">
-                  <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-cyan-600 animate-spin" />
                 </div>
               )}
 
@@ -486,14 +486,14 @@ export default function AppointmentDetailPage() {
                   {appt.status === 'SCHEDULED' && (
                     <button
                       onClick={() => handleStatusChange('CONFIRMED')}
-                      className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-indigo-100"
+                      className="w-full bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-cyan-100"
                     >
                       <CheckSquare className="w-4 h-4" /> Confirm Appointment
                     </button>
                   )}
                   <button
                     onClick={() => handleStatusChange('IN_PROGRESS')}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2 hover:shadow-indigo-100"
+                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2 hover:shadow-cyan-100"
                   >
                     <Activity className="w-4 h-4 animate-pulse" /> Check In & Start Visit
                   </button>
@@ -557,15 +557,15 @@ export default function AppointmentDetailPage() {
                   {!showFollowUpForm ? (
                     <button
                       onClick={() => setShowFollowUpForm(true)}
-                      className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-2 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5"
+                      className="w-full bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-semibold py-2 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5"
                     >
                       <CalendarPlus className="w-3.5 h-3.5" /> Schedule Follow Up
                     </button>
                   ) : (
-                    <form onSubmit={handleFollowUpSubmit} className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-3 mt-2">
+                    <form onSubmit={handleFollowUpSubmit} className="bg-cyan-50/50 p-4 rounded-xl border border-cyan-100 space-y-3 mt-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-indigo-800">Schedule Follow-up</span>
-                        <button type="button" onClick={() => setShowFollowUpForm(false)} className="text-indigo-500 hover:text-indigo-800">
+                        <span className="text-xs font-bold text-cyan-800">Schedule Follow-up</span>
+                        <button type="button" onClick={() => setShowFollowUpForm(false)} className="text-cyan-500 hover:text-cyan-800">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
@@ -574,19 +574,19 @@ export default function AppointmentDetailPage() {
                         value={followUpDate}
                         onChange={(e) => setFollowUpDate(e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
-                        className="w-full input text-xs p-2 rounded-lg border border-indigo-200 focus:border-indigo-500"
+                        className="w-full input text-xs p-2 rounded-lg border border-cyan-200 focus:border-cyan-500"
                         required
                       />
                       <textarea
                         value={followUpNotes}
                         onChange={(e) => setFollowUpNotes(e.target.value)}
                         placeholder="Follow-up advice/notes"
-                        className="w-full input text-xs p-2 rounded-lg border border-indigo-200 focus:border-indigo-500 resize-none h-16"
+                        className="w-full input text-xs p-2 rounded-lg border border-cyan-200 focus:border-cyan-500 resize-none h-16"
                       />
                       <button
                         type="submit"
                         disabled={updateStatusMutation.isPending}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-1"
+                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-1"
                       >
                         Schedule
                       </button>
@@ -597,11 +597,11 @@ export default function AppointmentDetailPage() {
 
               {/* Show follow up details if already scheduled */}
               {appt.followUpDate && (
-                <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-1">
-                  <p className="text-[10px] uppercase font-bold text-indigo-500">Scheduled Follow-up</p>
-                  <p className="text-sm font-bold text-indigo-900">{new Date(appt.followUpDate).toLocaleDateString('en-IN')}</p>
+                <div className="bg-cyan-50 p-4 rounded-xl border border-cyan-100 space-y-1">
+                  <p className="text-[10px] uppercase font-bold text-cyan-500">Scheduled Follow-up</p>
+                  <p className="text-sm font-bold text-cyan-900">{new Date(appt.followUpDate).toLocaleDateString('en-IN')}</p>
                   {appt.followUpNotes && (
-                    <p className="text-xs text-indigo-700 mt-1 italic font-medium">"{appt.followUpNotes}"</p>
+                    <p className="text-xs text-cyan-700 mt-1 italic font-medium">"{appt.followUpNotes}"</p>
                   )}
                 </div>
               )}
@@ -630,7 +630,7 @@ export default function AppointmentDetailPage() {
                 <h3 className="font-bold text-slate-800">Billing Statement</h3>
                 <p className="text-xs text-slate-400 mt-0.5">Invoice detail and status for this visit.</p>
               </div>
-              <CreditCard className="w-5 h-5 text-indigo-600 shrink-0" />
+              <CreditCard className="w-5 h-5 text-cyan-600 shrink-0" />
             </div>
 
             {/* Display Invoice Info */}
@@ -665,7 +665,7 @@ export default function AppointmentDetailPage() {
                   )}
                   <div className="flex justify-between border-t border-slate-200 pt-2.5 text-base font-bold text-slate-800">
                     <span>Total Bill</span>
-                    <span className="text-indigo-600">{formatCurrency(appt.invoice.total)}</span>
+                    <span className="text-cyan-600">{formatCurrency(appt.invoice.total)}</span>
                   </div>
                 </div>
 
@@ -689,7 +689,7 @@ export default function AppointmentDetailPage() {
                       <button
                         onClick={() => payInvoiceMutation.mutate(appt.invoice.id)}
                         disabled={payInvoiceMutation.isPending}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-1.5"
+                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-1.5"
                       >
                         {payInvoiceMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
                         Pay Invoice Online
@@ -708,7 +708,7 @@ export default function AppointmentDetailPage() {
                 {(isReceptionist || isAdmin) && !showInvoiceForm && (
                   <button
                     onClick={handleOpenInvoiceForm}
-                    className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-1.5 border border-indigo-100"
+                    className="w-full bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-1.5 border border-cyan-100"
                   >
                     <Plus className="w-4 h-4" /> Generate Invoice
                   </button>
@@ -765,7 +765,7 @@ export default function AppointmentDetailPage() {
                     <button
                       type="submit"
                       disabled={createInvoiceMutation.isPending}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-1 shadow-sm"
+                      className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-1 shadow-sm"
                     >
                       {createInvoiceMutation.isPending ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : 'Confirm & Create Invoice'}
                     </button>

@@ -1,11 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { tenantRequestsApi } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { Loader2, CheckCircle2, Building2, Mail, Phone, User, MapPin } from 'lucide-react';
+import { Loader2, CheckCircle2, Building2, Mail, Phone, User, MapPin, Tag } from 'lucide-react';
 
 export default function ClinicRequestForm() {
+  return (
+    <Suspense fallback={null}>
+      <ClinicRequestFormInner />
+    </Suspense>
+  );
+}
+
+function ClinicRequestFormInner() {
+  const searchParams = useSearchParams();
+  const selectedPlan = searchParams.get('plan');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
@@ -87,7 +98,7 @@ export default function ClinicRequestForm() {
               state: '',
             });
           }}
-          className="text-indigo-400 hover:text-indigo-300 font-medium text-sm transition-colors duration-200"
+          className="text-cyan-400 hover:text-cyan-300 font-medium text-sm transition-colors duration-200"
         >
           Submit another request
         </button>
@@ -102,12 +113,17 @@ export default function ClinicRequestForm() {
         <p className="text-slate-400 text-sm max-w-lg mx-auto">
           Fill out the details below to request access. A platform administrator will set up your tenant account and invite you as a Hospital Admin.
         </p>
+        {selectedPlan && (
+          <div className="inline-flex items-center gap-1.5 mt-4 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-semibold px-3.5 py-1.5 rounded-full">
+            <Tag className="w-3.5 h-3.5" /> Selected plan: {selectedPlan}
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section 1: Clinic Info */}
         <div className="space-y-4">
-          <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">1. Clinic Details</h4>
+          <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-2">1. Clinic Details</h4>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-slate-400" /> Clinic / Hospital Name *
@@ -119,7 +135,7 @@ export default function ClinicRequestForm() {
               onChange={handleChange}
               placeholder="e.g., City Care Hospital"
               className={`w-full bg-white/5 border ${
-                errors.name ? 'border-red-500/50 focus:ring-red-500' : 'border-white/20 focus:ring-indigo-500'
+                errors.name ? 'border-red-500/50 focus:ring-red-500' : 'border-white/20 focus:ring-cyan-500'
               } rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all`}
             />
             {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
@@ -128,7 +144,7 @@ export default function ClinicRequestForm() {
 
         {/* Section 2: Contact Admin */}
         <div className="space-y-4 pt-2">
-          <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">2. Administrator Information</h4>
+          <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-2">2. Administrator Information</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -142,7 +158,7 @@ export default function ClinicRequestForm() {
                 onChange={handleChange}
                 placeholder="John"
                 className={`w-full bg-white/5 border ${
-                  errors.firstName ? 'border-red-500/50 focus:ring-red-500' : 'border-white/20 focus:ring-indigo-500'
+                  errors.firstName ? 'border-red-500/50 focus:ring-red-500' : 'border-white/20 focus:ring-cyan-500'
                 } rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all`}
               />
               {errors.firstName && <p className="text-red-400 text-xs mt-1">{errors.firstName}</p>}
@@ -159,7 +175,7 @@ export default function ClinicRequestForm() {
                 onChange={handleChange}
                 placeholder="Doe"
                 className={`w-full bg-white/5 border ${
-                  errors.lastName ? 'border-red-500/50 focus:ring-red-500' : 'border-white/20 focus:ring-indigo-500'
+                  errors.lastName ? 'border-red-500/50 focus:ring-red-500' : 'border-white/20 focus:ring-cyan-500'
                 } rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all`}
               />
               {errors.lastName && <p className="text-red-400 text-xs mt-1">{errors.lastName}</p>}
@@ -178,7 +194,7 @@ export default function ClinicRequestForm() {
                 onChange={handleChange}
                 placeholder="admin@hospital.com"
                 className={`w-full bg-white/5 border ${
-                  errors.email ? 'border-red-500/50 focus:ring-red-500' : 'border-white/20 focus:ring-indigo-500'
+                  errors.email ? 'border-red-500/50 focus:ring-red-500' : 'border-white/20 focus:ring-cyan-500'
                 } rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all`}
               />
               {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
@@ -194,7 +210,7 @@ export default function ClinicRequestForm() {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="+1 (555) 000-0000"
-                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
               />
             </div>
           </div>
@@ -202,7 +218,7 @@ export default function ClinicRequestForm() {
 
         {/* Section 3: Location */}
         <div className="space-y-4 pt-2">
-          <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+          <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-2 flex items-center gap-1">
             <MapPin className="w-4 h-4" /> 3. Location (Optional)
           </h4>
           
@@ -214,7 +230,7 @@ export default function ClinicRequestForm() {
               value={form.address}
               onChange={handleChange}
               placeholder="123 Health Ave, Suite 400"
-              className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
             />
           </div>
 
@@ -227,7 +243,7 @@ export default function ClinicRequestForm() {
                 value={form.city}
                 onChange={handleChange}
                 placeholder="New York"
-                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
               />
             </div>
 
@@ -239,7 +255,7 @@ export default function ClinicRequestForm() {
                 value={form.state}
                 onChange={handleChange}
                 placeholder="NY"
-                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
               />
             </div>
           </div>
@@ -249,7 +265,7 @@ export default function ClinicRequestForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 mt-4 cursor-pointer"
+          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 mt-4 cursor-pointer"
         >
           {loading ? (
             <>

@@ -39,7 +39,7 @@ export function getRoleBadgeColor(role: string) {
 
 export function getStatusColor(status: string) {
   const colors: Record<string, string> = {
-    CONFIRMED: 'bg-indigo-100 text-indigo-800',
+    CONFIRMED: 'bg-cyan-100 text-cyan-800',
     SCHEDULED: 'bg-blue-100 text-blue-800',
     IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
     COMPLETED: 'bg-green-100 text-green-800',

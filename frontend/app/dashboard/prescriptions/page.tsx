@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { prescriptionsApi } from '@/lib/api';
-import { ClipboardList, Plus, FileText, Pill, ChevronRight, Stethoscope, ChevronLeft } from 'lucide-react';
+import { ClipboardList, Plus, FileText, Pill, ChevronRight, Stethoscope, ChevronLeft, AlertTriangle, RefreshCw } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -12,7 +12,7 @@ export default function PrescriptionsPage() {
   const [page, setPage] = useState(1);
   const { user } = useAuth();
   const isPatient = user?.role === 'PATIENT';
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['prescriptions', page, user?.id],
     queryFn: () =>
       prescriptionsApi
@@ -51,6 +51,15 @@ export default function PrescriptionsPage() {
               </div>
             </div>
           ))
+        ) : isError ? (
+          <div className="card text-center py-16">
+            <AlertTriangle className="w-12 h-12 text-red-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">Couldn&apos;t load prescriptions</p>
+            <p className="text-slate-400 text-sm mt-1">Something went wrong. Please try again.</p>
+            <button onClick={() => refetch()} className="btn-secondary mt-4 inline-flex items-center gap-2 text-sm">
+              <RefreshCw className="w-4 h-4" /> Retry
+            </button>
+          </div>
         ) : data?.data?.length === 0 ? (
           <div className="card text-center py-16">
             <ClipboardList className="w-12 h-12 text-slate-200 mx-auto mb-4" />
@@ -86,7 +95,7 @@ export default function PrescriptionsPage() {
                   <div className="flex items-center gap-2">
                     {rx.pdfUrl && (
                       <a href={`${BASE_URL}${rx.pdfUrl}`} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 border border-indigo-200 rounded-lg px-3 py-1.5 transition-colors">
+                        className="flex items-center gap-1.5 text-sm text-cyan-600 hover:text-cyan-700 border border-cyan-200 rounded-lg px-3 py-1.5 transition-colors">
                         <FileText className="w-4 h-4" /> PDF
                       </a>
                     )}
@@ -145,7 +154,7 @@ export default function PrescriptionsPage() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors border border-slate-200"
+            className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors border border-slate-200"
           >
             <ChevronLeft className="w-4 h-4" /> Previous
           </button>
@@ -155,7 +164,7 @@ export default function PrescriptionsPage() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors border border-slate-200"
+            className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors border border-slate-200"
           >
             Next <ChevronRight className="w-4 h-4" />
           </button>

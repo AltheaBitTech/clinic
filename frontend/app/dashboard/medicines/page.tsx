@@ -102,7 +102,7 @@ export default function MedicinesCatalogPage() {
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <Pill className="w-6 h-6 text-indigo-600 animate-pulse shrink-0" />
+            <Pill className="w-6 h-6 text-cyan-600 animate-pulse shrink-0" />
             Medicines & Ointments Catalog
           </h1>
           <p className="page-subtitle">Define preconfigured medicines and topical ointments for faster autocompleted prescription writing.</p>
@@ -118,7 +118,7 @@ export default function MedicinesCatalogPage() {
           onClick={() => { setActiveTab('MEDICINE'); setSearchQuery(''); }}
           className={`pb-3 px-4 text-sm font-semibold transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
             activeTab === 'MEDICINE'
-              ? 'border-indigo-600 text-indigo-600'
+              ? 'border-cyan-600 text-cyan-600'
               : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
@@ -128,7 +128,7 @@ export default function MedicinesCatalogPage() {
           onClick={() => { setActiveTab('OINTMENT'); setSearchQuery(''); }}
           className={`pb-3 px-4 text-sm font-semibold transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
             activeTab === 'OINTMENT'
-              ? 'border-indigo-600 text-indigo-600'
+              ? 'border-cyan-600 text-cyan-600'
               : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
@@ -154,7 +154,7 @@ export default function MedicinesCatalogPage() {
       <div className="card">
         {isLoading ? (
           <div className="py-12 flex justify-center items-center gap-2 text-slate-400 text-sm font-medium">
-            <Loader2 className="w-5 h-5 animate-spin text-indigo-600" /> Loading catalogue...
+            <Loader2 className="w-5 h-5 animate-spin text-cyan-600" /> Loading catalogue...
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="text-center py-16">
@@ -182,7 +182,7 @@ export default function MedicinesCatalogPage() {
                     <td className="py-3 px-4 text-xs text-slate-500">{item.frequency || 'None'}</td>
                     <td className="py-3 px-4 text-xs">
                       {item.timing ? (
-                        <span className="badge bg-indigo-50 text-indigo-700 text-[10px] font-bold">
+                        <span className="badge bg-cyan-50 text-cyan-700 text-[10px] font-bold">
                           {item.timing.replace('_', ' ')}
                         </span>
                       ) : (
@@ -194,6 +194,7 @@ export default function MedicinesCatalogPage() {
                       <button
                         onClick={() => handleDelete(item.id)}
                         disabled={deleteMutation.isPending}
+                        aria-label={`Delete ${item.name}`}
                         className="text-red-500 hover:text-red-650 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -212,7 +213,7 @@ export default function MedicinesCatalogPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <Sparkles className="w-5 h-5 text-cyan-600" />
               Add {activeTab === 'MEDICINE' ? 'Medicine' : 'Ointment'} to Catalog
             </h3>
 

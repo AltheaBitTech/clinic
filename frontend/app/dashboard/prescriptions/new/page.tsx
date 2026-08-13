@@ -467,7 +467,7 @@ function NewPrescriptionContent() {
       {/* Back Link */}
       <Link
         href="/dashboard/prescriptions"
-        className="inline-flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 text-sm font-medium mb-5 transition-colors group"
+        className="inline-flex items-center gap-1.5 text-slate-500 hover:text-cyan-600 text-sm font-medium mb-5 transition-colors group"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Back to Prescriptions
@@ -475,7 +475,7 @@ function NewPrescriptionContent() {
 
       <div className="page-header sm:mb-8">
         <h1 className="page-title flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse shrink-0" />
+          <Sparkles className="w-6 h-6 text-cyan-600 animate-pulse shrink-0" />
           Write New Prescription
         </h1>
         <p className="page-subtitle">Prescribe oral medications and topical ointments separately with catalog autocomplete assistance.</p>
@@ -489,13 +489,13 @@ function NewPrescriptionContent() {
           <div className="card space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
               <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0">1</span>
+                <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0">1</span>
                 <h3 className="font-semibold text-slate-800">Patient Details</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsRegModalOpen(true)}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50/50 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition-colors border-none cursor-pointer"
+                className="text-xs font-semibold text-cyan-600 hover:text-cyan-700 flex items-center gap-1 bg-cyan-50/50 hover:bg-cyan-50 px-2.5 py-1.5 rounded-lg transition-colors border-none cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Register New Patient
               </button>
@@ -537,7 +537,7 @@ function NewPrescriptionContent() {
                 <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-60 overflow-y-auto divide-y divide-slate-50">
                   {isLoadingPatients ? (
                     <div className="p-4 text-center text-sm text-slate-400 flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> Searching...
+                      <Loader2 className="w-4 h-4 animate-spin text-cyan-500" /> Searching...
                     </div>
                   ) : patientsData?.data?.length === 0 ? (
                     <div className="p-4 text-center text-sm text-slate-400">
@@ -548,7 +548,7 @@ function NewPrescriptionContent() {
                           setIsPatientDropdownOpen(false);
                           setIsRegModalOpen(true);
                         }}
-                        className="text-indigo-600 hover:underline font-semibold ml-1 block w-full mt-1.5"
+                        className="text-cyan-600 hover:underline font-semibold ml-1 block w-full mt-1.5"
                       >
                         Register this patient
                       </button>
@@ -611,20 +611,20 @@ function NewPrescriptionContent() {
           {/* STEP 2: DOCTOR SELECTION */}
           <div className="card space-y-4">
             <div className="flex items-center border-b border-slate-100 pb-3 mb-2">
-              <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">2</span>
+              <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">2</span>
               <h3 className="font-semibold text-slate-800">Prescribing Doctor</h3>
             </div>
 
             {user?.role === 'DOCTOR' ? (
               <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-cyan-100 text-cyan-700 text-sm font-bold flex items-center justify-center shrink-0">
                   DR
                 </div>
                 <div>
                   <p className="font-semibold text-slate-800 text-sm">Dr. {user?.firstName} {user?.lastName}</p>
                   <p className="text-xs text-slate-500">{user?.doctor?.specialization} · {user?.doctor?.department?.name || 'General'}</p>
                 </div>
-                <span className="badge bg-indigo-100 text-indigo-800 text-xs ml-auto">Prescribing Self</span>
+                <span className="badge bg-cyan-100 text-cyan-800 text-xs ml-auto">Prescribing Self</span>
               </div>
             ) : (
               <div className="relative">
@@ -663,7 +663,7 @@ function NewPrescriptionContent() {
                   <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-60 overflow-y-auto divide-y divide-slate-50">
                     {isLoadingDoctors ? (
                       <div className="p-4 text-center text-sm text-slate-400 flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> Loading doctors...
+                        <Loader2 className="w-4 h-4 animate-spin text-cyan-500" /> Loading doctors...
                       </div>
                     ) : filteredDoctors.length === 0 ? (
                       <div className="p-4 text-center text-sm text-slate-400">No doctors match search.</div>
@@ -679,7 +679,7 @@ function NewPrescriptionContent() {
                           className="flex items-center justify-between p-3.5 hover:bg-slate-50 cursor-pointer transition-colors"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-cyan-50 text-cyan-700 text-xs font-semibold flex items-center justify-center shrink-0">
                               {getInitials(doc.user.firstName, doc.user.lastName)}
                             </div>
                             <div className="text-left">
@@ -702,7 +702,7 @@ function NewPrescriptionContent() {
           {/* STEP 3: DIAGNOSIS & DATE */}
           <div className="card space-y-4">
             <div className="flex items-center border-b border-slate-100 pb-3 mb-2">
-              <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">3</span>
+              <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">3</span>
               <h3 className="font-semibold text-slate-800">Diagnosis & Validity</h3>
             </div>
 
@@ -740,13 +740,13 @@ function NewPrescriptionContent() {
           <div className="card space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0">4A</span>
+                <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0">4A</span>
                 <h3 className="font-semibold text-slate-800">Prescribed Oral Medicines</h3>
               </div>
               <button
                 type="button"
                 onClick={addMedicine}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50/50 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition-colors border-none cursor-pointer"
+                className="text-xs font-semibold text-cyan-600 hover:text-cyan-700 flex items-center gap-1 bg-cyan-50/50 hover:bg-cyan-50 px-2.5 py-1.5 rounded-lg transition-colors border-none cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Oral Medicine
               </button>
@@ -759,7 +759,7 @@ function NewPrescriptionContent() {
                   {/* Medicine Subheader & Delete Button */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Pill className="w-3.5 h-3.5 text-indigo-500 animate-pulse" /> Oral Medicine #{index + 1}
+                      <Pill className="w-3.5 h-3.5 text-cyan-500 animate-pulse" /> Oral Medicine #{index + 1}
                     </span>
                     {(medicines.length > 1 || ointments.filter(o => o.name.trim()).length > 0) && (
                       <button
@@ -799,7 +799,7 @@ function NewPrescriptionContent() {
                               className="p-2.5 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
                             >
                               <span>{item.name}</span>
-                              {item.dosage && <span className="text-[10px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{item.dosage}</span>}
+                              {item.dosage && <span className="text-[10px] text-cyan-600 bg-cyan-50 px-1.5 py-0.5 rounded">{item.dosage}</span>}
                             </div>
                           ))}
                         </div>
@@ -902,19 +902,19 @@ function NewPrescriptionContent() {
                         <div className="text-xs text-slate-400 flex items-center gap-1.5 py-1">
                           <Clock className="w-3.5 h-3.5 text-slate-300" />
                           <span>Using Auto-Scheduled Times: </span>
-                          <span className="font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100/50">
+                          <span className="font-semibold text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-100/50">
                             {getAutoScheduledTimes(med.frequency).join(', ')}
                           </span>
                         </div>
                       ) : (
                         med.reminderTimes.map((time: string, timeIdx: number) => (
-                          <div key={timeIdx} className="flex items-center gap-1 bg-indigo-50 border border-indigo-100 rounded-lg px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                            <Clock className="w-3 h-3 text-indigo-500" />
+                          <div key={timeIdx} className="flex items-center gap-1 bg-cyan-50 border border-cyan-100 rounded-lg px-2.5 py-1 text-xs font-semibold text-cyan-700">
+                            <Clock className="w-3 h-3 text-cyan-500" />
                             {time}
                             <button
                               type="button"
                               onClick={() => removeReminderTime('MEDICINE', index, timeIdx)}
-                              className="text-indigo-400 hover:text-indigo-650 ml-1 hover:bg-indigo-100 rounded p-0.5 cursor-pointer border-none bg-transparent"
+                              className="text-cyan-400 hover:text-cyan-650 ml-1 hover:bg-cyan-100 rounded p-0.5 cursor-pointer border-none bg-transparent"
                             >
                               &times;
                             </button>
@@ -949,13 +949,13 @@ function NewPrescriptionContent() {
           <div className="card space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0">4B</span>
+                <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0">4B</span>
                 <h3 className="font-semibold text-slate-800">Prescribed Topical Ointments</h3>
               </div>
               <button
                 type="button"
                 onClick={addOintment}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50/50 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition-colors border-none cursor-pointer"
+                className="text-xs font-semibold text-cyan-600 hover:text-cyan-700 flex items-center gap-1 bg-cyan-50/50 hover:bg-cyan-50 px-2.5 py-1.5 rounded-lg transition-colors border-none cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Topical Ointment
               </button>
@@ -968,7 +968,7 @@ function NewPrescriptionContent() {
                   {/* Ointment Subheader & Delete Button */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-indigo-500 animate-pulse" /> Topical Ointment #{index + 1}
+                      <FileText className="w-3.5 h-3.5 text-cyan-500 animate-pulse" /> Topical Ointment #{index + 1}
                     </span>
                     {(ointments.length > 1 || medicines.filter(m => m.name.trim()).length > 0) && (
                       <button
@@ -1009,7 +1009,7 @@ function NewPrescriptionContent() {
                               className="p-2.5 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
                             >
                               <span>{item.name}</span>
-                              {item.dosage && <span className="text-[10px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{item.dosage}</span>}
+                              {item.dosage && <span className="text-[10px] text-cyan-600 bg-cyan-50 px-1.5 py-0.5 rounded">{item.dosage}</span>}
                             </div>
                           ))}
                         </div>
@@ -1109,19 +1109,19 @@ function NewPrescriptionContent() {
                         <div className="text-xs text-slate-400 flex items-center gap-1.5 py-1">
                           <Clock className="w-3.5 h-3.5 text-slate-300" />
                           <span>Using Auto-Scheduled Times: </span>
-                          <span className="font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100/50">
+                          <span className="font-semibold text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-100/50">
                             {getAutoScheduledTimes(oint.frequency).join(', ')}
                           </span>
                         </div>
                       ) : (
                         oint.reminderTimes.map((time: string, timeIdx: number) => (
-                          <div key={timeIdx} className="flex items-center gap-1 bg-indigo-50 border border-indigo-100 rounded-lg px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                            <Clock className="w-3 h-3 text-indigo-500" />
+                          <div key={timeIdx} className="flex items-center gap-1 bg-cyan-50 border border-cyan-100 rounded-lg px-2.5 py-1 text-xs font-semibold text-cyan-700">
+                            <Clock className="w-3 h-3 text-cyan-500" />
                             {time}
                             <button
                               type="button"
                               onClick={() => removeReminderTime('OINTMENT', index, timeIdx)}
-                              className="text-indigo-400 hover:text-indigo-655 ml-1 hover:bg-indigo-100 rounded p-0.5 cursor-pointer border-none bg-transparent"
+                              className="text-cyan-400 hover:text-cyan-655 ml-1 hover:bg-cyan-100 rounded p-0.5 cursor-pointer border-none bg-transparent"
                             >
                               &times;
                             </button>
@@ -1155,7 +1155,7 @@ function NewPrescriptionContent() {
           {/* STEP 5: ADDITIONAL NOTES */}
           <div className="card space-y-4">
             <div className="flex items-center border-b border-slate-100 pb-3 mb-2">
-              <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">5</span>
+              <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">5</span>
               <h3 className="font-semibold text-slate-800">Doctor Notes & Remarks</h3>
             </div>
             
@@ -1177,7 +1177,7 @@ function NewPrescriptionContent() {
         <div className="lg:col-span-1">
           <div className="card sticky top-6 border border-slate-100 shadow-md space-y-6">
             <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 pb-3 border-b border-slate-100">
-              <FileText className="w-5 h-5 text-indigo-600" />
+              <FileText className="w-5 h-5 text-cyan-600" />
               Prescription Summary
             </h3>
 
@@ -1209,7 +1209,7 @@ function NewPrescriptionContent() {
 
                 {selectedDoctor ? (
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-cyan-50 text-cyan-700 text-xs font-bold flex items-center justify-center shrink-0">
                       Dr
                     </div>
                     <div className="min-w-0">
@@ -1238,12 +1238,12 @@ function NewPrescriptionContent() {
               <div>
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Prescription Items</span>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0">
                     <Pill className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-indigo-900 text-sm">{totalItemsCount} Prescribed Item(s)</p>
-                    <p className="text-xs text-indigo-700 font-medium">
+                    <p className="font-semibold text-cyan-900 text-sm">{totalItemsCount} Prescribed Item(s)</p>
+                    <p className="text-xs text-cyan-700 font-medium">
                       {medicines.filter(m => m.name.trim()).length} Meds · {ointments.filter(o => o.name.trim()).length} Ointments
                     </p>
                   </div>
@@ -1255,7 +1255,7 @@ function NewPrescriptionContent() {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !selectedPatient || !selectedDoctor || !diagnosis.trim()}
-              className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 font-bold"
+              className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 shadow-lg shadow-cyan-100 font-bold"
             >
               {isSubmitting ? (
                 <>
@@ -1276,7 +1276,7 @@ function NewPrescriptionContent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-              <User className="w-5 h-5 text-indigo-600" />
+              <User className="w-5 h-5 text-cyan-600" />
               Register Patient Profile
             </h3>
 
@@ -1421,7 +1421,7 @@ export default function NewPrescriptionPage() {
   return (
     <Suspense fallback={
       <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-cyan-600" />
       </div>
     }>
       <NewPrescriptionContent />

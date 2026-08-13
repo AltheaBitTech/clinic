@@ -172,7 +172,7 @@ export default function BillingPage() {
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <Receipt className="w-6 h-6 text-indigo-600 shrink-0" />
+            <Receipt className="w-6 h-6 text-cyan-600 shrink-0" />
             Billing & Invoices
           </h1>
           <p className="page-subtitle">Track patient billing records, generate clinic invoices, and record payments.</p>
@@ -195,7 +195,7 @@ export default function BillingPage() {
         </div>
 
         <div className="card flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-500 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-cyan-500 flex items-center justify-center shrink-0">
             <Receipt className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -236,7 +236,7 @@ export default function BillingPage() {
 
         {isLoading ? (
           <div className="py-12 flex justify-center items-center gap-2 text-slate-400 text-sm font-medium">
-            <Loader2 className="w-5 h-5 animate-spin text-indigo-600" /> Fetching Invoices...
+            <Loader2 className="w-5 h-5 animate-spin text-cyan-600" /> Fetching Invoices...
           </div>
         ) : invoicesData?.data?.length === 0 ? (
           <div className="text-center py-16">
@@ -284,7 +284,7 @@ export default function BillingPage() {
                           <button
                             onClick={() => markPaidMutation.mutate(inv.id)}
                             disabled={markPaidMutation.isPending}
-                            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-none rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                            className="text-xs font-bold text-cyan-600 hover:text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border-none rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
                           >
                             Mark Paid
                           </button>
@@ -296,7 +296,8 @@ export default function BillingPage() {
                           onClick={() => handleDownload(inv)}
                           disabled={downloadingId === inv.id}
                           title="Download invoice PDF"
-                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border-none rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                          aria-label="Download invoice PDF"
+                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-cyan-600 bg-slate-50 hover:bg-cyan-50 border-none rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                         >
                           {downloadingId === inv.id ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -308,7 +309,8 @@ export default function BillingPage() {
                         <button
                           onClick={() => handleEmailShare(inv)}
                           title="Send invoice via email"
-                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border-none rounded-lg transition-colors cursor-pointer"
+                          aria-label="Send invoice via email"
+                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-cyan-600 bg-slate-50 hover:bg-cyan-50 border-none rounded-lg transition-colors cursor-pointer"
                         >
                           <Mail className="w-3.5 h-3.5" />
                         </button>
@@ -316,6 +318,7 @@ export default function BillingPage() {
                         <button
                           onClick={() => handleWhatsappShare(inv)}
                           title="Send invoice via WhatsApp"
+                          aria-label="Send invoice via WhatsApp"
                           className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 border-none rounded-lg transition-colors cursor-pointer"
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
@@ -335,7 +338,7 @@ export default function BillingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <Sparkles className="w-5 h-5 text-cyan-600" />
               Generate Clinic Invoice
             </h3>
 
@@ -449,7 +452,7 @@ export default function BillingPage() {
                           className="p-3 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
                         >
                           <span>Dr. {d.user.firstName} {d.user.lastName}</span>
-                          <span className="text-[10px] text-indigo-600 bg-indigo-50 font-bold px-1.5 py-0.5 rounded">{formatCurrency(d.consultationFee)}</span>
+                          <span className="text-[10px] text-cyan-600 bg-cyan-50 font-bold px-1.5 py-0.5 rounded">{formatCurrency(d.consultationFee)}</span>
                         </div>
                       ))
                     )}
@@ -510,7 +513,7 @@ export default function BillingPage() {
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Net Total Invoice Cost</span>
                   <span className="text-xs text-slate-500">Amount - Discount + Tax</span>
                 </div>
-                <span className="text-xl font-black text-indigo-600">
+                <span className="text-xl font-black text-cyan-600">
                   {formatCurrency(Number(amount) - Number(discount) + Number(tax))}
                 </span>
               </div>

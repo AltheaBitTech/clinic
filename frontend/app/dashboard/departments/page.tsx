@@ -121,7 +121,7 @@ export default function DepartmentsPage() {
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-indigo-600 shrink-0" />
+            <Building2 className="w-6 h-6 text-cyan-600 shrink-0" />
             Departments
           </h1>
           <p className="page-subtitle">Manage medical departments, centers of excellence, and active divisions.</p>
@@ -190,12 +190,14 @@ export default function DepartmentsPage() {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => openEdit(d)}
-                    className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-indigo-600 transition-colors border-none bg-transparent cursor-pointer"
+                    aria-label={`Edit ${d.name}`}
+                    className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-cyan-600 transition-colors border-none bg-transparent cursor-pointer"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleDelete(d.id)}
+                    aria-label={`Delete ${d.name}`}
                     className="p-1.5 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors border-none bg-transparent cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -212,7 +214,7 @@ export default function DepartmentsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <Sparkles className="w-5 h-5 text-cyan-600" />
               {editingDept ? 'Edit Department' : 'Create Department'}
             </h3>
 

@@ -53,14 +53,14 @@ function CredentialsModal({ isOpen, onClose, credentials }: CredentialsModalProp
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-white rounded-2xl max-w-md w-full shadow-xl border border-slate-100 overflow-hidden transform transition-all">
-        <div className="p-6 border-b border-slate-50 bg-indigo-50">
+        <div className="p-6 border-b border-slate-50 bg-cyan-50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+            <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900">Hospital Approved!</h3>
-              <p className="text-xs text-indigo-700 font-medium">Tenant & Admin Account Created</p>
+              <p className="text-xs text-cyan-700 font-medium">Tenant & Admin Account Created</p>
             </div>
           </div>
         </div>
@@ -88,11 +88,11 @@ function CredentialsModal({ isOpen, onClose, credentials }: CredentialsModalProp
 
           <div className="space-y-1">
             <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Temporary Password</label>
-            <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-indigo-100 bg-indigo-50/20">
-              <span className="text-sm font-mono text-indigo-700 font-semibold">{credentials.temporaryPassword || 'Welcome@Arogyix2026'}</span>
+            <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-cyan-100 bg-cyan-50/20">
+              <span className="text-sm font-mono text-cyan-700 font-semibold">{credentials.temporaryPassword || 'Welcome@Arogyix2026'}</span>
               <button 
                 onClick={() => handleCopy(credentials.temporaryPassword || 'Welcome@Arogyix2026', 'Password')}
-                className="p-1 hover:bg-indigo-100 rounded text-indigo-600 hover:text-indigo-800 transition"
+                className="p-1 hover:bg-cyan-100 rounded text-cyan-600 hover:text-cyan-800 transition"
               >
                 <Copy className="w-4 h-4" />
               </button>
@@ -177,7 +177,7 @@ export default function SuperAdminDashboard() {
 
   if (statsLoading || requestsLoading) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="card animate-pulse">
@@ -195,7 +195,7 @@ export default function SuperAdminDashboard() {
   const pendingCount = (requests || []).filter((r: any) => r.status === 'PENDING').length;
 
   return (
-    <div className="p-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       {/* Header */}
       <div className="page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -206,7 +206,7 @@ export default function SuperAdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Total Hospitals" value={stats?.totalTenants || 0} icon={Building2} color="bg-indigo-500" />
+        <StatCard label="Total Hospitals" value={stats?.totalTenants || 0} icon={Building2} color="bg-cyan-500" />
         <StatCard label="Platform Users" value={stats?.totalUsers || 0} icon={Users} color="bg-emerald-500" />
         <StatCard label="Total Patients" value={stats?.totalPatients || 0} icon={UserCheck} color="bg-purple-500" />
         <StatCard label="Total Appointments" value={stats?.totalAppointments || 0} icon={Calendar} color="bg-amber-500" />
@@ -227,13 +227,13 @@ export default function SuperAdminDashboard() {
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5',
                 activeTab === 'PENDING'
-                  ? 'bg-white text-indigo-600 shadow-sm'
+                  ? 'bg-white text-cyan-600 shadow-sm'
                   : 'text-slate-500 hover:text-slate-800'
               )}
             >
               Pending
               {pendingCount > 0 && (
-                <span className="bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                <span className="bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
                   {pendingCount}
                 </span>
               )}

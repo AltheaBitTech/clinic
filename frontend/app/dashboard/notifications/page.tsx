@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@/lib/api';
-import { Bell, Check, CheckCheck } from 'lucide-react';
+import { Bell, Check, CheckCheck, AlertTriangle, RefreshCw } from 'lucide-react';
 import { timeAgo, cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
@@ -15,7 +15,7 @@ const CHANNEL_COLORS: Record<string, string> = {
 
 export default function NotificationsPage() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => notificationsApi.getAll().then((r) => r.data),
   });
@@ -50,6 +50,15 @@ export default function NotificationsPage() {
               </div>
             </div>
           ))
+        ) : isError ? (
+          <div className="card text-center py-16">
+            <AlertTriangle className="w-12 h-12 text-red-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">Couldn&apos;t load notifications</p>
+            <p className="text-slate-400 text-sm mt-1">Something went wrong. Please try again.</p>
+            <button onClick={() => refetch()} className="btn-secondary mt-4 inline-flex items-center gap-2 text-sm">
+              <RefreshCw className="w-4 h-4" /> Retry
+            </button>
+          </div>
         ) : data?.data?.length === 0 ? (
           <div className="card text-center py-16">
             <Bell className="w-12 h-12 text-slate-200 mx-auto mb-4" />
@@ -57,9 +66,13 @@ export default function NotificationsPage() {
           </div>
         ) : (
           data?.data?.map((n: any) => (
-            <div key={n.id}
-              className={cn('flex items-start gap-4 p-4 rounded-2xl border transition-all cursor-pointer',
-                n.readAt ? 'bg-white border-slate-100' : 'bg-indigo-50/50 border-indigo-100'
+            <button
+              key={n.id}
+              type="button"
+              disabled={!!n.readAt}
+              aria-label={n.readAt ? `${n.title} (read)` : `${n.title} — mark as read`}
+              className={cn('w-full flex items-start gap-4 p-4 rounded-2xl border transition-all text-left',
+                n.readAt ? 'bg-white border-slate-100 cursor-default' : 'bg-cyan-50/50 border-cyan-100 cursor-pointer'
               )}
               onClick={() => !n.readAt && notificationsApi.markRead(n.id).then(() => qc.invalidateQueries({ queryKey: ['notifications'] }))}
             >
@@ -69,13 +82,13 @@ export default function NotificationsPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className={cn('font-medium text-sm', n.readAt ? 'text-slate-700' : 'text-slate-900')}>{n.title}</p>
-                  {!n.readAt && <span className="w-2 h-2 bg-indigo-500 rounded-full" />}
+                  {!n.readAt && <span className="w-2 h-2 bg-cyan-500 rounded-full" />}
                 </div>
                 <p className="text-sm text-slate-500 mt-0.5">{n.body}</p>
                 <p className="text-xs text-slate-400 mt-1">{timeAgo(n.createdAt)}</p>
               </div>
               <span className={cn('badge text-xs shrink-0', CHANNEL_COLORS[n.channel])}>{n.channel}</span>
-            </div>
+            </button>
           ))
         )}
       </div>

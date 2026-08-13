@@ -78,8 +78,8 @@ export default function PharmaciesPage() {
         </div>
       ) : pharmacies.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
-            <Store className="w-8 h-8 text-indigo-300" />
+          <div className="w-16 h-16 rounded-2xl bg-cyan-50 flex items-center justify-center mb-4">
+            <Store className="w-8 h-8 text-cyan-300" />
           </div>
           <h3 className="text-slate-700 font-semibold text-lg mb-1">
             No pharmacies yet
@@ -145,8 +145,8 @@ function PharmacyCard({
       {/* Top */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-            <Store className="w-5 h-5 text-indigo-500" />
+          <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center shrink-0">
+            <Store className="w-5 h-5 text-cyan-500" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-800 text-sm leading-tight">
@@ -203,7 +203,7 @@ function PharmacyCard({
         <span className="text-[10px] text-slate-400">
           Added {formatDate(p.createdAt)}
         </span>
-        <span className="flex items-center gap-1 text-xs text-indigo-600 font-medium group-hover:underline">
+        <span className="flex items-center gap-1 text-xs text-cyan-600 font-medium group-hover:underline">
           View details <ChevronRight className="w-3.5 h-3.5" />
         </span>
       </div>
@@ -235,7 +235,7 @@ function PharmacyDetailDrawer({
       {/* Panel */}
       <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col animate-slide-in-right overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-600 to-violet-600">
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-cyan-600 to-emerald-600">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
               <Store className="w-5 h-5 text-white" />

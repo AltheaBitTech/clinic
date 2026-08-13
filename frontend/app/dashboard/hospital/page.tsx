@@ -5,7 +5,7 @@ import { dashboardApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
   Users, Calendar, Stethoscope, Receipt, TrendingUp,
-  AlertCircle, UserCheck, Clock
+  AlertCircle, UserCheck, Clock, AlertTriangle, RefreshCw
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 
@@ -28,7 +28,7 @@ function StatCard({
 
 export default function HospitalDashboard() {
   const { user } = useAuth();
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, isError, refetch } = useQuery({
     queryKey: ['dashboard', 'hospital'],
     queryFn: () => dashboardApi.getHospital().then((r) => r.data),
   });
@@ -49,6 +49,21 @@ export default function HospitalDashboard() {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="card text-center py-16">
+          <AlertTriangle className="w-12 h-12 text-red-200 mx-auto mb-4" />
+          <p className="text-slate-500 font-medium">Couldn&apos;t load dashboard data</p>
+          <p className="text-slate-400 text-sm mt-1">Something went wrong. Please try again.</p>
+          <button onClick={() => refetch()} className="btn-secondary mt-4 inline-flex items-center gap-2 text-sm">
+            <RefreshCw className="w-4 h-4" /> Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const greeting = new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening';
 
   return (
@@ -63,7 +78,7 @@ export default function HospitalDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-        <StatCard label="Today's Appointments" value={stats?.todayAppointments || 0} icon={Calendar} color="bg-indigo-500" />
+        <StatCard label="Today's Appointments" value={stats?.todayAppointments || 0} icon={Calendar} color="bg-cyan-500" />
         <StatCard label="Total Patients" value={stats?.totalPatients || 0} icon={Users} color="bg-emerald-500" />
         <StatCard label="Active Doctors" value={stats?.totalDoctors || 0} icon={Stethoscope} color="bg-purple-500" />
         <StatCard label="Today's Revenue" value={formatCurrency(stats?.todayRevenue || 0)} icon={TrendingUp} color="bg-amber-500" subtext={`${stats?.pendingPayments || 0} pending invoices`} />
@@ -88,7 +103,7 @@ export default function HospitalDashboard() {
           <div className="flex items-end gap-2 sm:gap-3 h-24 overflow-x-auto">
             {(stats?.appointmentsByStatus || []).map((s: any) => {
               const colors: Record<string, string> = {
-                CONFIRMED: 'bg-indigo-400', SCHEDULED: 'bg-blue-400',
+                CONFIRMED: 'bg-cyan-400', SCHEDULED: 'bg-blue-400',
                 IN_PROGRESS: 'bg-yellow-400', COMPLETED: 'bg-emerald-400',
                 CANCELLED: 'bg-red-400', NO_SHOW: 'bg-gray-400',
               };
@@ -117,7 +132,7 @@ export default function HospitalDashboard() {
         <div className="space-y-1">
           {(stats?.recentPatients || []).map((p: any) => (
             <div key={p.id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
-              <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold shrink-0">
+              <div className="w-9 h-9 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 text-xs font-bold shrink-0">
                 {p.user.firstName[0]}{p.user.lastName?.[0] || ''}
               </div>
               <div className="min-w-0 flex-1">

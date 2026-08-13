@@ -107,7 +107,7 @@ export default function ReceptionistDashboard() {
 
   if (isLoading) {
     return (
-      <div className="p-8 space-y-6 animate-pulse">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 animate-pulse">
         <div className="h-8 bg-slate-200 rounded w-1/4 mb-4" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
@@ -120,7 +120,7 @@ export default function ReceptionistDashboard() {
   }
 
   return (
-    <div className="p-8 animate-fade-in space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -143,14 +143,14 @@ export default function ReceptionistDashboard() {
 
       {/* Stats Summary Card Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card border-l-4 border-indigo-500 hover:shadow-md transition-shadow">
+        <div className="card border-l-4 border-cyan-500 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Today&apos;s Appointments</p>
               <p className="text-3xl font-bold text-slate-900 mt-2">{stats?.todayAppointments || 0}</p>
             </div>
-            <div className="p-2.5 bg-indigo-55 rounded-xl">
-              <Calendar className="w-5 h-5 text-indigo-600" />
+            <div className="p-2.5 bg-cyan-55 rounded-xl">
+              <Calendar className="w-5 h-5 text-cyan-600" />
             </div>
           </div>
           <div className="mt-3 text-xs text-slate-400">
@@ -205,21 +205,21 @@ export default function ReceptionistDashboard() {
       </div>
 
       {/* Quick Action Panel */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-100 flex flex-col md:flex-row gap-6 justify-between items-center">
+      <div className="bg-gradient-to-r from-cyan-50 to-emerald-50 p-6 rounded-2xl border border-cyan-100 flex flex-col md:flex-row gap-6 justify-between items-center">
         <div>
-          <h3 className="text-lg font-bold text-indigo-950">Reception Quick Actions</h3>
-          <p className="text-sm text-indigo-800/80">Register new patients, record details, book clinic visits, or configure billing invoices.</p>
+          <h3 className="text-lg font-bold text-cyan-950">Reception Quick Actions</h3>
+          <p className="text-sm text-cyan-800/80">Register new patients, record details, book clinic visits, or configure billing invoices.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <Link href="/dashboard/patients/new" className="btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all duration-155 hover:shadow-indigo-100 hover:scale-[1.01]">
+          <Link href="/dashboard/patients/new" className="btn bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all duration-155 hover:shadow-cyan-100 hover:scale-[1.01]">
             <UserPlus className="w-4 h-4" />
             Register Patient
           </Link>
-          <Link href="/dashboard/appointments/new" className="btn bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all duration-155 hover:shadow-purple-100 hover:scale-[1.01]">
+          <Link href="/dashboard/appointments/new" className="btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all duration-155 hover:shadow-emerald-100 hover:scale-[1.01]">
             <Plus className="w-4 h-4" />
             Book Appointment
           </Link>
-          <Link href="/dashboard/billing" className="btn bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all">
+          <Link href="/dashboard/billing" className="btn bg-white border border-cyan-200 hover:bg-cyan-50 text-cyan-700 font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all">
             <CreditCard className="w-4 h-4" />
             Billing Center
           </Link>
@@ -297,7 +297,7 @@ export default function ReceptionistDashboard() {
                     <tr key={appt.id} className="hover:bg-slate-50/30 transition-colors">
                       {/* Scheduled Time */}
                       <td className="py-4 px-4 font-semibold text-slate-900 whitespace-nowrap">
-                        <span className="flex items-center gap-1.5 text-indigo-600">
+                        <span className="flex items-center gap-1.5 text-cyan-600">
                           <Clock className="w-3.5 h-3.5" />
                           {apptTime}
                         </span>
@@ -310,7 +310,7 @@ export default function ReceptionistDashboard() {
                             {initial}
                           </div>
                           <div>
-                            <Link href={`/dashboard/patients`} className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors">
+                            <Link href={`/dashboard/patients`} className="font-semibold text-slate-900 hover:text-cyan-600 transition-colors">
                               {appt.patient.user.firstName} {appt.patient.user.lastName}
                             </Link>
                             <p className="text-[10px] text-slate-400 mt-0.5">{appt.patient.patientCode}</p>
@@ -352,7 +352,7 @@ export default function ReceptionistDashboard() {
                           <button
                             onClick={() => handleGenerateInvoice(appt.id, appt.patient.id)}
                             disabled={generateQuickInvoiceMutation.isPending}
-                            className="text-indigo-600 font-semibold hover:underline text-[11px] flex items-center gap-1"
+                            className="text-cyan-600 font-semibold hover:underline text-[11px] flex items-center gap-1"
                           >
                             Generate Bill
                           </button>
@@ -367,7 +367,7 @@ export default function ReceptionistDashboard() {
                             <button
                               onClick={() => handleCheckIn(appt.id)}
                               disabled={updateAppointmentMutation.isPending}
-                              className="btn bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-1 px-2.5 font-bold rounded-lg text-[10px] transition-all"
+                              className="btn bg-cyan-50 hover:bg-cyan-100 text-cyan-700 py-1 px-2.5 font-bold rounded-lg text-[10px] transition-all"
                             >
                               Check In
                             </button>

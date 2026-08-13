@@ -167,7 +167,7 @@ export default function ChatPage() {
 
   if (!myPersonId) {
     return (
-      <div className="p-8 animate-fade-in">
+      <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
         <div className="page-header">
           <h1 className="page-title">Chat</h1>
           <p className="page-subtitle">Message your care team</p>
@@ -223,7 +223,7 @@ export default function ChatPage() {
             <div className="text-center py-16 px-4">
               <MessageSquare className="w-10 h-10 text-slate-200 mx-auto mb-3" />
               <p className="text-slate-400 text-sm font-medium">No conversations yet</p>
-              <button onClick={() => setShowNewChat(true)} className="text-indigo-600 text-sm mt-2 hover:text-indigo-700">
+              <button onClick={() => setShowNewChat(true)} className="text-cyan-600 text-sm mt-2 hover:text-cyan-700">
                 Start a new chat
               </button>
             </div>
@@ -239,10 +239,10 @@ export default function ChatPage() {
                   onClick={() => setSelectedRoomId(room.id)}
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 text-left border-b border-slate-50 hover:bg-slate-50 transition-colors',
-                    isActive && 'bg-indigo-50 hover:bg-indigo-50',
+                    isActive && 'bg-cyan-50 hover:bg-cyan-50',
                   )}
                 >
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-sm font-bold shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 text-sm font-bold shrink-0">
                     {person ? getInitials(person.firstName, person.lastName) : '?'}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -258,7 +258,7 @@ export default function ChatPage() {
                       {lastMessage ? lastMessage.content : 'No messages yet'}
                     </p>
                   </div>
-                  {isUnread && <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />}
+                  {isUnread && <span className="w-2 h-2 rounded-full bg-cyan-600 shrink-0" />}
                 </button>
               );
             })
@@ -281,7 +281,7 @@ export default function ChatPage() {
                 const person = counterpartOf(selectedRoom);
                 return (
                   <>
-                    <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 text-xs font-bold shrink-0">
                       {person ? getInitials(person.firstName, person.lastName) : '?'}
                     </div>
                     <div className="min-w-0">
@@ -315,9 +315,9 @@ export default function ChatPage() {
                   const isMine = message.senderId === user?.id;
                   return (
                     <div key={message.id} className={cn('flex', isMine ? 'justify-end' : 'justify-start')}>
-                      <div className={cn('max-w-[70%] rounded-2xl px-4 py-2.5', isMine ? 'bg-indigo-600 text-white rounded-br-md' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-md')}>
+                      <div className={cn('max-w-[70%] rounded-2xl px-4 py-2.5', isMine ? 'bg-cyan-600 text-white rounded-br-md' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-md')}>
                         <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                        <p className={cn('text-[10px] mt-1', isMine ? 'text-indigo-200' : 'text-slate-400')} title={formatDateTime(message.createdAt)}>
+                        <p className={cn('text-[10px] mt-1', isMine ? 'text-cyan-200' : 'text-slate-400')} title={formatDateTime(message.createdAt)}>
                           {timeAgo(message.createdAt)}
                         </p>
                       </div>
@@ -394,7 +394,7 @@ function NewChatModal({
           <X className="w-4 h-4" />
         </button>
         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-          <Stethoscope className="w-5 h-5 text-indigo-600" />
+          <Stethoscope className="w-5 h-5 text-cyan-600" />
           {isDoctor ? 'Message a Patient' : 'Message a Doctor'}
         </h3>
 
@@ -426,7 +426,7 @@ function NewChatModal({
                     onClick={() => onSelect(p.id)}
                     className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-left disabled:opacity-50"
                   >
-                    <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 text-xs font-bold shrink-0">
                       {getInitials(p.user.firstName, p.user.lastName)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -437,7 +437,7 @@ function NewChatModal({
                         {isDoctor ? p.patientCode : p.department?.name || p.specialization}
                       </p>
                     </div>
-                    {alreadyChatting && <span className="text-[10px] text-indigo-500 font-medium shrink-0">Chatting</span>}
+                    {alreadyChatting && <span className="text-[10px] text-cyan-500 font-medium shrink-0">Chatting</span>}
                   </button>
                 );
               })

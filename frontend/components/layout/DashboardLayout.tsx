@@ -97,7 +97,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin" />
           <span className="text-slate-500 font-medium">Loading Arogyix...</span>
         </div>
       </div>
@@ -156,12 +156,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-100"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-sm font-bold shrink-0">
+                <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 text-sm font-bold shrink-0">
                   {getInitials(user.firstName, user.lastName)}
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-indigo-600">{user.firstName} {user.lastName}</p>
+                <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-cyan-600">{user.firstName} {user.lastName}</p>
                 <p className="text-xs text-slate-400 truncate">{user.role.replace('_', ' ')}</p>
               </div>
             </Link>
@@ -184,7 +184,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           {user.tenant && (
-            <div className="mt-3 flex items-center gap-3 px-2.5 py-2.5 bg-indigo-50 rounded-lg">
+            <div className="mt-3 flex items-center gap-3 px-2.5 py-2.5 bg-cyan-50 rounded-lg">
               {user.tenant.logoUrl ? (
                 <img
                   src={user.tenant.logoUrl.startsWith('http') ? user.tenant.logoUrl : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001'}${user.tenant.logoUrl}`}
@@ -192,7 +192,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className="w-10 h-10 rounded-lg object-cover shrink-0"
                 />
               ) : null}
-              <p className="text-sm font-semibold text-indigo-600 truncate">{user.tenant.name}</p>
+              <p className="text-sm font-semibold text-cyan-600 truncate">{user.tenant.name}</p>
             </div>
           )}
           <Link href={getDashboardHref()} className="mt-3 flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity w-fit">

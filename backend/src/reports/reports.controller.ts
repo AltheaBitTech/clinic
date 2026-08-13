@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, UploadedFile, UseInterceptors, ForbiddenException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
@@ -6,7 +6,7 @@ import { extname } from 'path';
 import { ReportsService } from './reports.service';
 import { UploadReportDto } from './dto/report.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { ReportType } from '@prisma/client';
+import { ReportType, UserRole } from '@prisma/client';
 
 const storage = diskStorage({
   destination: './uploads/reports',
@@ -36,19 +36,31 @@ export class ReportsController {
 
   @Get()
   @ApiOperation({ summary: 'List reports' })
-  findAll(
+  async findAll(
     @CurrentUser() user: any,
     @Query('patientId') patientId?: string,
     @Query('type') type?: ReportType,
     @Query('page') page?: number,
   ) {
-    return this.reportsService.findAll(user.tenantId, patientId, type, page);
+    let effectivePatientId = patientId;
+
+    if (user.role === UserRole.PATIENT) {
+      const ownPatientId = await this.reportsService.getPatientIdForUser(user.id);
+      if (!ownPatientId) return { data: [], total: 0, page: page || 1, limit: 20 };
+      effectivePatientId = ownPatientId;
+    }
+
+    return this.reportsService.findAll(user.tenantId, effectivePatientId, type, page);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a patient report by ID' })
-  findOne(@Param('id') id: string) {
-    return this.reportsService.findOne(id);
+  async findOne(@CurrentUser() user: any, @Param('id') id: string) {
+    const report = await this.reportsService.findOne(id);
+    if (user.role === UserRole.PATIENT && report.patient.userId !== user.id) {
+      throw new ForbiddenException('You are not authorized to view this report');
+    }
+    return report;
   }
 
   @Delete(':id')

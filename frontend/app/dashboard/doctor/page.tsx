@@ -3,18 +3,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Calendar, Users, ClipboardList, Clock } from 'lucide-react';
+import { Calendar, Users, ClipboardList, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 import { cn, formatDateTime } from '@/lib/utils';
 
 export default function DoctorDashboard() {
   const { user } = useAuth();
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, isError, refetch } = useQuery({
     queryKey: ['dashboard', 'doctor'],
     queryFn: () => dashboardApi.getDoctor().then((r) => r.data),
   });
 
   const statusColors: Record<string, string> = {
-    CONFIRMED: 'bg-indigo-100 text-indigo-700',
+    CONFIRMED: 'bg-cyan-100 text-cyan-700',
     SCHEDULED: 'bg-blue-100 text-blue-700',
     IN_PROGRESS: 'bg-yellow-100 text-yellow-700',
     COMPLETED: 'bg-emerald-100 text-emerald-700',
@@ -22,7 +22,7 @@ export default function DoctorDashboard() {
   };
 
   return (
-    <div className="p-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="page-header">
         <h1 className="page-title">Dr. {user?.firstName}&apos;s Dashboard</h1>
         <p className="page-subtitle">Your appointments and patient overview for today</p>
@@ -31,7 +31,7 @@ export default function DoctorDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {[
-          { label: "Today's Appointments", value: stats?.todayAppointments || 0, icon: Calendar, color: 'bg-indigo-500' },
+          { label: "Today's Appointments", value: stats?.todayAppointments || 0, icon: Calendar, color: 'bg-cyan-500' },
           { label: 'Total Patients', value: stats?.totalPatients || 0, icon: Users, color: 'bg-emerald-500' },
           { label: 'Prescriptions Pending', value: stats?.pendingPrescriptions || 0, icon: ClipboardList, color: 'bg-amber-500' },
         ].map(({ label, value, icon: Icon, color }) => (
@@ -48,8 +48,8 @@ export default function DoctorDashboard() {
       {/* Today's Schedule */}
       <div className="card">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center">
-            <Clock className="w-5 h-5 text-indigo-600" />
+          <div className="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-cyan-600" />
           </div>
           <h3 className="font-semibold text-slate-800">Today&apos;s Schedule</h3>
           <span className="ml-auto text-sm text-slate-400">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
@@ -67,6 +67,14 @@ export default function DoctorDashboard() {
               </div>
             ))}
           </div>
+        ) : isError ? (
+          <div className="text-center py-12">
+            <AlertTriangle className="w-10 h-10 text-red-200 mx-auto mb-3" />
+            <p className="text-slate-500 font-medium text-sm">Couldn&apos;t load today&apos;s schedule</p>
+            <button onClick={() => refetch()} className="btn-secondary mt-4 inline-flex items-center gap-2 text-sm">
+              <RefreshCw className="w-4 h-4" /> Retry
+            </button>
+          </div>
         ) : stats?.todaySchedule?.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -76,7 +84,7 @@ export default function DoctorDashboard() {
           <div className="space-y-2">
             {stats?.todaySchedule?.map((appt: any) => (
               <div key={appt.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
-                <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold shrink-0">
+                <div className="w-9 h-9 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 text-xs font-bold shrink-0">
                   {appt.patient.user.firstName[0]}{appt.patient.user.lastName?.[0] || ''}
                 </div>
                 <div className="flex-1">

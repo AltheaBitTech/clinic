@@ -106,7 +106,7 @@ export default function StaffPage() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'HOSPITAL_ADMIN': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'DOCTOR': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case 'DOCTOR': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
       case 'RECEPTIONIST': return 'bg-blue-100 text-blue-700 border-blue-200';
       default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
@@ -117,7 +117,7 @@ export default function StaffPage() {
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <UserCheck className="w-6 h-6 text-indigo-600 shrink-0" />
+            <UserCheck className="w-6 h-6 text-cyan-600 shrink-0" />
             Staff & Access Control
           </h1>
           <p className="page-subtitle">Manage clinic user accounts, access roles, and invite new staff members.</p>
@@ -158,7 +158,7 @@ export default function StaffPage() {
       {/* Staff Grid */}
       {isLoading ? (
         <div className="py-12 flex justify-center items-center gap-2 text-slate-400 text-sm font-medium">
-          <Loader2 className="w-5 h-5 animate-spin text-indigo-600" /> Loading staff directory...
+          <Loader2 className="w-5 h-5 animate-spin text-cyan-600" /> Loading staff directory...
         </div>
       ) : filteredStaff.length === 0 ? (
         <div className="card text-center py-16">
@@ -205,7 +205,7 @@ export default function StaffPage() {
                       onClick={() => toggleActiveMutation.mutate(u.id)}
                       disabled={toggleActiveMutation.isPending}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none ${
-                        u.isActive ? 'bg-indigo-600' : 'bg-slate-200'
+                        u.isActive ? 'bg-cyan-600' : 'bg-slate-200'
                       }`}
                     >
                       <span
@@ -228,15 +228,15 @@ export default function StaffPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <Sparkles className="w-5 h-5 text-cyan-600" />
               Invite Clinic Staff
             </h3>
 
             {invitedLink ? (
               <div className="space-y-4">
-                <div className="p-4 bg-indigo-50 border border-indigo-100 text-indigo-900 rounded-xl text-xs space-y-2">
+                <div className="p-4 bg-cyan-50 border border-cyan-100 text-cyan-900 rounded-xl text-xs space-y-2">
                   <p className="font-bold flex items-center gap-1.5"><Link2 className="w-4 h-4" /> Registration Link Generated</p>
-                  <p className="text-indigo-700">Give this link to your new staff member to complete registration. They will inherit the correct permissions.</p>
+                  <p className="text-cyan-700">Give this link to your new staff member to complete registration. They will inherit the correct permissions.</p>
                 </div>
                 <div className="flex gap-2">
                   <input
@@ -248,7 +248,7 @@ export default function StaffPage() {
                   <button
                     onClick={copyToClipboard}
                     type="button"
-                    className="btn-primary p-2.5 flex items-center justify-center bg-indigo-600"
+                    className="btn-primary p-2.5 flex items-center justify-center bg-cyan-600"
                   >
                     <Copy className="w-4 h-4" />
                   </button>

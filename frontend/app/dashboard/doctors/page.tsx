@@ -174,7 +174,7 @@ export default function DoctorsPage() {
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <Stethoscope className="w-6 h-6 text-indigo-600 shrink-0" />
+            <Stethoscope className="w-6 h-6 text-cyan-600 shrink-0" />
             Doctors Directory
           </h1>
           <p className="page-subtitle">Configure doctor consultation fees, clinical schedules, and details.</p>
@@ -226,19 +226,20 @@ export default function DoctorsPage() {
               <div>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0 border border-indigo-100">
+                    <div className="w-12 h-12 rounded-full bg-cyan-50 text-cyan-700 text-sm font-bold flex items-center justify-center shrink-0 border border-cyan-100">
                       {getInitials(doc.user.firstName, doc.user.lastName)}
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-slate-800 text-sm truncate">
                         Dr. {doc.user.firstName} {doc.user.lastName}
                       </h3>
-                      <p className="text-xs text-indigo-600 font-medium mt-0.5">{doc.specialization}</p>
+                      <p className="text-xs text-cyan-600 font-medium mt-0.5">{doc.specialization}</p>
                       <p className="text-[11px] text-slate-400 truncate">{doc.department?.name || 'General Department'}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => openEdit(doc)}
+                    aria-label={`Edit Dr. ${doc.user.firstName} ${doc.user.lastName}`}
                     className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -304,7 +305,7 @@ export default function DoctorsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-scale-up relative">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <Sparkles className="w-5 h-5 text-cyan-600" />
               {editingDoctor ? `Edit Profile: Dr. ${editingDoctor.user.firstName}` : 'Configure Doctor Profile'}
             </h3>
 
@@ -508,7 +509,7 @@ export default function DoctorsPage() {
                         onClick={() => handleDayToggle(day)}
                         className={`py-1.5 px-3 rounded-lg border text-xs font-semibold cursor-pointer transition-all ${
                           checked
-                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100'
+                            ? 'bg-cyan-600 border-cyan-600 text-white shadow-md shadow-cyan-100'
                             : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                         }`}
                       >

@@ -44,7 +44,7 @@ export default function PatientDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-cyan-600 animate-spin" />
         <span className="text-slate-500 font-medium">Loading patient file...</span>
       </div>
     );
@@ -109,7 +109,7 @@ export default function PatientDetailPage() {
       case 'APPOINTMENT':
         return <Calendar className="w-4 h-4 text-emerald-600" />;
       case 'PRESCRIPTION':
-        return <ClipboardList className="w-4 h-4 text-indigo-600" />;
+        return <ClipboardList className="w-4 h-4 text-cyan-600" />;
       case 'MEDICINE_STARTED':
         return <HeartPulse className="w-4 h-4 text-rose-600" />;
       case 'REPORT_UPLOADED':
@@ -129,7 +129,7 @@ export default function PatientDetailPage() {
       case 'APPOINTMENT':
         return 'bg-emerald-50 border-emerald-100';
       case 'PRESCRIPTION':
-        return 'bg-indigo-50 border-indigo-100';
+        return 'bg-cyan-50 border-cyan-100';
       case 'MEDICINE_STARTED':
         return 'bg-rose-50 border-rose-100';
       case 'REPORT_UPLOADED':
@@ -166,7 +166,7 @@ export default function PatientDetailPage() {
         </Link>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-700 text-xl font-bold border border-indigo-200 shadow-sm shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-cyan-100 flex items-center justify-center text-cyan-700 text-xl font-bold border border-cyan-200 shadow-sm shrink-0">
               {getInitials(patient.user.firstName, patient.user.lastName)}
             </div>
             <div>
@@ -287,7 +287,7 @@ export default function PatientDetailPage() {
               onClick={() => setActiveTab('timeline')}
               className={`flex-1 py-3 text-center text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-all ${
                 activeTab === 'timeline'
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-cyan-600 text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
@@ -297,7 +297,7 @@ export default function PatientDetailPage() {
               onClick={() => setActiveTab('records')}
               className={`flex-1 py-3 text-center text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-all ${
                 activeTab === 'records'
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-cyan-600 text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
@@ -307,7 +307,7 @@ export default function PatientDetailPage() {
               onClick={() => setActiveTab('family')}
               className={`flex-1 py-3 text-center text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-all ${
                 activeTab === 'family'
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-cyan-600 text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
@@ -320,12 +320,12 @@ export default function PatientDetailPage() {
             <div className="card space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-base font-bold text-slate-800">Clinical History Timeline</h3>
-                <span className="badge bg-indigo-50 text-indigo-700">{timeline?.data?.length || 0} events</span>
+                <span className="badge bg-cyan-50 text-cyan-700">{timeline?.data?.length || 0} events</span>
               </div>
 
               {isTimelineLoading ? (
                 <div className="flex justify-center p-8">
-                  <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-cyan-600 animate-spin" />
                 </div>
               ) : !timeline?.data || timeline.data.length === 0 ? (
                 <div className="text-center py-12">
@@ -363,7 +363,7 @@ export default function PatientDetailPage() {
               {/* Prescriptions */}
               <div className="card">
                 <h3 className="text-base font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
-                  <ClipboardList className="w-5 h-5 text-indigo-500" /> Recent Prescriptions
+                  <ClipboardList className="w-5 h-5 text-cyan-500" /> Recent Prescriptions
                 </h3>
 
                 {patient.prescriptions?.length === 0 ? (
@@ -377,7 +377,7 @@ export default function PatientDetailPage() {
                             <h4 className="font-semibold text-slate-800">Prescription</h4>
                             <p className="text-xs text-slate-400">{formatDate(p.createdAt)}</p>
                           </div>
-                          <span className="badge bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                          <span className="badge bg-cyan-50 text-cyan-700 text-xs font-semibold">
                             {p.medicines?.length} Medicines
                           </span>
                         </div>
@@ -486,12 +486,12 @@ export default function PatientDetailPage() {
                   {patient.familyMembers?.map((fm: any) => (
                     <div key={fm.id} className="p-4 rounded-xl border border-slate-100 shadow-xs space-y-3 relative bg-slate-50">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                        <div className="w-9 h-9 rounded-xl bg-cyan-50 border border-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-sm">
                           {getInitials(fm.name, '')}
                         </div>
                         <div>
                           <h4 className="font-semibold text-slate-800 text-sm">{fm.name}</h4>
-                          <span className="badge bg-indigo-50 text-indigo-700 font-medium text-[10px] uppercase">{fm.relation}</span>
+                          <span className="badge bg-cyan-50 text-cyan-700 font-medium text-[10px] uppercase">{fm.relation}</span>
                         </div>
                       </div>
                       <ul className="text-xs space-y-1 text-slate-500 border-t border-slate-200/50 pt-2">
@@ -521,14 +521,14 @@ export default function PatientDetailPage() {
       {isFamilyModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-scale-in">
-            <div className="px-6 py-4 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
+            <div className="px-6 py-4 bg-cyan-50 border-b border-cyan-100 flex items-center justify-between">
               <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
-                <Users className="w-5 h-5 text-indigo-600" /> Link Family Member
+                <Users className="w-5 h-5 text-cyan-600" /> Link Family Member
               </h3>
               <button
                 type="button"
                 onClick={() => setIsFamilyModalOpen(false)}
-                className="p-1 hover:bg-indigo-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+                className="p-1 hover:bg-cyan-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>

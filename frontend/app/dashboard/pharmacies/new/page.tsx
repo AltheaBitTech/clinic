@@ -104,7 +104,7 @@ export default function NewPharmacyPage() {
 
       {/* Page Header */}
       <div className="flex items-center gap-4 mb-6 sm:mb-8">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0">
+        <div className="w-12 h-12 rounded-2xl bg-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-200 shrink-0">
           <Store className="w-6 h-6 text-white" />
         </div>
         <div>
@@ -404,8 +404,8 @@ function FormSection({
   return (
     <div className="card space-y-4">
       <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-indigo-600" />
+        <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-cyan-600" />
         </div>
         <div>
           <h2 className="font-semibold text-slate-800 text-sm">{title}</h2>

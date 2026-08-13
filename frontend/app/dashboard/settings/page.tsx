@@ -115,7 +115,7 @@ export default function SettingsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto animate-fade-in">
       <div className="page-header sm:mb-8">
         <h1 className="page-title flex items-center gap-2">
-          <Settings className="w-6 h-6 text-indigo-600 shrink-0" />
+          <Settings className="w-6 h-6 text-cyan-600 shrink-0" />
           Account & Portal Settings
         </h1>
         <p className="page-subtitle">Configure your personal login details, contact profile, and hospital branding settings.</p>
@@ -127,7 +127,7 @@ export default function SettingsPage() {
           onClick={() => setActiveTab('profile')}
           className={`pb-3 px-4 text-sm font-semibold transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
             activeTab === 'profile'
-              ? 'border-indigo-600 text-indigo-600'
+              ? 'border-cyan-600 text-cyan-600'
               : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
@@ -138,7 +138,7 @@ export default function SettingsPage() {
             onClick={() => setActiveTab('hospital')}
             className={`pb-3 px-4 text-sm font-semibold transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
               activeTab === 'hospital'
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-cyan-600 text-cyan-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
@@ -151,7 +151,7 @@ export default function SettingsPage() {
       {activeTab === 'profile' ? (
         <form onSubmit={handleProfileSubmit} className="card space-y-6">
           <div className="border-b border-slate-100 pb-3 flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-indigo-600" />
+            <Sparkles className="w-4 h-4 text-cyan-600" />
             <h3 className="font-bold text-slate-800 text-sm">Personal Login Profile</h3>
           </div>
 
@@ -235,7 +235,7 @@ export default function SettingsPage() {
               <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
                 {/* Avatar Preview */}
                 <div className="relative group shrink-0">
-                  <div className="w-20 h-20 rounded-full border-2 border-white shadow-md overflow-hidden bg-indigo-50 flex items-center justify-center text-indigo-700 text-2xl font-bold">
+                  <div className="w-20 h-20 rounded-full border-2 border-white shadow-md overflow-hidden bg-cyan-50 flex items-center justify-center text-cyan-700 text-2xl font-bold">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001'}${avatarUrl}`}
@@ -255,7 +255,7 @@ export default function SettingsPage() {
                 {/* Upload Actions */}
                 <div className="flex-1 space-y-3 w-full">
                   <div className="flex flex-wrap items-center gap-3">
-                    <label className="btn-primary flex items-center gap-2 text-sm cursor-pointer py-2 px-4 shadow-sm hover:shadow transition-all bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">
+                    <label className="btn-primary flex items-center gap-2 text-sm cursor-pointer py-2 px-4 shadow-sm hover:shadow transition-all bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium">
                       {isUploadingAvatar ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -352,7 +352,7 @@ export default function SettingsPage() {
       ) : (
         <form onSubmit={handleHospitalSubmit} className="card space-y-6">
           <div className="border-b border-slate-100 pb-3 flex items-center gap-2 mb-2">
-            <Building2 className="w-4 h-4 text-indigo-600" />
+            <Building2 className="w-4 h-4 text-cyan-600" />
             <h3 className="font-bold text-slate-800 text-sm">Hospital Branding Details</h3>
           </div>
 
@@ -377,7 +377,7 @@ export default function SettingsPage() {
             <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
               {/* Logo Preview */}
               <div className="relative group shrink-0">
-                <div className="w-20 h-20 rounded-xl border-2 border-white shadow-md overflow-hidden bg-indigo-50 flex items-center justify-center text-indigo-700 text-2xl font-bold">
+                <div className="w-20 h-20 rounded-xl border-2 border-white shadow-md overflow-hidden bg-cyan-50 flex items-center justify-center text-cyan-700 text-2xl font-bold">
                   {logoUrl ? (
                     <img
                       src={logoUrl.startsWith('http') ? logoUrl : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001'}${logoUrl}`}
@@ -397,7 +397,7 @@ export default function SettingsPage() {
               {/* Upload Actions */}
               <div className="flex-1 space-y-3 w-full">
                 <div className="flex flex-wrap items-center gap-3">
-                  <label className="btn-primary flex items-center gap-2 text-sm cursor-pointer py-2 px-4 shadow-sm hover:shadow transition-all bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">
+                  <label className="btn-primary flex items-center gap-2 text-sm cursor-pointer py-2 px-4 shadow-sm hover:shadow transition-all bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium">
                     {isUploadingLogo ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />

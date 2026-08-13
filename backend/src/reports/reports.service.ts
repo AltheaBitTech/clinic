@@ -61,8 +61,13 @@ export class ReportsService {
     return { data, total, page, limit };
   }
 
+  async getPatientIdForUser(userId: string): Promise<string | null> {
+    const patient = await this.prisma.patient.findFirst({ where: { userId }, select: { id: true } });
+    return patient?.id ?? null;
+  }
+
   async findOne(id: string) {
-    const report = await this.prisma.report.findUnique({ where: { id } });
+    const report = await this.prisma.report.findUnique({ where: { id }, include: { patient: true } });
     if (!report) throw new NotFoundException('Report not found');
     return report;
   }

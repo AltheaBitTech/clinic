@@ -3,30 +3,40 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Calendar, Pill, FileText, ClipboardList } from 'lucide-react';
+import { Calendar, Pill, FileText, ClipboardList, AlertTriangle, RefreshCw } from 'lucide-react';
 import { cn, formatDateTime, formatDate } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function PatientDashboard() {
   const { user } = useAuth();
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, isError, refetch } = useQuery({
     queryKey: ['dashboard', 'patient'],
     queryFn: () => dashboardApi.getPatient().then((r) => r.data),
   });
 
   return (
-    <div className="p-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="page-header">
         <h1 className="page-title">Hello, {user?.firstName}! 👋</h1>
         <p className="page-subtitle">Your health overview and upcoming schedule</p>
       </div>
 
+      {isError ? (
+        <div className="card text-center py-16">
+          <AlertTriangle className="w-12 h-12 text-red-200 mx-auto mb-4" />
+          <p className="text-slate-500 font-medium">Couldn&apos;t load your dashboard</p>
+          <p className="text-slate-400 text-sm mt-1">Something went wrong. Please try again.</p>
+          <button onClick={() => refetch()} className="btn-secondary mt-4 inline-flex items-center gap-2 text-sm">
+            <RefreshCw className="w-4 h-4" /> Retry
+          </button>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upcoming Appointments */}
         <div className="card lg:col-span-2">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-indigo-600" />
+            <div className="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-cyan-600" />
             </div>
             <h3 className="font-semibold text-slate-800">Upcoming Appointments</h3>
           </div>
@@ -46,8 +56,8 @@ export default function PatientDashboard() {
           ) : (
             <div className="space-y-3">
               {stats?.upcomingAppointments?.map((appt: any) => (
-                <div key={appt.id} className="flex items-center gap-4 p-4 bg-indigo-50 rounded-xl">
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold shrink-0">
+                <div key={appt.id} className="flex items-center gap-4 p-4 bg-cyan-50 rounded-xl">
+                  <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 text-xs font-bold shrink-0">
                     Dr
                   </div>
                   <div className="flex-1">
@@ -56,7 +66,7 @@ export default function PatientDashboard() {
                     </p>
                     <p className="text-xs text-slate-500">{formatDateTime(appt.scheduledAt)}</p>
                   </div>
-                  <span className="badge bg-indigo-100 text-indigo-700 text-xs">{appt.status}</span>
+                  <span className="badge bg-cyan-100 text-cyan-700 text-xs">{appt.status}</span>
                 </div>
               ))}
             </div>
@@ -149,6 +159,7 @@ export default function PatientDashboard() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
