@@ -6,7 +6,7 @@ import { pharmaciesApi } from '@/lib/api';
 import {
   Store, Search, Plus, Phone, MapPin, Mail, Clock,
   Truck, AlertCircle, ChevronRight, Building2, User,
-  FileText, CheckCircle2, XCircle
+  FileText, CheckCircle2, XCircle, Link2, Copy, Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
@@ -16,6 +16,8 @@ import toast from 'react-hot-toast';
 export default function PharmaciesPage() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<any>(null);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteLink, setInviteLink] = useState('');
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -35,6 +37,34 @@ export default function PharmaciesPage() {
     onError: () => toast.error('Failed to deactivate pharmacy'),
   });
 
+  const inviteMutation = useMutation({
+    mutationFn: () => pharmaciesApi.createInvite(),
+    onSuccess: (res: any) => {
+      const token = res.data.token;
+      setInviteLink(`${window.location.origin}/register/pharmacy?token=${token}`);
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to generate invite link');
+    },
+  });
+
+  const openInviteModal = () => {
+    setIsInviteModalOpen(true);
+    setInviteLink('');
+    inviteMutation.mutate();
+  };
+
+  const closeInviteModal = () => {
+    setIsInviteModalOpen(false);
+    setInviteLink('');
+    inviteMutation.reset();
+  };
+
+  const copyInviteLink = () => {
+    navigator.clipboard.writeText(inviteLink);
+    toast.success('Registration link copied!');
+  };
+
   const isAdmin = user?.role === 'HOSPITAL_ADMIN';
 
   return (
@@ -47,14 +77,24 @@ export default function PharmaciesPage() {
             Manage linked pharmacies for your clinic
           </p>
         </div>
-        <Link
-          href="/dashboard/pharmacies/new"
-          id="add-pharmacy-btn"
-          className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Add Pharmacy
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            id="invite-pharmacy-btn"
+            onClick={openInviteModal}
+            className="btn-secondary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+          >
+            <Link2 className="w-4 h-4" />
+            Invite Pharmacy
+          </button>
+          <Link
+            href="/dashboard/pharmacies/new"
+            id="add-pharmacy-btn"
+            className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4" />
+            Add Pharmacy
+          </Link>
+        </div>
       </div>
 
       {/* Search */}
@@ -118,6 +158,73 @@ export default function PharmaciesPage() {
           onClose={() => setSelected(null)}
           onRemove={() => removeMutation.mutate(selected.id)}
         />
+      )}
+
+      {/* Invite Pharmacy Modal */}
+      {isInviteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
+              <Sparkles className="w-5 h-5 text-cyan-600" />
+              Invite a Pharmacy
+            </h3>
+
+            {inviteMutation.isPending ? (
+              <div className="flex flex-col items-center justify-center py-8 gap-3">
+                <span className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-slate-500">Generating one-time link…</p>
+              </div>
+            ) : inviteLink ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-cyan-50 border border-cyan-100 text-cyan-900 rounded-xl text-xs space-y-2">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <Link2 className="w-4 h-4" /> Self-Registration Link Generated
+                  </p>
+                  <p className="text-cyan-700">
+                    Share this link with the pharmacy. They can fill in their own details and
+                    set a password to join your clinic&apos;s network. The link expires in 7
+                    days or after first use.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={inviteLink}
+                    className="input text-xs bg-slate-50 cursor-default"
+                  />
+                  <button
+                    onClick={copyInviteLink}
+                    type="button"
+                    className="btn-primary p-2.5 flex items-center justify-center bg-cyan-600"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+                <button
+                  onClick={closeInviteModal}
+                  className="btn-secondary w-full py-2.5 mt-2 justify-center font-bold"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-slate-500">
+                  Something went wrong generating the invite link.
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button onClick={closeInviteModal} className="btn-secondary">
+                    Cancel
+                  </button>
+                  <button onClick={() => inviteMutation.mutate()} className="btn-primary">
+                    Retry
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

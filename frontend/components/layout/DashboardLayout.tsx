@@ -36,6 +36,7 @@ const navItems: NavItem[] = [
   { label: 'Prescriptions', href: '/dashboard/prescriptions', icon: ClipboardList, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'PATIENT'] },
   { label: 'Medicines Catalog', href: '/dashboard/medicines', icon: Pill, roles: ['HOSPITAL_ADMIN', 'DOCTOR'] },
   { label: 'Pharmacies', href: '/dashboard/pharmacies', icon: Store, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { label: 'My Pharmacy', href: '/dashboard/pharmacy-portal', icon: Store, roles: ['PHARMACY'] },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'PATIENT'] },
   { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare, roles: ['DOCTOR', 'PATIENT'] },
   { label: 'Billing', href: '/dashboard/billing', icon: Receipt, roles: ['HOSPITAL_ADMIN', 'RECEPTIONIST'] },
@@ -122,6 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       DOCTOR: '/dashboard/doctor',
       RECEPTIONIST: '/dashboard/receptionist',
       PATIENT: '/dashboard/patient',
+      PHARMACY: '/dashboard/pharmacy-portal',
     };
     return map[user.role] || '/dashboard/patient';
   };

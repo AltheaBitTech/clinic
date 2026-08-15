@@ -10,12 +10,13 @@ interface User {
   phone?: string;
   firstName: string;
   lastName: string;
-  role: 'SUPER_ADMIN' | 'HOSPITAL_ADMIN' | 'DOCTOR' | 'RECEPTIONIST' | 'PATIENT';
+  role: 'SUPER_ADMIN' | 'HOSPITAL_ADMIN' | 'DOCTOR' | 'RECEPTIONIST' | 'PATIENT' | 'PHARMACY';
   tenantId?: string;
   avatarUrl?: string;
   isVerified: boolean;
   doctor?: any;
   patient?: any;
+  pharmacy?: any;
   tenant?: any;
 }
 
@@ -92,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       DOCTOR: '/dashboard/doctor',
       RECEPTIONIST: '/dashboard/receptionist',
       PATIENT: '/dashboard/patient',
+      PHARMACY: '/dashboard/pharmacy-portal',
     };
     router.push(routes[role] || '/dashboard/patient');
   };

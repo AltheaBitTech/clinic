@@ -21,6 +21,7 @@ export class AuthService {
   private readonly userRelationsInclude = {
     doctor: { include: { department: true } },
     patient: true,
+    pharmacy: true,
     tenant: { select: { id: true, name: true, slug: true, logoUrl: true } },
   };
 

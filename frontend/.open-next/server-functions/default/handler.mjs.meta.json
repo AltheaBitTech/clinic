@@ -3659,7 +3659,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-      "bytes": 292080,
+      "bytes": 332853,
       "imports": [
         {
           "path": "path",
@@ -4150,8 +4150,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0bmh7-n._.js": {
-      "bytes": 27699,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0sfkszf._.js": {
+      "bytes": 12428,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/server/app-render/work-async-storage.external.js",
@@ -4182,7 +4182,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__12iu1qn._.js": {
-      "bytes": 268236,
+      "bytes": 268656,
       "imports": [
         {
           "path": "stream",
@@ -4258,7 +4258,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__176tirr._.js": {
-      "bytes": 12426,
+      "bytes": 12424,
       "imports": [],
       "format": "cjs"
     },
@@ -4322,6 +4322,11 @@
           "original": "next/dist/shared/lib/no-fallback-error.external.js"
         }
       ],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_0-0j4jn._.js": {
+      "bytes": 15565,
+      "imports": [],
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app__not-found_page_actions_0pt47yr.js": {
@@ -4448,6 +4453,22 @@
       ],
       "format": "cjs"
     },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0183c9w._.js": {
+      "bytes": 99922,
+      "imports": [
+        {
+          "path": "child_process",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "buffer",
+          "kind": "require-call",
+          "external": true
+        }
+      ],
+      "format": "cjs"
+    },
     ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0h6iw-6._.js": {
       "bytes": 2068,
       "imports": [
@@ -4459,13 +4480,13 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0gtawkg._.js": {
-      "bytes": 14118,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_14rbgk5._.js": {
+      "bytes": 15242,
       "imports": [],
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/_186uk5f._.js": {
-      "bytes": 403809,
+      "bytes": 404564,
       "imports": [],
       "format": "cjs"
     },
@@ -4480,12 +4501,17 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/lib_utils_ts_0az0sfq._.js": {
-      "bytes": 48606,
+      "bytes": 48602,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1gu5tuy._.js": {
-      "bytes": 9830,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1j451ax._.js": {
+      "bytes": 10993,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0pccbiu._.js": {
+      "bytes": 1057,
       "imports": [],
       "format": "cjs"
     },
@@ -4527,12 +4553,12 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_appointments_[id]_page_tsx_17ae35-._.js": {
-      "bytes": 28947,
+      "bytes": 28931,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0j-ndwn._.js": {
-      "bytes": 15017,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9n91._.js": {
+      "bytes": 5441,
       "imports": [],
       "format": "cjs"
     },
@@ -4564,12 +4590,12 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_appointments_new_page_tsx_1vq74l8._.js": {
-      "bytes": 25261,
+      "bytes": 25325,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1drrhi8._.js": {
-      "bytes": 11783,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0rzqhw4._.js": {
+      "bytes": 2394,
       "imports": [],
       "format": "cjs"
     },
@@ -4595,8 +4621,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_1rg5yj4._.js": {
-      "bytes": 14212,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_1yuasqt._.js": {
+      "bytes": 6558,
       "imports": [],
       "format": "cjs"
     },
@@ -4633,17 +4659,12 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_billing_page_tsx_1ku6efb._.js": {
-      "bytes": 14457,
+      "bytes": 16523,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_07ro0nb._.js": {
-      "bytes": 12195,
-      "imports": [],
-      "format": "cjs"
-    },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0by0jua._.js": {
-      "bytes": 1308,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_16p-sge._.js": {
+      "bytes": 4454,
       "imports": [],
       "format": "cjs"
     },
@@ -4652,22 +4673,6 @@
       "imports": [
         {
           "path": "path",
-          "kind": "require-call",
-          "external": true
-        }
-      ],
-      "format": "cjs"
-    },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0pikrjw._.js": {
-      "bytes": 111483,
-      "imports": [
-        {
-          "path": "child_process",
-          "kind": "require-call",
-          "external": true
-        },
-        {
-          "path": "buffer",
           "kind": "require-call",
           "external": true
         }
@@ -4685,13 +4690,13 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_chat_page_actions_0_kakih.js": {
-      "bytes": 126,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_0qojrk7._.js": {
+      "bytes": 14546,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_x_mjs_1imjbgq._.js": {
-      "bytes": 262,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_chat_page_actions_0_kakih.js": {
+      "bytes": 126,
       "imports": [],
       "format": "cjs"
     },
@@ -4717,8 +4722,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_1v94v8d._.js": {
-      "bytes": 8745,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_034fbbs._.js": {
+      "bytes": 11598,
       "imports": [],
       "format": "cjs"
     },
@@ -4749,8 +4754,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0k9tfc9._.js": {
-      "bytes": 13513,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_1olxx4b._.js": {
+      "bytes": 5178,
       "imports": [],
       "format": "cjs"
     },
@@ -4787,12 +4792,12 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_doctors_page_tsx_0dz6wqo._.js": {
-      "bytes": 14335,
+      "bytes": 14468,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0cxyjx8._.js": {
-      "bytes": 1431,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_08mp2lj._.js": {
+      "bytes": 4112,
       "imports": [],
       "format": "cjs"
     },
@@ -4818,8 +4823,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0alur5e._.js": {
-      "bytes": 14960,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_0huw27z._.js": {
+      "bytes": 7331,
       "imports": [],
       "format": "cjs"
     },
@@ -4850,8 +4855,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0vo0_74._.js": {
-      "bytes": 17253,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_1r39ru5._.js": {
+      "bytes": 7923,
       "imports": [],
       "format": "cjs"
     },
@@ -4882,8 +4887,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_1rw31ry._.js": {
-      "bytes": 10758,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_0jsy_i-._.js": {
+      "bytes": 13569,
       "imports": [],
       "format": "cjs"
     },
@@ -4914,18 +4919,13 @@
       ],
       "format": "cjs"
     },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_0krz299._.js": {
+      "bytes": 6929,
+      "imports": [],
+      "format": "cjs"
+    },
     ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_notifications_page_actions_1h7r_b4.js": {
       "bytes": 134,
-      "imports": [],
-      "format": "cjs"
-    },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_notifications_page_tsx_1gg_g5v._.js": {
-      "bytes": 3201,
-      "imports": [],
-      "format": "cjs"
-    },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_@tanstack_react-query_build_modern_0qe3gn4._.js": {
-      "bytes": 11889,
       "imports": [],
       "format": "cjs"
     },
@@ -4957,7 +4957,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_page_tsx_0k894ow._.js": {
-      "bytes": 681,
+      "bytes": 717,
       "imports": [],
       "format": "cjs"
     },
@@ -4983,8 +4983,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_1hufdm6._.js": {
-      "bytes": 15423,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_0rt8t_m._.js": {
+      "bytes": 7191,
       "imports": [],
       "format": "cjs"
     },
@@ -5021,12 +5021,12 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_[id]_page_tsx_1p0jyjk._.js": {
-      "bytes": 22370,
+      "bytes": 22342,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_13gqjs2._.js": {
-      "bytes": 11686,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_08vsk2k._.js": {
+      "bytes": 2138,
       "imports": [],
       "format": "cjs"
     },
@@ -5052,13 +5052,18 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0dnzz6a._.js": {
-      "bytes": 14676,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_new_page_actions_0vci1t5.js": {
+      "bytes": 133,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_new_page_actions_0vci1t5.js": {
-      "bytes": 133,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_new_page_tsx_155v3j3._.js": {
+      "bytes": 14869,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0-c_9zz._.js": {
+      "bytes": 3336,
       "imports": [],
       "format": "cjs"
     },
@@ -5084,8 +5089,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_1s4dg8h._.js": {
-      "bytes": 14706,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_01uk269._.js": {
+      "bytes": 6570,
       "imports": [],
       "format": "cjs"
     },
@@ -5096,6 +5101,38 @@
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1jlwb_a.js": {
       "bytes": 23417,
+      "imports": [
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        }
+      ],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__09apb-1._.js": {
+      "bytes": 2110,
+      "imports": [
+        {
+          "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/no-fallback-error.external.js",
+          "kind": "require-call",
+          "original": "next/dist/shared/lib/no-fallback-error.external.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_20-5q-_._.js": {
+      "bytes": 16328,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_[id]_edit_page_actions_08vdet_.js": {
+      "bytes": 146,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_10uz_4x.js": {
+      "bytes": 23542,
       "imports": [
         {
           "path": "path",
@@ -5116,8 +5153,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_1r6uta-._.js": {
-      "bytes": 14662,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_12h9scu._.js": {
+      "bytes": 14696,
       "imports": [],
       "format": "cjs"
     },
@@ -5148,18 +5185,60 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0kssfar._.js": {
-      "bytes": 11146,
-      "imports": [],
-      "format": "cjs"
-    },
     ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_page_actions_0zuy6g2.js": {
       "bytes": 131,
       "imports": [],
       "format": "cjs"
     },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacies_page_tsx_1jyh495._.js": {
+      "bytes": 12422,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0bw3fqc._.js": {
+      "bytes": 5613,
+      "imports": [],
+      "format": "cjs"
+    },
     ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0u7rv91.js": {
       "bytes": 23427,
+      "imports": [
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        }
+      ],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1mmsfxk._.js": {
+      "bytes": 2092,
+      "imports": [
+        {
+          "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/no-fallback-error.external.js",
+          "kind": "require-call",
+          "original": "next/dist/shared/lib/no-fallback-error.external.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacy-portal_page_actions_0icu6jl.js": {
+      "bytes": 137,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacy-portal_page_tsx_073btof._.js": {
+      "bytes": 12709,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1idxje-._.js": {
+      "bytes": 4604,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1gzhvn-.js": {
+      "bytes": 23448,
       "imports": [
         {
           "path": "path",
@@ -5186,12 +5265,12 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_prescriptions_new_page_tsx_0e7_our._.js": {
-      "bytes": 40360,
+      "bytes": 40318,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_15u1r9m._.js": {
-      "bytes": 11723,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0jx1xii._.js": {
+      "bytes": 2334,
       "imports": [],
       "format": "cjs"
     },
@@ -5217,8 +5296,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0ehlyyw._.js": {
-      "bytes": 15257,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_0r4-6rf._.js": {
+      "bytes": 7421,
       "imports": [],
       "format": "cjs"
     },
@@ -5255,12 +5334,12 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_receptionist_page_tsx_01bbxrv._.js": {
-      "bytes": 14331,
+      "bytes": 14068,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0u5168f._.js": {
-      "bytes": 1132,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9q1g._.js": {
+      "bytes": 4147,
       "imports": [],
       "format": "cjs"
     },
@@ -5286,8 +5365,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0vfdjkj._.js": {
-      "bytes": 13302,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_1kckl-w._.js": {
+      "bytes": 9435,
       "imports": [],
       "format": "cjs"
     },
@@ -5318,13 +5397,18 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0jrtk0k._.js": {
-      "bytes": 16738,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_settings_page_actions_0zse488.js": {
+      "bytes": 129,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_settings_page_actions_0zse488.js": {
-      "bytes": 129,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_settings_page_tsx_11my32h._.js": {
+      "bytes": 15043,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_03zgrri._.js": {
+      "bytes": 4359,
       "imports": [],
       "format": "cjs"
     },
@@ -5350,8 +5434,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0-68axa._.js": {
-      "bytes": 11503,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_1o8-do4._.js": {
+      "bytes": 14349,
       "imports": [],
       "format": "cjs"
     },
@@ -5382,8 +5466,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_113eqh6._.js": {
-      "bytes": 24048,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_1bcb1of._.js": {
+      "bytes": 14472,
       "imports": [],
       "format": "cjs"
     },
@@ -5587,8 +5671,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0g-z89f._.js": {
-      "bytes": 9796,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_08vk730._.js": {
+      "bytes": 9987,
       "imports": [],
       "format": "cjs"
     },
@@ -5614,7 +5698,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_react-hook-form_dist_index_esm_mjs_0sajker._.js": {
-      "bytes": 313598,
+      "bytes": 313400,
       "imports": [],
       "format": "cjs"
     },
@@ -5630,12 +5714,12 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/_0mbxg5h._.js": {
-      "bytes": 23787,
+      "bytes": 27726,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_1pvgcg9._.js": {
-      "bytes": 11854,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_0w7p732._.js": {
+      "bytes": 12498,
       "imports": [],
       "format": "cjs"
     },
@@ -5671,8 +5755,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/chunks/ssr/_0mxws0v._.js": {
-      "bytes": 10214,
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_1uzxyqt._.js": {
+      "bytes": 11880,
       "imports": [],
       "format": "cjs"
     },
@@ -5692,8 +5776,45 @@
       ],
       "format": "cjs"
     },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__01jlg3d._.js": {
+      "bytes": 2060,
+      "imports": [
+        {
+          "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/no-fallback-error.external.js",
+          "kind": "require-call",
+          "original": "next/dist/shared/lib/no-fallback-error.external.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_register_pharmacy_page_actions_0ojh82c.js": {
+      "bytes": 129,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/app_register_pharmacy_page_tsx_0zwnjvs._.js": {
+      "bytes": 14995,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0rptoso._.js": {
+      "bytes": 7085,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0to_6le.js": {
+      "bytes": 23351,
+      "imports": [
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        }
+      ],
+      "format": "cjs"
+    },
     ".open-next/server-functions/default/.next/server/chunks/[turbopack]_runtime.js": {
-      "bytes": 73259,
+      "bytes": 77226,
       "imports": [
         {
           "path": "worker_threads",
@@ -5731,9 +5852,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0-66vdo._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0bmh7-n._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0sfkszf._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0bmh7-n._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0sfkszf._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__12iu1qn._.js",
@@ -5759,6 +5880,11 @@
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0-0j4jn._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0-0j4jn._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app__not-found_page_actions_0pt47yr.js",
@@ -5836,14 +5962,19 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_13q04th.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0183c9w._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0183c9w._.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0h6iw-6._.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0h6iw-6._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0gtawkg._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_14rbgk5._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0gtawkg._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_14rbgk5._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_186uk5f._.js",
@@ -5866,9 +5997,14 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/lib_utils_ts_0az0sfq._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1gu5tuy._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1j451ax._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1gu5tuy._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1j451ax._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0pccbiu._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0pccbiu._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_1enzot_._.js",
@@ -5901,9 +6037,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_appointments_[id]_page_tsx_17ae35-._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0j-ndwn._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9n91._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0j-ndwn._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9n91._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1jbjwpy.js",
@@ -5926,9 +6062,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_appointments_new_page_tsx_1vq74l8._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1drrhi8._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0rzqhw4._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1drrhi8._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0rzqhw4._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_147lq-k.js",
@@ -5941,9 +6077,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__09afnv9._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1rg5yj4._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1yuasqt._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1rg5yj4._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1yuasqt._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_appointments_page_actions_1t72cqu.js",
@@ -5971,14 +6107,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_billing_page_tsx_1ku6efb._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_07ro0nb._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_16p-sge._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_07ro0nb._.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0by0jua._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0by0jua._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_16p-sge._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0c64yun.js",
@@ -5986,24 +6117,19 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0c64yun.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0pikrjw._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0pikrjw._.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__17eo-13._.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__17eo-13._.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0qojrk7._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0qojrk7._.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_chat_page_actions_0_kakih.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_chat_page_actions_0_kakih.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_x_mjs_1imjbgq._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_x_mjs_1imjbgq._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_10nu2z9.js",
@@ -6016,9 +6142,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0seg852._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1v94v8d._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_034fbbs._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1v94v8d._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_034fbbs._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_departments_page_actions_01hdoup.js",
@@ -6036,9 +6162,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0k3kjat._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0k9tfc9._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1olxx4b._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0k9tfc9._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1olxx4b._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_doctor_page_actions_15fifex.js",
@@ -6066,9 +6192,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_doctors_page_tsx_0dz6wqo._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0cxyjx8._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_08mp2lj._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0cxyjx8._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_08mp2lj._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1rl7r5g.js",
@@ -6081,9 +6207,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1u0siae._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0alur5e._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0huw27z._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0alur5e._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0huw27z._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_hospital_page_actions_15h6zje.js",
@@ -6101,9 +6227,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__218m2kz._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0vo0_74._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1r39ru5._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0vo0_74._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1r39ru5._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_hospitals_page_actions_0np5yeo.js",
@@ -6121,9 +6247,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0zqa517._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1rw31ry._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0jsy_i-._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1rw31ry._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0jsy_i-._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_medicines_page_actions_1gi2qy3.js",
@@ -6141,19 +6267,14 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1_tqp1m._.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0krz299._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0krz299._.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_notifications_page_actions_1h7r_b4.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_notifications_page_actions_1h7r_b4.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_notifications_page_tsx_1gg_g5v._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_notifications_page_tsx_1gg_g5v._.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_@tanstack_react-query_build_modern_0qe3gn4._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_@tanstack_react-query_build_modern_0qe3gn4._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0n3f_6p.js",
@@ -6186,9 +6307,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0c_eln_._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1hufdm6._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0rt8t_m._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1hufdm6._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0rt8t_m._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patient_page_actions_1cme3eh.js",
@@ -6216,9 +6337,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_[id]_page_tsx_1p0jyjk._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_13gqjs2._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_08vsk2k._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_13gqjs2._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_08vsk2k._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_15t28l7.js",
@@ -6231,14 +6352,19 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__12wse5f._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0dnzz6a._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0dnzz6a._.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_new_page_actions_0vci1t5.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_new_page_actions_0vci1t5.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_new_page_tsx_155v3j3._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_new_page_tsx_155v3j3._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0-c_9zz._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0-c_9zz._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0j14dio.js",
@@ -6251,9 +6377,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1s--9vx._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1s4dg8h._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_01uk269._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1s4dg8h._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_01uk269._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_page_actions_0fc2h92.js",
@@ -6266,14 +6392,34 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1jlwb_a.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__09apb-1._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__09apb-1._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_20-5q-_._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_20-5q-_._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_[id]_edit_page_actions_08vdet_.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_[id]_edit_page_actions_08vdet_.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_10uz_4x.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_10uz_4x.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__00uii3f._.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__00uii3f._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1r6uta-._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_12h9scu._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1r6uta-._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_12h9scu._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_new_page_actions_1h2jcoo.js",
@@ -6291,19 +6437,49 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0v-mi7c._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0kssfar._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0kssfar._.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_page_actions_0zuy6g2.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_page_actions_0zuy6g2.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacies_page_tsx_1jyh495._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacies_page_tsx_1jyh495._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0bw3fqc._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0bw3fqc._.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0u7rv91.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0u7rv91.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1mmsfxk._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1mmsfxk._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacy-portal_page_actions_0icu6jl.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacy-portal_page_actions_0icu6jl.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacy-portal_page_tsx_073btof._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacy-portal_page_tsx_073btof._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1idxje-._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1idxje-._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1gzhvn-.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1gzhvn-.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0zajd90._.js",
@@ -6321,9 +6497,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_prescriptions_new_page_tsx_0e7_our._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_15u1r9m._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0jx1xii._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_15u1r9m._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0jx1xii._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0jujdst.js",
@@ -6336,9 +6512,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0332prr._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0ehlyyw._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0r4-6rf._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0ehlyyw._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0r4-6rf._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_prescriptions_page_actions_1juh39b.js",
@@ -6366,9 +6542,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_receptionist_page_tsx_01bbxrv._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0u5168f._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9q1g._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0u5168f._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9q1g._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0_roe_u.js",
@@ -6381,9 +6557,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1zc0hut._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0vfdjkj._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1kckl-w._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0vfdjkj._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1kckl-w._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_reports_page_actions_15qosy_.js",
@@ -6401,14 +6577,19 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__07jk-wd._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0jrtk0k._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0jrtk0k._.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_settings_page_actions_0zse488.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_settings_page_actions_0zse488.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_settings_page_tsx_11my32h._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_settings_page_tsx_11my32h._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_03zgrri._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_03zgrri._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_186tpnh.js",
@@ -6421,9 +6602,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0awzp8x._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0-68axa._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1o8-do4._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0-68axa._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1o8-do4._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_staff_page_actions_0fa1o13.js",
@@ -6441,9 +6622,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1g9vsgj._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_113eqh6._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1bcb1of._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_113eqh6._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1bcb1of._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_super-admin_page_actions_0lo37g3.js",
@@ -6481,9 +6662,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1_ldcjd._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0g-z89f._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_08vk730._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0g-z89f._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_08vk730._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_login_page_actions_04fnjo0.js",
@@ -6516,9 +6697,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0mbxg5h._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1pvgcg9._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0w7p732._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1pvgcg9._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0w7p732._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_page_actions_0hhsz1j.js",
@@ -6541,9 +6722,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1tvb2fy._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0mxws0v._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1uzxyqt._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0mxws0v._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1uzxyqt._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_register_page_actions_1op-s-x.js",
@@ -6554,6 +6735,31 @@
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0kbre-4.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0kbre-4.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__01jlg3d._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__01jlg3d._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_register_pharmacy_page_actions_0ojh82c.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_register_pharmacy_page_actions_0ojh82c.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_register_pharmacy_page_tsx_0zwnjvs._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_register_pharmacy_page_tsx_0zwnjvs._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0rptoso._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0rptoso._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0to_6le.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0to_6le.js"
         },
         {
           "path": "<runtime>",
@@ -6564,7 +6770,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js": {
-      "bytes": 73269,
+      "bytes": 77236,
       "imports": [
         {
           "path": "worker_threads",
@@ -6602,9 +6808,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0-66vdo._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0bmh7-n._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0sfkszf._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0bmh7-n._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0sfkszf._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__12iu1qn._.js",
@@ -6630,6 +6836,11 @@
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0-0j4jn._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0-0j4jn._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app__not-found_page_actions_0pt47yr.js",
@@ -6707,14 +6918,19 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_13q04th.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0183c9w._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0183c9w._.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0h6iw-6._.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0h6iw-6._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0gtawkg._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_14rbgk5._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0gtawkg._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_14rbgk5._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_186uk5f._.js",
@@ -6737,9 +6953,14 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/lib_utils_ts_0az0sfq._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1gu5tuy._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1j451ax._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1gu5tuy._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1j451ax._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0pccbiu._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0pccbiu._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_1enzot_._.js",
@@ -6772,9 +6993,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_appointments_[id]_page_tsx_17ae35-._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0j-ndwn._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9n91._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0j-ndwn._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9n91._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1jbjwpy.js",
@@ -6797,9 +7018,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_appointments_new_page_tsx_1vq74l8._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1drrhi8._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0rzqhw4._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1drrhi8._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0rzqhw4._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_147lq-k.js",
@@ -6812,9 +7033,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__09afnv9._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1rg5yj4._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1yuasqt._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1rg5yj4._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1yuasqt._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_appointments_page_actions_1t72cqu.js",
@@ -6842,14 +7063,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_billing_page_tsx_1ku6efb._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_07ro0nb._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_16p-sge._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_07ro0nb._.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0by0jua._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0by0jua._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_16p-sge._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0c64yun.js",
@@ -6857,24 +7073,19 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0c64yun.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0pikrjw._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0pikrjw._.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__17eo-13._.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__17eo-13._.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0qojrk7._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0qojrk7._.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_chat_page_actions_0_kakih.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_chat_page_actions_0_kakih.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_x_mjs_1imjbgq._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_x_mjs_1imjbgq._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_10nu2z9.js",
@@ -6887,9 +7098,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0seg852._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1v94v8d._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_034fbbs._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1v94v8d._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_034fbbs._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_departments_page_actions_01hdoup.js",
@@ -6907,9 +7118,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0k3kjat._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0k9tfc9._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1olxx4b._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0k9tfc9._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1olxx4b._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_doctor_page_actions_15fifex.js",
@@ -6937,9 +7148,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_doctors_page_tsx_0dz6wqo._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0cxyjx8._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_08mp2lj._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0cxyjx8._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_08mp2lj._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1rl7r5g.js",
@@ -6952,9 +7163,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1u0siae._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0alur5e._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0huw27z._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0alur5e._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0huw27z._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_hospital_page_actions_15h6zje.js",
@@ -6972,9 +7183,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__218m2kz._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0vo0_74._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1r39ru5._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0vo0_74._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1r39ru5._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_hospitals_page_actions_0np5yeo.js",
@@ -6992,9 +7203,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0zqa517._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1rw31ry._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0jsy_i-._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1rw31ry._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0jsy_i-._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_medicines_page_actions_1gi2qy3.js",
@@ -7012,19 +7223,14 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1_tqp1m._.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0krz299._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0krz299._.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_notifications_page_actions_1h7r_b4.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_notifications_page_actions_1h7r_b4.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_notifications_page_tsx_1gg_g5v._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_notifications_page_tsx_1gg_g5v._.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_@tanstack_react-query_build_modern_0qe3gn4._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_@tanstack_react-query_build_modern_0qe3gn4._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0n3f_6p.js",
@@ -7057,9 +7263,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0c_eln_._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1hufdm6._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0rt8t_m._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1hufdm6._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0rt8t_m._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patient_page_actions_1cme3eh.js",
@@ -7087,9 +7293,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_[id]_page_tsx_1p0jyjk._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_13gqjs2._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_08vsk2k._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_13gqjs2._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_08vsk2k._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_15t28l7.js",
@@ -7102,14 +7308,19 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__12wse5f._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0dnzz6a._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0dnzz6a._.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_new_page_actions_0vci1t5.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_new_page_actions_0vci1t5.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_new_page_tsx_155v3j3._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_new_page_tsx_155v3j3._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0-c_9zz._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0-c_9zz._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0j14dio.js",
@@ -7122,9 +7333,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1s--9vx._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1s4dg8h._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_01uk269._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1s4dg8h._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_01uk269._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_page_actions_0fc2h92.js",
@@ -7137,14 +7348,34 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1jlwb_a.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__09apb-1._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__09apb-1._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_20-5q-_._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_20-5q-_._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_[id]_edit_page_actions_08vdet_.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_[id]_edit_page_actions_08vdet_.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_10uz_4x.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_10uz_4x.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__00uii3f._.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__00uii3f._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1r6uta-._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_12h9scu._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1r6uta-._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_12h9scu._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_new_page_actions_1h2jcoo.js",
@@ -7162,19 +7393,49 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0v-mi7c._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0kssfar._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0kssfar._.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_page_actions_0zuy6g2.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_page_actions_0zuy6g2.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacies_page_tsx_1jyh495._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacies_page_tsx_1jyh495._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0bw3fqc._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0bw3fqc._.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0u7rv91.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0u7rv91.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1mmsfxk._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1mmsfxk._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacy-portal_page_actions_0icu6jl.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacy-portal_page_actions_0icu6jl.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacy-portal_page_tsx_073btof._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacy-portal_page_tsx_073btof._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1idxje-._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1idxje-._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1gzhvn-.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1gzhvn-.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0zajd90._.js",
@@ -7192,9 +7453,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_prescriptions_new_page_tsx_0e7_our._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_15u1r9m._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0jx1xii._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_15u1r9m._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0jx1xii._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0jujdst.js",
@@ -7207,9 +7468,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0332prr._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0ehlyyw._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0r4-6rf._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0ehlyyw._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0r4-6rf._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_prescriptions_page_actions_1juh39b.js",
@@ -7237,9 +7498,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_receptionist_page_tsx_01bbxrv._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0u5168f._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9q1g._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0u5168f._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9q1g._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0_roe_u.js",
@@ -7252,9 +7513,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1zc0hut._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0vfdjkj._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1kckl-w._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0vfdjkj._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1kckl-w._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_reports_page_actions_15qosy_.js",
@@ -7272,14 +7533,19 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__07jk-wd._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0jrtk0k._.js",
-          "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0jrtk0k._.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_settings_page_actions_0zse488.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_settings_page_actions_0zse488.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_settings_page_tsx_11my32h._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_settings_page_tsx_11my32h._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_03zgrri._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_03zgrri._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_186tpnh.js",
@@ -7292,9 +7558,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0awzp8x._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0-68axa._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1o8-do4._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0-68axa._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1o8-do4._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_staff_page_actions_0fa1o13.js",
@@ -7312,9 +7578,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1g9vsgj._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_113eqh6._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1bcb1of._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_113eqh6._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1bcb1of._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_super-admin_page_actions_0lo37g3.js",
@@ -7352,9 +7618,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1_ldcjd._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0g-z89f._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_08vk730._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0g-z89f._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_08vk730._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_login_page_actions_04fnjo0.js",
@@ -7387,9 +7653,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0mbxg5h._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1pvgcg9._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0w7p732._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1pvgcg9._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0w7p732._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_page_actions_0hhsz1j.js",
@@ -7412,9 +7678,9 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1tvb2fy._.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_0mxws0v._.js",
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_1uzxyqt._.js",
           "kind": "require-call",
-          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_0mxws0v._.js"
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_1uzxyqt._.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_register_page_actions_1op-s-x.js",
@@ -7427,9 +7693,45 @@
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0kbre-4.js"
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__01jlg3d._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__01jlg3d._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_register_pharmacy_page_actions_0ojh82c.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_register_pharmacy_page_actions_0ojh82c.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/app_register_pharmacy_page_tsx_0zwnjvs._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/app_register_pharmacy_page_tsx_0zwnjvs._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0rptoso._.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0rptoso._.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0to_6le.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0to_6le.js"
+        },
+        {
           "path": "<runtime>",
           "kind": "import-statement",
           "external": true
+        }
+      ],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/app/dashboard/pharmacies/[id]/edit/page.js": {
+      "bytes": 1065,
+      "imports": [
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js",
+          "kind": "require-call",
+          "original": "../../../../../chunks/ssr/[turbopack]_runtime.js"
         }
       ],
       "format": "cjs"
@@ -7463,6 +7765,17 @@
           "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js",
           "kind": "require-call",
           "original": "../../../../chunks/ssr/[turbopack]_runtime.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".open-next/server-functions/default/.next/server/app/dashboard/pharmacy-portal/page.js": {
+      "bytes": 1051,
+      "imports": [
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js",
+          "kind": "require-call",
+          "original": "../../../chunks/ssr/[turbopack]_runtime.js"
         }
       ],
       "format": "cjs"
@@ -7687,6 +8000,17 @@
       ],
       "format": "cjs"
     },
+    ".open-next/server-functions/default/.next/server/app/register/pharmacy/page.js": {
+      "bytes": 998,
+      "imports": [
+        {
+          "path": ".open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js",
+          "kind": "require-call",
+          "original": "../../../chunks/ssr/[turbopack]_runtime.js"
+        }
+      ],
+      "format": "cjs"
+    },
     ".open-next/server-functions/default/.next/server/app/dashboard/doctor/page.js": {
       "bytes": 1033,
       "imports": [
@@ -7798,7 +8122,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/next/dist/server/require.js": {
-      "bytes": 11603,
+      "bytes": 12317,
       "imports": [
         {
           "path": "path",
@@ -7846,6 +8170,11 @@
           "external": true
         },
         {
+          "path": ".open-next/server-functions/default/.next/server/app/dashboard/pharmacies/[id]/edit/page.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/app/dashboard/pharmacies/[id]/edit/page.js"
+        },
+        {
           "path": ".open-next/server-functions/default/.next/server/app/dashboard/appointments/[id]/page.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/app/dashboard/appointments/[id]/page.js"
@@ -7859,6 +8188,11 @@
           "path": ".open-next/server-functions/default/.next/server/app/dashboard/appointments/new/page.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/app/dashboard/appointments/new/page.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/dashboard/pharmacy-portal/page.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/app/dashboard/pharmacy-portal/page.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/app/dashboard/pharmacies/new/page.js",
@@ -7959,6 +8293,11 @@
           "path": ".open-next/server-functions/default/.next/server/app/dashboard/reports/page.js",
           "kind": "require-call",
           "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/app/dashboard/reports/page.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/register/pharmacy/page.js",
+          "kind": "require-call",
+          "original": "/Users/vishal/Clinic/frontend/.open-next/server-functions/default/.next/server/app/register/pharmacy/page.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/app/dashboard/doctor/page.js",
@@ -9188,7 +9527,7 @@
       "format": "esm"
     },
     ".open-next/server-functions/default/index.mjs": {
-      "bytes": 101803,
+      "bytes": 103424,
       "imports": [
         {
           "path": "node:module",
@@ -9573,37 +9912,47 @@
           "external": true
         },
         {
-          "path": "path",
-          "kind": "require-call",
-          "external": true
-        },
-        {
-          "path": "path",
-          "kind": "require-call",
-          "external": true
-        },
-        {
-          "path": "path",
-          "kind": "require-call",
-          "external": true
-        },
-        {
-          "path": "path",
-          "kind": "require-call",
-          "external": true
-        },
-        {
-          "path": "path",
-          "kind": "require-call",
-          "external": true
-        },
-        {
           "path": "child_process",
           "kind": "require-call",
           "external": true
         },
         {
           "path": "buffer",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "path",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "path",
           "kind": "require-call",
           "external": true
         },
@@ -9739,6 +10088,11 @@
         },
         {
           "path": "node:zlib",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "path",
           "kind": "require-call",
           "external": true
         },
@@ -10659,7 +11013,7 @@
           "bytesInOutput": 586
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-          "bytesInOutput": 250958
+          "bytesInOutput": 287660
         },
         ".open-next/cloudflare-templates/shims/throw.js": {
           "bytesInOutput": 215
@@ -10733,20 +11087,23 @@
         ".open-next/server-functions/default/node_modules/next/dist/server/app-render/dynamic-access-async-storage.external.js": {
           "bytesInOutput": 516
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0bmh7-n._.js": {
-          "bytesInOutput": 28844
+        ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0sfkszf._.js": {
+          "bytesInOutput": 12823
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__12iu1qn._.js": {
-          "bytesInOutput": 277806
+          "bytesInOutput": 278254
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__176tirr._.js": {
-          "bytesInOutput": 12549
+          "bytesInOutput": 12547
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1wla4to._.js": {
           "bytesInOutput": 4860
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1x-fub_._.js": {
           "bytesInOutput": 1570
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_0-0j4jn._.js": {
+          "bytesInOutput": 16419
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app__not-found_page_actions_0pt47yr.js": {
           "bytesInOutput": 270
@@ -10793,14 +11150,17 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_13q04th.js": {
           "bytesInOutput": 23176
         },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0183c9w._.js": {
+          "bytesInOutput": 104117
+        },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0h6iw-6._.js": {
           "bytesInOutput": 2191
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0gtawkg._.js": {
-          "bytesInOutput": 14367
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_14rbgk5._.js": {
+          "bytesInOutput": 15493
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_186uk5f._.js": {
-          "bytesInOutput": 470738
+          "bytesInOutput": 471501
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_1px4jgp._.js": {
           "bytesInOutput": 1326
@@ -10809,10 +11169,13 @@
           "bytesInOutput": 289
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/lib_utils_ts_0az0sfq._.js": {
-          "bytesInOutput": 50810
+          "bytesInOutput": 50806
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1gu5tuy._.js": {
-          "bytesInOutput": 10344
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1j451ax._.js": {
+          "bytesInOutput": 11550
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0pccbiu._.js": {
+          "bytesInOutput": 1198
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_1enzot_._.js": {
           "bytesInOutput": 108787
@@ -10830,10 +11193,10 @@
           "bytesInOutput": 301
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_appointments_[id]_page_tsx_17ae35-._.js": {
-          "bytesInOutput": 29156
+          "bytesInOutput": 29140
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0j-ndwn._.js": {
-          "bytesInOutput": 15599
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9n91._.js": {
+          "bytesInOutput": 5622
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1jbjwpy.js": {
           "bytesInOutput": 23749
@@ -10845,10 +11208,10 @@
           "bytesInOutput": 303
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_appointments_new_page_tsx_1vq74l8._.js": {
-          "bytesInOutput": 25519
+          "bytesInOutput": 25584
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1drrhi8._.js": {
-          "bytesInOutput": 12297
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0rzqhw4._.js": {
+          "bytesInOutput": 2535
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_147lq-k.js": {
           "bytesInOutput": 23739
@@ -10856,8 +11219,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__09afnv9._.js": {
           "bytesInOutput": 2203
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_1rg5yj4._.js": {
-          "bytesInOutput": 14749
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_1yuasqt._.js": {
+          "bytesInOutput": 6706
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_appointments_page_actions_1t72cqu.js": {
           "bytesInOutput": 295
@@ -10872,28 +11235,22 @@
           "bytesInOutput": 285
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_billing_page_tsx_1ku6efb._.js": {
-          "bytesInOutput": 14671
+          "bytesInOutput": 16765
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_07ro0nb._.js": {
-          "bytesInOutput": 12777
-        },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0by0jua._.js": {
-          "bytesInOutput": 1449
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_16p-sge._.js": {
+          "bytesInOutput": 4635
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0c64yun.js": {
           "bytesInOutput": 23662
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0pikrjw._.js": {
-          "bytesInOutput": 115993
-        },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__17eo-13._.js": {
           "bytesInOutput": 2167
         },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_0qojrk7._.js": {
+          "bytesInOutput": 14919
+        },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_chat_page_actions_0_kakih.js": {
           "bytesInOutput": 279
-        },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_x_mjs_1imjbgq._.js": {
-          "bytesInOutput": 409
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_10nu2z9.js": {
           "bytesInOutput": 23647
@@ -10901,8 +11258,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0seg852._.js": {
           "bytesInOutput": 2199
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_1v94v8d._.js": {
-          "bytesInOutput": 8902
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_034fbbs._.js": {
+          "bytesInOutput": 11823
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_departments_page_actions_01hdoup.js": {
           "bytesInOutput": 293
@@ -10913,8 +11270,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0k3kjat._.js": {
           "bytesInOutput": 2179
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0k9tfc9._.js": {
-          "bytesInOutput": 14039
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_1olxx4b._.js": {
+          "bytesInOutput": 5303
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_doctor_page_actions_15fifex.js": {
           "bytesInOutput": 283
@@ -10929,10 +11286,10 @@
           "bytesInOutput": 285
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_doctors_page_tsx_0dz6wqo._.js": {
-          "bytesInOutput": 14604
+          "bytesInOutput": 14739
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0cxyjx8._.js": {
-          "bytesInOutput": 1572
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_08mp2lj._.js": {
+          "bytesInOutput": 4293
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1rl7r5g.js": {
           "bytesInOutput": 23660
@@ -10940,8 +11297,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1u0siae._.js": {
           "bytesInOutput": 2183
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0alur5e._.js": {
-          "bytesInOutput": 15503
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_0huw27z._.js": {
+          "bytesInOutput": 7473
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_hospital_page_actions_15h6zje.js": {
           "bytesInOutput": 287
@@ -10952,8 +11309,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__218m2kz._.js": {
           "bytesInOutput": 2189
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0vo0_74._.js": {
-          "bytesInOutput": 17800
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_1r39ru5._.js": {
+          "bytesInOutput": 8069
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_hospitals_page_actions_0np5yeo.js": {
           "bytesInOutput": 289
@@ -10964,8 +11321,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0zqa517._.js": {
           "bytesInOutput": 2191
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_1rw31ry._.js": {
-          "bytesInOutput": 10906
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_0jsy_i-._.js": {
+          "bytesInOutput": 13785
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_medicines_page_actions_1gi2qy3.js": {
           "bytesInOutput": 289
@@ -10976,14 +11333,11 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1_tqp1m._.js": {
           "bytesInOutput": 2207
         },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_0krz299._.js": {
+          "bytesInOutput": 7124
+        },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_notifications_page_actions_1h7r_b4.js": {
           "bytesInOutput": 296
-        },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_notifications_page_tsx_1gg_g5v._.js": {
-          "bytesInOutput": 3359
-        },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_@tanstack_react-query_build_modern_0qe3gn4._.js": {
-          "bytesInOutput": 12503
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0n3f_6p.js": {
           "bytesInOutput": 23692
@@ -10995,7 +11349,7 @@
           "bytesInOutput": 269
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_page_tsx_0k894ow._.js": {
-          "bytesInOutput": 808
+          "bytesInOutput": 844
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1_v5osr.js": {
           "bytesInOutput": 23590
@@ -11003,8 +11357,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0c_eln_._.js": {
           "bytesInOutput": 2180
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_1hufdm6._.js": {
-          "bytesInOutput": 15966
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_0rt8t_m._.js": {
+          "bytesInOutput": 7333
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patient_page_actions_1cme3eh.js": {
           "bytesInOutput": 285
@@ -11019,10 +11373,10 @@
           "bytesInOutput": 294
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_[id]_page_tsx_1p0jyjk._.js": {
-          "bytesInOutput": 22618
+          "bytesInOutput": 22590
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_13gqjs2._.js": {
-          "bytesInOutput": 12200
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_08vsk2k._.js": {
+          "bytesInOutput": 2279
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_15t28l7.js": {
           "bytesInOutput": 23729
@@ -11030,11 +11384,14 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__12wse5f._.js": {
           "bytesInOutput": 2203
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0dnzz6a._.js": {
-          "bytesInOutput": 14841
-        },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_new_page_actions_0vci1t5.js": {
           "bytesInOutput": 294
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_patients_new_page_tsx_155v3j3._.js": {
+          "bytesInOutput": 15097
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0-c_9zz._.js": {
+          "bytesInOutput": 3477
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0j14dio.js": {
           "bytesInOutput": 23719
@@ -11042,8 +11399,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1s--9vx._.js": {
           "bytesInOutput": 2186
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_1s4dg8h._.js": {
-          "bytesInOutput": 15237
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_01uk269._.js": {
+          "bytesInOutput": 6699
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_patients_page_actions_0fc2h92.js": {
           "bytesInOutput": 287
@@ -11051,11 +11408,23 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1jlwb_a.js": {
           "bytesInOutput": 23667
         },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__09apb-1._.js": {
+          "bytesInOutput": 2233
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_20-5q-_._.js": {
+          "bytesInOutput": 16582
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_[id]_edit_page_actions_08vdet_.js": {
+          "bytesInOutput": 308
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_10uz_4x.js": {
+          "bytesInOutput": 23792
+        },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__00uii3f._.js": {
           "bytesInOutput": 2209
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_1r6uta-._.js": {
-          "bytesInOutput": 14936
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_12h9scu._.js": {
+          "bytesInOutput": 14970
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_new_page_actions_1h2jcoo.js": {
           "bytesInOutput": 299
@@ -11066,14 +11435,32 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0v-mi7c._.js": {
           "bytesInOutput": 2193
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0kssfar._.js": {
-          "bytesInOutput": 11369
-        },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacies_page_actions_0zuy6g2.js": {
           "bytesInOutput": 290
         },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacies_page_tsx_1jyh495._.js": {
+          "bytesInOutput": 12707
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0bw3fqc._.js": {
+          "bytesInOutput": 5794
+        },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0u7rv91.js": {
           "bytesInOutput": 23677
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1mmsfxk._.js": {
+          "bytesInOutput": 2215
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_pharmacy-portal_page_actions_0icu6jl.js": {
+          "bytesInOutput": 301
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_pharmacy-portal_page_tsx_073btof._.js": {
+          "bytesInOutput": 12947
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1idxje-._.js": {
+          "bytesInOutput": 4784
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_1gzhvn-.js": {
+          "bytesInOutput": 23697
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0zajd90._.js": {
           "bytesInOutput": 2223
@@ -11082,10 +11469,10 @@
           "bytesInOutput": 305
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_prescriptions_new_page_tsx_0e7_our._.js": {
-          "bytesInOutput": 40921
+          "bytesInOutput": 40896
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_15u1r9m._.js": {
-          "bytesInOutput": 12237
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0jx1xii._.js": {
+          "bytesInOutput": 2475
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0jujdst.js": {
           "bytesInOutput": 23744
@@ -11093,8 +11480,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0332prr._.js": {
           "bytesInOutput": 2207
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0ehlyyw._.js": {
-          "bytesInOutput": 15815
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_0r4-6rf._.js": {
+          "bytesInOutput": 7582
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_prescriptions_page_actions_1juh39b.js": {
           "bytesInOutput": 297
@@ -11109,10 +11496,10 @@
           "bytesInOutput": 295
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_receptionist_page_tsx_01bbxrv._.js": {
-          "bytesInOutput": 14570
+          "bytesInOutput": 14303
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_lucide-react_dist_esm_icons_0u5168f._.js": {
-          "bytesInOutput": 1273
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_1bf9q1g._.js": {
+          "bytesInOutput": 4328
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0_roe_u.js": {
           "bytesInOutput": 23687
@@ -11120,8 +11507,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1zc0hut._.js": {
           "bytesInOutput": 2183
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0vfdjkj._.js": {
-          "bytesInOutput": 13885
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_1kckl-w._.js": {
+          "bytesInOutput": 9652
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_reports_page_actions_15qosy_.js": {
           "bytesInOutput": 284
@@ -11132,11 +11519,14 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__07jk-wd._.js": {
           "bytesInOutput": 2187
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0jrtk0k._.js": {
-          "bytesInOutput": 16975
-        },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_settings_page_actions_0zse488.js": {
           "bytesInOutput": 286
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/app_dashboard_settings_page_tsx_11my32h._.js": {
+          "bytesInOutput": 15265
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_03zgrri._.js": {
+          "bytesInOutput": 4540
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_186tpnh.js": {
           "bytesInOutput": 23665
@@ -11144,8 +11534,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0awzp8x._.js": {
           "bytesInOutput": 2175
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0-68axa._.js": {
-          "bytesInOutput": 11672
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_1o8-do4._.js": {
+          "bytesInOutput": 14589
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_staff_page_actions_0fa1o13.js": {
           "bytesInOutput": 280
@@ -11156,8 +11546,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1g9vsgj._.js": {
           "bytesInOutput": 2199
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_113eqh6._.js": {
-          "bytesInOutput": 24638
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_1bcb1of._.js": {
+          "bytesInOutput": 14663
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_dashboard_super-admin_page_actions_0lo37g3.js": {
           "bytesInOutput": 293
@@ -11180,8 +11570,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1_ldcjd._.js": {
           "bytesInOutput": 2133
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0g-z89f._.js": {
-          "bytesInOutput": 9990
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_08vk730._.js": {
+          "bytesInOutput": 10180
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_login_page_actions_04fnjo0.js": {
           "bytesInOutput": 261
@@ -11193,16 +11583,16 @@
           "bytesInOutput": 23509
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_react-hook-form_dist_index_esm_mjs_0sajker._.js": {
-          "bytesInOutput": 389016
+          "bytesInOutput": 388818
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__0p6y_2u._.js": {
           "bytesInOutput": 1268
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_0mbxg5h._.js": {
-          "bytesInOutput": 24209
+          "bytesInOutput": 28183
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_1pvgcg9._.js": {
-          "bytesInOutput": 12023
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_0w7p732._.js": {
+          "bytesInOutput": 12670
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_page_actions_0hhsz1j.js": {
           "bytesInOutput": 249
@@ -11216,8 +11606,8 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__1tvb2fy._.js": {
           "bytesInOutput": 2147
         },
-        ".open-next/server-functions/default/.next/server/chunks/ssr/_0mxws0v._.js": {
-          "bytesInOutput": 10380
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_1uzxyqt._.js": {
+          "bytesInOutput": 12057
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_register_page_actions_1op-s-x.js": {
           "bytesInOutput": 267
@@ -11225,20 +11615,41 @@
         ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0kbre-4.js": {
           "bytesInOutput": 23524
         },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/[root-of-the-server]__01jlg3d._.js": {
+          "bytesInOutput": 2183
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/_next-internal_server_app_register_pharmacy_page_actions_0ojh82c.js": {
+          "bytesInOutput": 285
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/app_register_pharmacy_page_tsx_0zwnjvs._.js": {
+          "bytesInOutput": 15302
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_0rptoso._.js": {
+          "bytesInOutput": 7281
+        },
+        ".open-next/server-functions/default/.next/server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_0to_6le.js": {
+          "bytesInOutput": 23601
+        },
         ".open-next/server-functions/default/.next/server/chunks/[turbopack]_runtime.js": {
-          "bytesInOutput": 37843
+          "bytesInOutput": 40011
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js": {
-          "bytesInOutput": 37858
+          "bytesInOutput": 40026
+        },
+        ".open-next/server-functions/default/.next/server/app/dashboard/pharmacies/[id]/edit/page.js": {
+          "bytesInOutput": 1189
         },
         ".open-next/server-functions/default/.next/server/app/dashboard/appointments/[id]/page.js": {
-          "bytesInOutput": 1184
+          "bytesInOutput": 1185
         },
         ".open-next/server-functions/default/.next/server/app/dashboard/prescriptions/new/page.js": {
           "bytesInOutput": 1185
         },
         ".open-next/server-functions/default/.next/server/app/dashboard/appointments/new/page.js": {
           "bytesInOutput": 1182
+        },
+        ".open-next/server-functions/default/.next/server/app/dashboard/pharmacy-portal/page.js": {
+          "bytesInOutput": 1177
         },
         ".open-next/server-functions/default/.next/server/app/dashboard/pharmacies/new/page.js": {
           "bytesInOutput": 1176
@@ -11253,10 +11664,10 @@
           "bytesInOutput": 1173
         },
         ".open-next/server-functions/default/.next/server/app/dashboard/appointments/page.js": {
-          "bytesInOutput": 1170
+          "bytesInOutput": 1171
         },
         ".open-next/server-functions/default/.next/server/app/dashboard/patients/new/page.js": {
-          "bytesInOutput": 1170
+          "bytesInOutput": 1171
         },
         ".open-next/server-functions/default/.next/server/app/dashboard/receptionist/page.js": {
           "bytesInOutput": 1171
@@ -11300,6 +11711,9 @@
         ".open-next/server-functions/default/.next/server/app/dashboard/reports/page.js": {
           "bytesInOutput": 1156
         },
+        ".open-next/server-functions/default/.next/server/app/register/pharmacy/page.js": {
+          "bytesInOutput": 1117
+        },
         ".open-next/server-functions/default/.next/server/app/dashboard/doctor/page.js": {
           "bytesInOutput": 1151
         },
@@ -11331,7 +11745,7 @@
           "bytesInOutput": 1102
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/require.js": {
-          "bytesInOutput": 6027
+          "bytesInOutput": 6342
         },
         ".open-next/server-functions/default/node_modules/next/dist/lib/wait.js": {
           "bytesInOutput": 341
@@ -11481,10 +11895,10 @@
           "bytesInOutput": 5074
         },
         ".open-next/server-functions/default/index.mjs": {
-          "bytesInOutput": 73572
+          "bytesInOutput": 75020
         }
       },
-      "bytes": 6178844
+      "bytes": 6273012
     }
   }
 }

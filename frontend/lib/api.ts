@@ -165,6 +165,12 @@ export const pharmaciesApi = {
   getOne: (id: string) => api.get(`/pharmacies/${id}`),
   update: (id: string, data: any) => api.put(`/pharmacies/${id}`, data),
   remove: (id: string) => api.delete(`/pharmacies/${id}`),
+  createInvite: () => api.post('/pharmacies/invite'),
+  getInvite: (token: string) => api.get(`/pharmacies/invite/${token}`),
+  completeInvite: (token: string, data: any) =>
+    api.post(`/pharmacies/invite/${token}/complete`, data),
+  getMine: () => api.get('/pharmacies/me'),
+  updateMine: (data: any) => api.put('/pharmacies/me', data),
 };
 
 

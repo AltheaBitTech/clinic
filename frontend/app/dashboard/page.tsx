@@ -16,6 +16,7 @@ export default function DashboardPage() {
         DOCTOR: '/dashboard/doctor',
         RECEPTIONIST: '/dashboard/receptionist',
         PATIENT: '/dashboard/patient',
+        PHARMACY: '/dashboard/pharmacy-portal',
       };
       router.replace(routes[user.role] || '/dashboard/patient');
     }
