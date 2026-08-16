@@ -24,13 +24,28 @@ export class DoctorsService {
         experienceYears: dto.experienceYears,
         consultationFee: dto.consultationFee,
         bio: dto.bio,
-        availableDays: dto.availableDays || ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
+        availableDays: dto.availableDays || [
+          'MONDAY',
+          'TUESDAY',
+          'WEDNESDAY',
+          'THURSDAY',
+          'FRIDAY',
+        ],
         consultationStart: dto.consultationStart || '09:00',
         consultationEnd: dto.consultationEnd || '17:00',
         slotDuration: dto.slotDuration || 30,
       },
       include: {
-        user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            avatarUrl: true,
+          },
+        },
         department: true,
       },
     });
@@ -47,7 +62,16 @@ export class DoctorsService {
         skip,
         take: limit,
         include: {
-          user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true } },
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+              avatarUrl: true,
+            },
+          },
           department: true,
           _count: { select: { appointments: true, prescriptions: true } },
         },
@@ -88,14 +112,25 @@ export class DoctorsService {
         consultationEnd: dto.consultationEnd,
         slotDuration: dto.slotDuration,
       },
-      include: { user: { select: { id: true, firstName: true, lastName: true } }, department: true },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } },
+        department: true,
+      },
     });
   }
 
   async getAvailableSlots(doctorId: string, date: string) {
     const doctor = await this.findOne(doctorId);
     const dayDate = new Date(date);
-    const dayName = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][dayDate.getDay()];
+    const dayName = [
+      'SUNDAY',
+      'MONDAY',
+      'TUESDAY',
+      'WEDNESDAY',
+      'THURSDAY',
+      'FRIDAY',
+      'SATURDAY',
+    ][dayDate.getDay()];
 
     if (!doctor.availableDays.includes(dayName)) {
       return { available: false, slots: [] };
@@ -114,7 +149,9 @@ export class DoctorsService {
       select: { scheduledAt: true },
     });
 
-    const bookedTimes = existingAppts.map((a) => a.scheduledAt.getHours() * 60 + a.scheduledAt.getMinutes());
+    const bookedTimes = existingAppts.map(
+      (a) => a.scheduledAt.getHours() * 60 + a.scheduledAt.getMinutes(),
+    );
 
     // Generate slots
     const [startH, startM] = doctor.consultationStart.split(':').map(Number);
@@ -130,7 +167,9 @@ export class DoctorsService {
     for (let min = startMin; min < endMin; min += doctor.slotDuration) {
       if (isToday && min <= nowMin) continue;
       if (!bookedTimes.includes(min)) {
-        const h = Math.floor(min / 60).toString().padStart(2, '0');
+        const h = Math.floor(min / 60)
+          .toString()
+          .padStart(2, '0');
         const m = (min % 60).toString().padStart(2, '0');
         slots.push(`${h}:${m}`);
       }

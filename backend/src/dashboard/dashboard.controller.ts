@@ -29,7 +29,10 @@ export class DashboardController {
   @Roles(UserRole.DOCTOR)
   @ApiOperation({ summary: 'Doctor dashboard' })
   getDoctor(@CurrentUser() user: any) {
-    return this.dashboardService.getDoctorDashboard(user.tenantId, user.doctor?.id);
+    return this.dashboardService.getDoctorDashboard(
+      user.tenantId,
+      user.doctor?.id,
+    );
   }
 
   @Get('patient')

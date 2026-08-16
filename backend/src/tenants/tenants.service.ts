@@ -1,6 +1,14 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTenantDto, UpdateTenantDto, InviteUserDto } from './dto/tenant.dto';
+import {
+  CreateTenantDto,
+  UpdateTenantDto,
+  InviteUserDto,
+} from './dto/tenant.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -8,7 +16,10 @@ export class TenantsService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateTenantDto) {
-    const slug = dto.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = dto.name
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
     const existing = await this.prisma.tenant.findUnique({ where: { slug } });
     if (existing) throw new ConflictException('Tenant slug already exists');
 
@@ -23,7 +34,9 @@ export class TenantsService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          _count: { select: { users: true, patients: true, appointments: true } },
+          _count: {
+            select: { users: true, patients: true, appointments: true },
+          },
         },
       }),
       this.prisma.tenant.count(),
@@ -98,6 +111,12 @@ export class TenantsService {
       this.prisma.invoice.count({ where: { tenantId, status: 'PENDING' } }),
     ]);
 
-    return { totalDoctors, totalPatients, totalAppointments, todayAppointments, pendingInvoices };
+    return {
+      totalDoctors,
+      totalPatients,
+      totalAppointments,
+      todayAppointments,
+      pendingInvoices,
+    };
   }
 }

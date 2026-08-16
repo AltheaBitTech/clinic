@@ -192,6 +192,14 @@ function RegisterForm() {
               Sign in
             </Link>
           </p>
+          {!inviteToken && (
+            <p className="mt-2 text-center text-sm text-slate-400 font-light">
+              Registering a pharmacy business?{' '}
+              <Link href="/register/pharmacy-business" className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
+                Sign up here
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     </div>

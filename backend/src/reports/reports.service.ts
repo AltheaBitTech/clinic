@@ -8,7 +8,13 @@ import * as fs from 'fs';
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(tenantId: string, uploadedBy: string, patientId: string, file: Express.Multer.File, body: any) {
+  async create(
+    tenantId: string,
+    uploadedBy: string,
+    patientId: string,
+    file: Express.Multer.File,
+    body: any,
+  ) {
     const fileUrl = `/uploads/reports/${file.filename}`;
 
     const report = await this.prisma.report.create({
@@ -42,7 +48,13 @@ export class ReportsService {
     return report;
   }
 
-  async findAll(tenantId: string, patientId?: string, type?: ReportType, page = 1, limit = 20) {
+  async findAll(
+    tenantId: string,
+    patientId?: string,
+    type?: ReportType,
+    page = 1,
+    limit = 20,
+  ) {
     const skip = (page - 1) * limit;
     const where: any = { tenantId };
     if (patientId) where.patientId = patientId;
@@ -62,12 +74,18 @@ export class ReportsService {
   }
 
   async getPatientIdForUser(userId: string): Promise<string | null> {
-    const patient = await this.prisma.patient.findFirst({ where: { userId }, select: { id: true } });
+    const patient = await this.prisma.patient.findFirst({
+      where: { userId },
+      select: { id: true },
+    });
     return patient?.id ?? null;
   }
 
   async findOne(id: string) {
-    const report = await this.prisma.report.findUnique({ where: { id }, include: { patient: true } });
+    const report = await this.prisma.report.findUnique({
+      where: { id },
+      include: { patient: true },
+    });
     if (!report) throw new NotFoundException('Report not found');
     return report;
   }

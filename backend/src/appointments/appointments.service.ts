@@ -1,6 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateAppointmentDto, UpdateAppointmentDto } from './dto/appointment.dto';
+import {
+  CreateAppointmentDto,
+  UpdateAppointmentDto,
+} from './dto/appointment.dto';
 
 @Injectable()
 export class AppointmentsService {
@@ -11,20 +18,26 @@ export class AppointmentsService {
     let finalPatientId = dto.patientId;
 
     if (user.role === 'PATIENT') {
-      const patient = await this.prisma.patient.findUnique({ where: { userId: user.id } });
+      const patient = await this.prisma.patient.findUnique({
+        where: { userId: user.id },
+      });
       if (!patient) throw new NotFoundException('Patient profile not found');
       finalPatientId = patient.id;
       finalTenantId = patient.tenantId;
     } else {
       if (!finalTenantId) {
-        const patient = await this.prisma.patient.findUnique({ where: { id: dto.patientId } });
+        const patient = await this.prisma.patient.findUnique({
+          where: { id: dto.patientId },
+        });
         if (!patient) throw new NotFoundException('Patient not found');
         finalTenantId = patient.tenantId;
       }
     }
 
     if (!finalTenantId) {
-      throw new BadRequestException('Tenant ID is required to create an appointment');
+      throw new BadRequestException(
+        'Tenant ID is required to create an appointment',
+      );
     }
 
     const scheduledAt = new Date(dto.scheduledAt);
@@ -45,8 +58,21 @@ export class AppointmentsService {
         notes: dto.notes,
       },
       include: {
-        patient: { include: { user: { select: { firstName: true, lastName: true, email: true, phone: true } } } },
-        doctor: { include: { user: { select: { firstName: true, lastName: true } } } },
+        patient: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
+        },
+        doctor: {
+          include: { user: { select: { firstName: true, lastName: true } } },
+        },
       },
     });
 
@@ -82,7 +108,9 @@ export class AppointmentsService {
 
     let finalTenantId = user.tenantId;
     if (user.role === 'PATIENT') {
-      const patient = await this.prisma.patient.findFirst({ where: { userId: user.id } });
+      const patient = await this.prisma.patient.findFirst({
+        where: { userId: user.id },
+      });
       if (patient) {
         finalTenantId = patient.tenantId;
         where.patientId = patient.id;
@@ -90,7 +118,9 @@ export class AppointmentsService {
         where.patientId = 'none';
       }
     } else if (user.role === 'DOCTOR') {
-      const doctor = await this.prisma.doctor.findUnique({ where: { userId: user.id } });
+      const doctor = await this.prisma.doctor.findUnique({
+        where: { userId: user.id },
+      });
       if (doctor) {
         finalTenantId = doctor.tenantId;
         where.doctorId = doctor.id;
@@ -123,8 +153,25 @@ export class AppointmentsService {
         take: limit,
         orderBy: { scheduledAt: 'asc' },
         include: {
-          patient: { include: { user: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } } } },
-          doctor: { include: { user: { select: { firstName: true, lastName: true, avatarUrl: true } } } },
+          patient: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  phone: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+          doctor: {
+            include: {
+              user: {
+                select: { firstName: true, lastName: true, avatarUrl: true },
+              },
+            },
+          },
         },
       }),
       this.prisma.appointment.count({ where }),
@@ -154,7 +201,9 @@ export class AppointmentsService {
     if (dto.scheduledAt) {
       data.scheduledAt = new Date(dto.scheduledAt);
       if (data.scheduledAt.getTime() < Date.now()) {
-        throw new BadRequestException('Cannot reschedule an appointment to the past');
+        throw new BadRequestException(
+          'Cannot reschedule an appointment to the past',
+        );
       }
     }
     if (dto.followUpDate) data.followUpDate = new Date(dto.followUpDate);
@@ -180,8 +229,12 @@ export class AppointmentsService {
       where: { id },
       data,
       include: {
-        patient: { include: { user: { select: { firstName: true, lastName: true } } } },
-        doctor: { include: { user: { select: { firstName: true, lastName: true } } } },
+        patient: {
+          include: { user: { select: { firstName: true, lastName: true } } },
+        },
+        doctor: {
+          include: { user: { select: { firstName: true, lastName: true } } },
+        },
       },
     });
   }
@@ -201,8 +254,21 @@ export class AppointmentsService {
       where,
       orderBy: { scheduledAt: 'asc' },
       include: {
-        patient: { include: { user: { select: { firstName: true, lastName: true, phone: true, avatarUrl: true } } } },
-        doctor: { include: { user: { select: { firstName: true, lastName: true } } } },
+        patient: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                phone: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+        doctor: {
+          include: { user: { select: { firstName: true, lastName: true } } },
+        },
       },
     });
   }
@@ -217,7 +283,9 @@ export class AppointmentsService {
           patient: {
             appointments: {
               some: {
-                scheduledAt: { gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+                scheduledAt: {
+                  gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                },
                 status: { in: ['SCHEDULED', 'CONFIRMED', 'COMPLETED'] },
               },
             },
@@ -225,8 +293,14 @@ export class AppointmentsService {
         },
       },
       include: {
-        patient: { include: { user: { select: { firstName: true, lastName: true, phone: true } } } },
-        doctor: { include: { user: { select: { firstName: true, lastName: true } } } },
+        patient: {
+          include: {
+            user: { select: { firstName: true, lastName: true, phone: true } },
+          },
+        },
+        doctor: {
+          include: { user: { select: { firstName: true, lastName: true } } },
+        },
       },
       take: 20,
     });

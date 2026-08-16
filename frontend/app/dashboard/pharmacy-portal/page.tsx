@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { pharmaciesApi } from '@/lib/api';
+import Link from 'next/link';
+import { pharmaciesApi, pharmacyDashboardApi } from '@/lib/api';
 import {
   Store, Phone, Mail, MapPin, Clock, Truck, FileText,
   User, Check, AlertCircle, Building2, Loader2, Pencil, X,
+  Pill, Boxes, ClipboardList, TrendingDown, AlertTriangle, Receipt, ShoppingCart,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -51,6 +53,11 @@ export default function PharmacyPortalPage() {
   const { data: pharmacy, isLoading } = useQuery({
     queryKey: ['pharmacy-mine'],
     queryFn: () => pharmaciesApi.getMine().then((r) => r.data),
+  });
+
+  const { data: summary } = useQuery({
+    queryKey: ['pharmacy-dashboard-summary'],
+    queryFn: () => pharmacyDashboardApi.getSummary().then((r) => r.data),
   });
 
   useEffect(() => {
@@ -107,7 +114,7 @@ export default function PharmacyPortalPage() {
   if (!pharmacy || !form) return null;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-200 shrink-0">
@@ -130,8 +137,32 @@ export default function PharmacyPortalPage() {
         )}
       </div>
 
+      {!isEditing && (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <SummaryCard icon={TrendingDown} label="Low Stock" value={summary?.lowStockCount ?? '—'} color="amber" />
+            <SummaryCard icon={AlertTriangle} label="Expiring Soon" value={summary?.expiringSoonCount ?? '—'} color="red" />
+            <SummaryCard icon={ClipboardList} label="Pending Rx" value={summary?.pendingPrescriptions ?? '—'} color="cyan" />
+            <SummaryCard
+              icon={Receipt}
+              label="Today's Sales"
+              value={summary ? `₹${Number(summary.todaysSalesTotal).toFixed(0)}` : '—'}
+              color="emerald"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <QuickLink href="/dashboard/pharmacy-portal/medicines" icon={Pill} label="Medicine Catalog" />
+            <QuickLink href="/dashboard/pharmacy-portal/inventory" icon={Boxes} label="Inventory" />
+            <QuickLink href="/dashboard/pharmacy-portal/prescriptions" icon={ClipboardList} label="Prescriptions" />
+            <QuickLink href="/dashboard/pharmacy-portal/suppliers" icon={Truck} label="Suppliers" />
+            <QuickLink href="/dashboard/pharmacy-portal/purchases" icon={ShoppingCart} label="Purchase Orders" />
+          </div>
+        </>
+      )}
+
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="space-y-6" id="edit-pharmacy-profile-form">
+        <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl mx-auto" id="edit-pharmacy-profile-form">
           <FormSection icon={Store} title="Basic Information" description="Core details about the pharmacy">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField id="edit-pharmacy-name" label="Pharmacy Name" required error={errors.name}>
@@ -334,7 +365,7 @@ export default function PharmacyPortalPage() {
           </div>
         </form>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-3xl mx-auto">
           {pharmacy.homeDeliveryAvailable && (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600">
               <Truck className="w-3.5 h-3.5" />
@@ -390,6 +421,50 @@ export default function PharmacyPortalPage() {
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
+
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  color: 'amber' | 'red' | 'cyan' | 'emerald';
+}) {
+  const colorStyles: Record<string, string> = {
+    amber: 'bg-amber-50 text-amber-600',
+    red: 'bg-red-50 text-red-600',
+    cyan: 'bg-cyan-50 text-cyan-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
+  };
+  return (
+    <div className="card flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${colorStyles[color]}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-lg font-bold text-slate-800 leading-tight">{value}</p>
+        <p className="text-[11px] text-slate-400 truncate">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function QuickLink({ href, icon: Icon, label }: { href: string; icon: React.ElementType; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="card flex items-center gap-3 hover:border-cyan-200 hover:shadow-md transition-all"
+    >
+      <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center shrink-0">
+        <Icon className="w-5 h-5 text-cyan-600" />
+      </div>
+      <p className="text-sm font-semibold text-slate-700">{label}</p>
+    </Link>
+  );
+}
 
 function FormSection({
   icon: Icon,

@@ -269,6 +269,7 @@ export default function SuperAdminDashboard() {
             <thead>
               <tr>
                 <th>Hospital / Clinic</th>
+                <th>Type</th>
                 <th>Admin details</th>
                 <th>Location</th>
                 <th>Submitted On</th>
@@ -289,6 +290,16 @@ export default function SuperAdminDashboard() {
                         <p className="text-[10px] text-slate-400 mt-0.5 font-mono">ID: {req.id}</p>
                       </div>
                     </div>
+                  </td>
+                  <td>
+                    <span className={cn(
+                      'badge font-semibold uppercase tracking-wider text-[10px] px-2 py-0.5',
+                      req.type === 'PHARMACY'
+                        ? 'bg-cyan-50 text-cyan-700 border border-cyan-200/50'
+                        : 'bg-slate-100 text-slate-600 border border-slate-200/50'
+                    )}>
+                      {req.type === 'PHARMACY' ? 'Pharmacy' : 'Hospital'}
+                    </span>
                   </td>
                   <td>
                     <div className="space-y-0.5 text-xs text-slate-600">

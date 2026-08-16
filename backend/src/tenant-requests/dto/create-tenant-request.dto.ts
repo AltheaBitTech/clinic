@@ -1,8 +1,18 @@
-import { IsString, IsEmail, IsOptional } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TenantType } from '@prisma/client';
 
 export class CreateTenantRequestDto {
-  @ApiProperty({ description: 'Hospital or Clinic Name' })
+  @ApiPropertyOptional({
+    description: 'Type of tenant being requested',
+    enum: TenantType,
+    default: TenantType.HOSPITAL,
+  })
+  @IsOptional()
+  @IsEnum(TenantType)
+  type?: TenantType;
+
+  @ApiProperty({ description: 'Hospital/Clinic/Pharmacy Business Name' })
   @IsString()
   name: string;
 
@@ -18,12 +28,16 @@ export class CreateTenantRequestDto {
   @IsString()
   lastName: string;
 
-  @ApiPropertyOptional({ description: 'Contact Phone Number' })
+  @ApiPropertyOptional({
+    description: 'Contact Phone Number (required when type is PHARMACY)',
+  })
   @IsOptional()
   @IsString()
   phone?: string;
 
-  @ApiPropertyOptional({ description: 'Street Address' })
+  @ApiPropertyOptional({
+    description: 'Street Address (required when type is PHARMACY)',
+  })
   @IsOptional()
   @IsString()
   address?: string;

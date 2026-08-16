@@ -31,14 +31,20 @@ export class MedicalCatalogService {
     });
   }
 
-  async findAll(tenantId: string, type?: string, search?: string, page = 1, limit = 50) {
+  async findAll(
+    tenantId: string,
+    type?: string,
+    search?: string,
+    page = 1,
+    limit = 50,
+  ) {
     const skip = (page - 1) * limit;
     const where: any = { tenantId };
-    
+
     if (type) {
       where.type = type;
     }
-    
+
     if (search) {
       where.name = {
         contains: search,

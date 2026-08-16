@@ -32,8 +32,17 @@ export class PrescriptionsService {
       },
       include: {
         medicines: true,
-        patient: { include: { user: { select: { firstName: true, lastName: true, email: true } } } },
-        doctor: { include: { user: { select: { firstName: true, lastName: true } }, department: true } },
+        patient: {
+          include: {
+            user: { select: { firstName: true, lastName: true, email: true } },
+          },
+        },
+        doctor: {
+          include: {
+            user: { select: { firstName: true, lastName: true } },
+            department: true,
+          },
+        },
       },
     });
 
@@ -53,7 +62,10 @@ export class PrescriptionsService {
         eventType: 'PRESCRIPTION',
         title: `Prescription by Dr. ${prescription.doctor.user.firstName}`,
         description: prescription.diagnosis || 'New prescription',
-        metadata: { prescriptionId: prescription.id, medicines: prescription.medicines.length },
+        metadata: {
+          prescriptionId: prescription.id,
+          medicines: prescription.medicines.length,
+        },
       },
     });
 
@@ -64,7 +76,10 @@ export class PrescriptionsService {
   }
 
   async getPatientIdForUser(userId: string): Promise<string | null> {
-    const patient = await this.prisma.patient.findFirst({ where: { userId }, select: { id: true } });
+    const patient = await this.prisma.patient.findFirst({
+      where: { userId },
+      select: { id: true },
+    });
     return patient?.id ?? null;
   }
 
@@ -83,8 +98,12 @@ export class PrescriptionsService {
         orderBy: { createdAt: 'desc' },
         include: {
           medicines: true,
-          patient: { include: { user: { select: { firstName: true, lastName: true } } } },
-          doctor: { include: { user: { select: { firstName: true, lastName: true } } } },
+          patient: {
+            include: { user: { select: { firstName: true, lastName: true } } },
+          },
+          doctor: {
+            include: { user: { select: { firstName: true, lastName: true } } },
+          },
         },
       }),
       this.prisma.prescription.count({ where }),
@@ -115,7 +134,8 @@ export class PrescriptionsService {
     try {
       const PDFDocument = require('pdfkit');
       const uploadDir = path.join(process.cwd(), 'uploads', 'prescriptions');
-      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      if (!fs.existsSync(uploadDir))
+        fs.mkdirSync(uploadDir, { recursive: true });
 
       const fileName = `prescription_${prescription.id}.pdf`;
       const filePath = path.join(uploadDir, fileName);
@@ -133,17 +153,28 @@ export class PrescriptionsService {
         const contentWidth = doc.page.width - marginX * 2;
         const drawDivider = () => {
           doc.moveDown(0.4);
-          doc.strokeColor('#ccc').moveTo(marginX, doc.y).lineTo(marginX + contentWidth, doc.y).stroke();
+          doc
+            .strokeColor('#ccc')
+            .moveTo(marginX, doc.y)
+            .lineTo(marginX + contentWidth, doc.y)
+            .stroke();
           doc.strokeColor('black');
           doc.moveDown(0.5);
         };
         const sectionHeading = (title: string) => {
-          doc.fontSize(11).font('Helvetica-Bold').fillColor('#15803d').text(title);
+          doc
+            .fontSize(11)
+            .font('Helvetica-Bold')
+            .fillColor('#15803d')
+            .text(title);
           doc.fillColor('black');
           doc.moveDown(0.3);
         };
         const labelValueRow = (label: string, value: string) => {
-          doc.font('Helvetica-Bold').fontSize(10).text(label, marginX, doc.y, { continued: true });
+          doc
+            .font('Helvetica-Bold')
+            .fontSize(10)
+            .text(label, marginX, doc.y, { continued: true });
           doc.font('Helvetica').text(` : ${value}`);
         };
 
@@ -153,49 +184,98 @@ export class PrescriptionsService {
         const logoSize = 50;
         const logoY = headerY + (headerHeight - logoSize) / 2;
 
-        doc.roundedRect(marginX, headerY, contentWidth, headerHeight, 4).strokeColor('#16a34a').stroke();
+        doc
+          .roundedRect(marginX, headerY, contentWidth, headerHeight, 4)
+          .strokeColor('#16a34a')
+          .stroke();
         doc.strokeColor('black');
 
-        const arogyixLogoPath = path.join(process.cwd(), 'assets', 'arogyix-logo.png');
+        const arogyixLogoPath = path.join(
+          process.cwd(),
+          'assets',
+          'arogyix-logo.png',
+        );
         if (fs.existsSync(arogyixLogoPath)) {
-          doc.image(arogyixLogoPath, marginX + 15, logoY, { width: logoSize, height: logoSize });
+          doc.image(arogyixLogoPath, marginX + 15, logoY, {
+            width: logoSize,
+            height: logoSize,
+          });
         }
 
         const tenantLogoPath = this.resolveTenantLogoPath(tenant?.logoUrl);
         if (tenantLogoPath) {
-          doc.image(tenantLogoPath, marginX + contentWidth - logoSize - 15, logoY, {
-            width: logoSize,
-            height: logoSize,
-            fit: [logoSize, logoSize],
-          });
+          doc.image(
+            tenantLogoPath,
+            marginX + contentWidth - logoSize - 15,
+            logoY,
+            {
+              width: logoSize,
+              height: logoSize,
+              fit: [logoSize, logoSize],
+            },
+          );
         }
 
         const titleX = marginX + 75;
         const titleWidth = contentWidth - 150;
-        doc.fontSize(20).font('Helvetica-Bold').fillColor('#15803d')
-          .text('AROGYIX', titleX, headerY + 14, { width: titleWidth, align: 'center' });
-        doc.fontSize(12).font('Helvetica-Bold').fillColor('black')
-          .text(tenant?.name || 'Hospital', titleX, headerY + 40, { width: titleWidth, align: 'center' });
-        const addressLine = [tenant?.address, tenant?.city, tenant?.state].filter(Boolean).join(', ');
+        doc
+          .fontSize(20)
+          .font('Helvetica-Bold')
+          .fillColor('#15803d')
+          .text('AROGYIX', titleX, headerY + 14, {
+            width: titleWidth,
+            align: 'center',
+          });
+        doc
+          .fontSize(12)
+          .font('Helvetica-Bold')
+          .fillColor('black')
+          .text(tenant?.name || 'Hospital', titleX, headerY + 40, {
+            width: titleWidth,
+            align: 'center',
+          });
+        const addressLine = [tenant?.address, tenant?.city, tenant?.state]
+          .filter(Boolean)
+          .join(', ');
         if (addressLine) {
-          doc.fontSize(8).font('Helvetica').fillColor('#666')
-            .text(addressLine, titleX, headerY + 58, { width: titleWidth, align: 'center' });
+          doc
+            .fontSize(8)
+            .font('Helvetica')
+            .fillColor('#666')
+            .text(addressLine, titleX, headerY + 58, {
+              width: titleWidth,
+              align: 'center',
+            });
         }
         doc.fillColor('black');
         doc.y = headerY + headerHeight + 15;
 
         // ─── Doctor ───
-        doc.fontSize(12).font('Helvetica-Bold').text(
-          `Dr. ${prescription.doctor.user.firstName} ${prescription.doctor.user.lastName}`,
-        );
-        const doctorSubLine = [prescription.doctor.qualification, prescription.doctor.specialization]
+        doc
+          .fontSize(12)
+          .font('Helvetica-Bold')
+          .text(
+            `Dr. ${prescription.doctor.user.firstName} ${prescription.doctor.user.lastName}`,
+          );
+        const doctorSubLine = [
+          prescription.doctor.qualification,
+          prescription.doctor.specialization,
+        ]
           .filter(Boolean)
           .join(' | ');
         if (doctorSubLine) {
-          doc.fontSize(9).font('Helvetica').fillColor('#555').text(doctorSubLine);
+          doc
+            .fontSize(9)
+            .font('Helvetica')
+            .fillColor('#555')
+            .text(doctorSubLine);
         }
         if (prescription.doctor.registrationNo) {
-          doc.fontSize(9).font('Helvetica').fillColor('#555').text(`Reg No: ${prescription.doctor.registrationNo}`);
+          doc
+            .fontSize(9)
+            .font('Helvetica')
+            .fillColor('#555')
+            .text(`Reg No: ${prescription.doctor.registrationNo}`);
         }
         doc.fillColor('black');
         drawDivider();
@@ -205,10 +285,19 @@ export class PrescriptionsService {
         const age = this.calculateAge(prescription.patient.dateOfBirth);
         labelValueRow('Patient', patientName);
         if (age !== null) labelValueRow('Age', `${age} Years`);
-        if (prescription.patient.gender) labelValueRow('Gender', this.toTitleCase(prescription.patient.gender));
-        labelValueRow('Date', new Date().toLocaleDateString('en-IN', {
-          day: '2-digit', month: 'short', year: 'numeric',
-        }));
+        if (prescription.patient.gender)
+          labelValueRow(
+            'Gender',
+            this.toTitleCase(prescription.patient.gender),
+          );
+        labelValueRow(
+          'Date',
+          new Date().toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          }),
+        );
         drawDivider();
 
         // ─── Diagnosis ───
@@ -227,7 +316,10 @@ export class PrescriptionsService {
         // ─── Rx ───
         sectionHeading('Rx');
         prescription.medicines.forEach((med: any, index: number) => {
-          doc.fontSize(10).font('Helvetica-Bold').text(`${index + 1}. ${med.name} ${med.dosage}`);
+          doc
+            .fontSize(10)
+            .font('Helvetica-Bold')
+            .text(`${index + 1}. ${med.name} ${med.dosage}`);
           doc.fontSize(9).font('Helvetica').fillColor('#333');
           doc.text(`   ${med.frequency}`);
           doc.text(`   ${this.toTitleCase(med.timing)}`);
@@ -254,18 +346,27 @@ export class PrescriptionsService {
 
         // ─── Signature ───
         doc.moveDown(1.5);
-        doc.fontSize(11).font('Helvetica-Bold').text(
-          `Dr. ${prescription.doctor.user.firstName} ${prescription.doctor.user.lastName}`,
-          { align: 'right' },
-        );
-        doc.fontSize(9).font('Helvetica-Oblique').fillColor('#555').text('Digital Signature', { align: 'right' });
+        doc
+          .fontSize(11)
+          .font('Helvetica-Bold')
+          .text(
+            `Dr. ${prescription.doctor.user.firstName} ${prescription.doctor.user.lastName}`,
+            { align: 'right' },
+          );
+        doc
+          .fontSize(9)
+          .font('Helvetica-Oblique')
+          .fillColor('#555')
+          .text('Digital Signature', { align: 'right' });
         doc.fillColor('black');
         drawDivider();
 
-        doc.fontSize(8).fillColor('gray').text(
-          `Generated by Arogyix — ${new Date().toISOString()}`,
-          { align: 'center' },
-        );
+        doc
+          .fontSize(8)
+          .fillColor('gray')
+          .text(`Generated by Arogyix — ${new Date().toISOString()}`, {
+            align: 'center',
+          });
 
         doc.end();
         stream.on('finish', resolve);
@@ -306,9 +407,10 @@ export class PrescriptionsService {
     const remindersData: any[] = [];
 
     for (const medicine of prescription.medicines) {
-      const times = medicine.reminderTimes.length > 0
-        ? medicine.reminderTimes
-        : this.getDefaultTimes(medicine.frequency);
+      const times =
+        medicine.reminderTimes.length > 0
+          ? medicine.reminderTimes
+          : this.getDefaultTimes(medicine.frequency);
 
       for (const time of times) {
         const [hours, minutes] = time.split(':').map(Number);
@@ -351,7 +453,7 @@ export class PrescriptionsService {
       'Thrice daily': ['08:00', '14:00', '20:00'],
       'Four times daily': ['08:00', '12:00', '16:00', '20:00'],
       'Before bed': ['21:00'],
-      'Morning': ['09:00'],
+      Morning: ['09:00'],
     };
     return map[frequency] || ['09:00'];
   }

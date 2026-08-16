@@ -1,7 +1,25 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
-import { CreatePatientDto, UpdatePatientDto, AddFamilyMemberDto } from './dto/patient.dto';
+import {
+  CreatePatientDto,
+  UpdatePatientDto,
+  AddFamilyMemberDto,
+} from './dto/patient.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
@@ -41,7 +59,16 @@ export class PatientsController {
     const patient = await this.patientsService['prisma'].patient.findFirst({
       where: { userId: user.id },
       include: {
-        user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            avatarUrl: true,
+          },
+        },
         familyMembers: true,
       },
     });
@@ -56,14 +83,28 @@ export class PatientsController {
   }
 
   @Put(':id')
-  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST, UserRole.PATIENT)
+  @Roles(
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.DOCTOR,
+    UserRole.RECEPTIONIST,
+    UserRole.PATIENT,
+  )
   @ApiOperation({ summary: 'Update patient info' })
-  update(@CurrentUser() user: any, @Param('id') id: string, @Body() dto: UpdatePatientDto) {
+  update(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: UpdatePatientDto,
+  ) {
     return this.patientsService.update(id, user.tenantId, dto);
   }
 
   @Post(':id/family-members')
-  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST, UserRole.PATIENT)
+  @Roles(
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.DOCTOR,
+    UserRole.RECEPTIONIST,
+    UserRole.PATIENT,
+  )
   @ApiOperation({ summary: 'Add a family member to patient' })
   addFamilyMember(
     @CurrentUser() user: any,

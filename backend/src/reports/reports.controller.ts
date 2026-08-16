@@ -1,6 +1,22 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, UploadedFile, UseInterceptors, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+  ForbiddenException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ReportsService } from './reports.service';
@@ -31,7 +47,13 @@ export class ReportsController {
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: UploadReportDto,
   ) {
-    return this.reportsService.create(user.tenantId, user.id, dto.patientId, file, dto);
+    return this.reportsService.create(
+      user.tenantId,
+      user.id,
+      dto.patientId,
+      file,
+      dto,
+    );
   }
 
   @Get()
@@ -45,12 +67,20 @@ export class ReportsController {
     let effectivePatientId = patientId;
 
     if (user.role === UserRole.PATIENT) {
-      const ownPatientId = await this.reportsService.getPatientIdForUser(user.id);
-      if (!ownPatientId) return { data: [], total: 0, page: page || 1, limit: 20 };
+      const ownPatientId = await this.reportsService.getPatientIdForUser(
+        user.id,
+      );
+      if (!ownPatientId)
+        return { data: [], total: 0, page: page || 1, limit: 20 };
       effectivePatientId = ownPatientId;
     }
 
-    return this.reportsService.findAll(user.tenantId, effectivePatientId, type, page);
+    return this.reportsService.findAll(
+      user.tenantId,
+      effectivePatientId,
+      type,
+      page,
+    );
   }
 
   @Get(':id')
@@ -58,7 +88,9 @@ export class ReportsController {
   async findOne(@CurrentUser() user: any, @Param('id') id: string) {
     const report = await this.reportsService.findOne(id);
     if (user.role === UserRole.PATIENT && report.patient.userId !== user.id) {
-      throw new ForbiddenException('You are not authorized to view this report');
+      throw new ForbiddenException(
+        'You are not authorized to view this report',
+      );
     }
     return report;
   }

@@ -12,7 +12,10 @@ export class UpdateProfileDto {
   @IsString()
   lastName?: string;
 
-  @ApiPropertyOptional({ description: 'Contact phone number', example: '+919876543210' })
+  @ApiPropertyOptional({
+    description: 'Contact phone number',
+    example: '+919876543210',
+  })
   @IsOptional()
   @IsString()
   phone?: string;
@@ -24,6 +27,10 @@ export class UpdateProfileDto {
 }
 
 export class UploadAvatarDto {
-  @ApiProperty({ type: 'string', format: 'binary', description: 'The avatar image file' })
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'The avatar image file',
+  })
   file: any;
 }

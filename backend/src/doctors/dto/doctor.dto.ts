@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsNumber, IsArray, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  IsBoolean,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
 export class CreateDoctorDto {
@@ -10,7 +16,10 @@ export class CreateDoctorDto {
   @ApiPropertyOptional() @IsOptional() @IsNumber() experienceYears?: number;
   @ApiPropertyOptional() @IsOptional() @IsNumber() consultationFee?: number;
   @ApiPropertyOptional() @IsOptional() @IsString() bio?: string;
-  @ApiPropertyOptional({ type: [String] }) @IsOptional() @IsArray() availableDays?: string[];
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  availableDays?: string[];
   @ApiPropertyOptional() @IsOptional() @IsString() consultationStart?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() consultationEnd?: string;
   @ApiPropertyOptional() @IsOptional() @IsNumber() slotDuration?: number;

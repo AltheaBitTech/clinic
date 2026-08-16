@@ -20,6 +20,15 @@ import { RemindersModule } from './reminders/reminders.module';
 import { TenantRequestsModule } from './tenant-requests/tenant-requests.module';
 import { MedicalCatalogModule } from './medical-catalog/medical-catalog.module';
 import { PharmaciesModule } from './pharmacies/pharmacies.module';
+import { PharmacySharedModule } from './pharmacy-shared/pharmacy-shared.module';
+import { PharmacyCatalogModule } from './pharmacy-catalog/pharmacy-catalog.module';
+import { PharmacyInventoryModule } from './pharmacy-inventory/pharmacy-inventory.module';
+import { PharmacySuppliersModule } from './pharmacy-suppliers/pharmacy-suppliers.module';
+import { PharmacyPurchasesModule } from './pharmacy-purchases/pharmacy-purchases.module';
+import { PharmacyPrescriptionsModule } from './pharmacy-prescriptions/pharmacy-prescriptions.module';
+import { PharmacySalesModule } from './pharmacy-sales/pharmacy-sales.module';
+import { PharmacyReportsModule } from './pharmacy-reports/pharmacy-reports.module';
+import { PharmacyDashboardModule } from './pharmacy-dashboard/pharmacy-dashboard.module';
 
 @Module({
   imports: [
@@ -44,6 +53,15 @@ import { PharmaciesModule } from './pharmacies/pharmacies.module';
     TenantRequestsModule,
     MedicalCatalogModule,
     PharmaciesModule,
+    PharmacySharedModule,
+    PharmacyCatalogModule,
+    PharmacyInventoryModule,
+    PharmacySuppliersModule,
+    PharmacyPurchasesModule,
+    PharmacyPrescriptionsModule,
+    PharmacySalesModule,
+    PharmacyReportsModule,
+    PharmacyDashboardModule,
   ],
 })
 export class AppModule {}

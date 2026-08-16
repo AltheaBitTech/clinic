@@ -1,7 +1,15 @@
 import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
-import { CreateAppointmentDto, UpdateAppointmentDto } from './dto/appointment.dto';
+import {
+  CreateAppointmentDto,
+  UpdateAppointmentDto,
+} from './dto/appointment.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
@@ -13,7 +21,12 @@ export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Post()
-  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST, UserRole.PATIENT)
+  @Roles(
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.DOCTOR,
+    UserRole.RECEPTIONIST,
+    UserRole.PATIENT,
+  )
   @ApiOperation({ summary: 'Create appointment' })
   create(@CurrentUser() user: any, @Body() dto: CreateAppointmentDto) {
     return this.appointmentsService.create(user, dto);
@@ -41,8 +54,12 @@ export class AppointmentsController {
   @Get('today')
   @ApiOperation({ summary: "Get today's appointments" })
   getToday(@CurrentUser() user: any) {
-    const doctorId = user.role === UserRole.DOCTOR ? user.doctor?.id : undefined;
-    return this.appointmentsService.getTodayAppointments(user.tenantId, doctorId);
+    const doctorId =
+      user.role === UserRole.DOCTOR ? user.doctor?.id : undefined;
+    return this.appointmentsService.getTodayAppointments(
+      user.tenantId,
+      doctorId,
+    );
   }
 
   @Get('missed-followups')

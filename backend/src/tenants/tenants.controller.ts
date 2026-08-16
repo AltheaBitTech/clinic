@@ -1,11 +1,33 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { TenantsService } from './tenants.service';
-import { CreateTenantDto, UpdateTenantDto, InviteUserDto } from './dto/tenant.dto';
+import {
+  CreateTenantDto,
+  UpdateTenantDto,
+  InviteUserDto,
+} from './dto/tenant.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
@@ -77,8 +99,13 @@ export class TenantsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.HOSPITAL_ADMIN)
   @UseInterceptors(FileInterceptor('file', { storage: logoStorage }))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload hospital/clinic logo [SuperAdmin, HospitalAdmin]' })
-  async uploadLogo(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+  @ApiOperation({
+    summary: 'Upload hospital/clinic logo [SuperAdmin, HospitalAdmin]',
+  })
+  async uploadLogo(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     const url = `/uploads/logos/${file.filename}`;
     await this.tenantsService.update(id, { logoUrl: url });
     return { url };

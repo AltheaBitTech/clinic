@@ -14,7 +14,9 @@ export class TenantRequestsController {
 
   @Public()
   @Post()
-  @ApiOperation({ summary: 'Submit a new clinic/hospital tenant request from landing page' })
+  @ApiOperation({
+    summary: 'Submit a new clinic/hospital tenant request from landing page',
+  })
   create(@Body() dto: CreateTenantRequestDto) {
     return this.tenantRequestsService.create(dto);
   }
@@ -32,7 +34,9 @@ export class TenantRequestsController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/approve')
   @Roles(UserRole.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Approve a tenant registration request [SuperAdmin]' })
+  @ApiOperation({
+    summary: 'Approve a tenant registration request [SuperAdmin]',
+  })
   approve(@Param('id') id: string) {
     console.log(`Approving tenant request with ID: ${id}`);
     return this.tenantRequestsService.approve(id);
@@ -42,7 +46,9 @@ export class TenantRequestsController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/reject')
   @Roles(UserRole.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Reject a tenant registration request [SuperAdmin]' })
+  @ApiOperation({
+    summary: 'Reject a tenant registration request [SuperAdmin]',
+  })
   reject(@Param('id') id: string) {
     return this.tenantRequestsService.reject(id);
   }

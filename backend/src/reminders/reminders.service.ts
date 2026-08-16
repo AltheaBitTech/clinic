@@ -17,7 +17,11 @@ export class RemindersService {
         scheduledAt: { gte: now, lte: windowEnd },
       },
       include: {
-        patient: { include: { user: { select: { email: true, phone: true, firstName: true } } } },
+        patient: {
+          include: {
+            user: { select: { email: true, phone: true, firstName: true } },
+          },
+        },
         medicine: true,
       },
       take: 100,
@@ -42,7 +46,10 @@ export class RemindersService {
             eventType: 'REMINDER_SENT',
             title: `Medicine Reminder Sent`,
             description: `Reminder for ${reminder.medicine.name} via ${reminder.channel}`,
-            metadata: { medicineId: reminder.medicineId, channel: reminder.channel },
+            metadata: {
+              medicineId: reminder.medicineId,
+              channel: reminder.channel,
+            },
           },
         });
       } catch (err) {
@@ -70,8 +77,14 @@ export class RemindersService {
         status: { in: ['SCHEDULED', 'CONFIRMED'] },
       },
       include: {
-        patient: { include: { user: { select: { email: true, phone: true, firstName: true } } } },
-        doctor: { include: { user: { select: { firstName: true, lastName: true } } } },
+        patient: {
+          include: {
+            user: { select: { email: true, phone: true, firstName: true } },
+          },
+        },
+        doctor: {
+          include: { user: { select: { firstName: true, lastName: true } } },
+        },
       },
     });
 

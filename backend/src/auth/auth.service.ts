@@ -8,7 +8,12 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
-import { RegisterDto, LoginDto, VerifyOtpDto, AcceptInviteDto } from './dto/auth.dto';
+import {
+  RegisterDto,
+  LoginDto,
+  VerifyOtpDto,
+  AcceptInviteDto,
+} from './dto/auth.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -26,7 +31,9 @@ export class AuthService {
   };
 
   async register(dto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (existing) throw new ConflictException('Email already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
@@ -57,12 +64,14 @@ export class AuthService {
       where: { email: dto.email },
       include: this.userRelationsInclude,
     });
-    if (!user || !user.passwordHash) throw new UnauthorizedException('Invalid credentials');
+    if (!user || !user.passwordHash)
+      throw new UnauthorizedException('Invalid credentials');
 
     const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
-    if (!user.isActive) throw new UnauthorizedException('Account is deactivated');
+    if (!user.isActive)
+      throw new UnauthorizedException('Account is deactivated');
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -116,14 +125,20 @@ export class AuthService {
     });
     if (!user) throw new NotFoundException('User not found');
 
-    if (!user.otp || user.otp !== dto.otp) throw new BadRequestException('Invalid OTP');
+    if (!user.otp || user.otp !== dto.otp)
+      throw new BadRequestException('Invalid OTP');
     if (!user.otpExpiresAt || new Date() > user.otpExpiresAt) {
       throw new BadRequestException('OTP has expired');
     }
 
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { otp: null, otpExpiresAt: null, isVerified: true, lastLoginAt: new Date() },
+      data: {
+        otp: null,
+        otpExpiresAt: null,
+        isVerified: true,
+        lastLoginAt: new Date(),
+      },
     });
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);
@@ -134,7 +149,8 @@ export class AuthService {
 
   async refreshTokens(userId: string, refreshToken: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !user.refreshToken) throw new UnauthorizedException('Access denied');
+    if (!user || !user.refreshToken)
+      throw new UnauthorizedException('Access denied');
 
     const isMatch = await bcrypt.compare(refreshToken, user.refreshToken);
     if (!isMatch) throw new UnauthorizedException('Access denied');
@@ -161,9 +177,12 @@ export class AuthService {
 
     if (!invite) throw new NotFoundException('Invite not found');
     if (invite.usedAt) throw new BadRequestException('Invite already used');
-    if (new Date() > invite.expiresAt) throw new BadRequestException('Invite expired');
+    if (new Date() > invite.expiresAt)
+      throw new BadRequestException('Invite expired');
 
-    const existing = await this.prisma.user.findUnique({ where: { email: invite.email } });
+    const existing = await this.prisma.user.findUnique({
+      where: { email: invite.email },
+    });
     if (existing) throw new ConflictException('Email already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, 12);

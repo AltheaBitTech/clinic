@@ -1,6 +1,14 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreatePatientDto, UpdatePatientDto, AddFamilyMemberDto } from './dto/patient.dto';
+import {
+  CreatePatientDto,
+  UpdatePatientDto,
+  AddFamilyMemberDto,
+} from './dto/patient.dto';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -9,7 +17,9 @@ export class PatientsService {
 
   async create(tenantId: string, dto: CreatePatientDto) {
     // Check if user already exists
-    let user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    let user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     let temporaryPassword: string | undefined;
 
     if (user) {
@@ -17,7 +27,10 @@ export class PatientsService {
       const existing = await this.prisma.patient.findFirst({
         where: { userId: user.id, tenantId },
       });
-      if (existing) throw new ConflictException('Patient already registered at this hospital');
+      if (existing)
+        throw new ConflictException(
+          'Patient already registered at this hospital',
+        );
     } else {
       // Create user account
       temporaryPassword = Math.random().toString(36).slice(-8);
@@ -55,7 +68,18 @@ export class PatientsService {
         chronicConditions: dto.chronicConditions || [],
         notes: dto.notes,
       },
-      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true } } },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            avatarUrl: true,
+          },
+        },
+      },
     });
 
     // Add registration event to timeline
@@ -92,8 +116,19 @@ export class PatientsService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true } },
-          _count: { select: { appointments: true, prescriptions: true, reports: true } },
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+              avatarUrl: true,
+            },
+          },
+          _count: {
+            select: { appointments: true, prescriptions: true, reports: true },
+          },
         },
       }),
       this.prisma.patient.count({ where }),
@@ -106,12 +141,27 @@ export class PatientsService {
     const patient = await this.prisma.patient.findFirst({
       where: { id, ...(tenantId ? { tenantId } : {}) },
       include: {
-        user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true } },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            avatarUrl: true,
+          },
+        },
         familyMembers: true,
         appointments: {
           orderBy: { scheduledAt: 'desc' },
           take: 5,
-          include: { doctor: { include: { user: { select: { firstName: true, lastName: true } } } } },
+          include: {
+            doctor: {
+              include: {
+                user: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
         },
         prescriptions: {
           orderBy: { createdAt: 'desc' },
@@ -146,7 +196,11 @@ export class PatientsService {
     });
   }
 
-  async addFamilyMember(patientId: string, tenantId: string, dto: AddFamilyMemberDto) {
+  async addFamilyMember(
+    patientId: string,
+    tenantId: string,
+    dto: AddFamilyMemberDto,
+  ) {
     await this.findOne(patientId, tenantId);
     return this.prisma.familyMember.create({
       data: {

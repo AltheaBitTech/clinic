@@ -6,20 +6,33 @@ export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
   async getSuperAdminDashboard() {
-    const [totalTenants, totalUsers, totalPatients, totalAppointments] = await Promise.all([
-      this.prisma.tenant.count(),
-      this.prisma.user.count(),
-      this.prisma.patient.count(),
-      this.prisma.appointment.count(),
-    ]);
+    const [totalTenants, totalUsers, totalPatients, totalAppointments] =
+      await Promise.all([
+        this.prisma.tenant.count(),
+        this.prisma.user.count(),
+        this.prisma.patient.count(),
+        this.prisma.appointment.count(),
+      ]);
 
     const recentTenants = await this.prisma.tenant.findMany({
       orderBy: { createdAt: 'desc' },
       take: 5,
-      select: { id: true, name: true, subscriptionPlan: true, createdAt: true, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        subscriptionPlan: true,
+        createdAt: true,
+        isActive: true,
+      },
     });
 
-    return { totalTenants, totalUsers, totalPatients, totalAppointments, recentTenants };
+    return {
+      totalTenants,
+      totalUsers,
+      totalPatients,
+      totalAppointments,
+      recentTenants,
+    };
   }
 
   async getHospitalAdminDashboard(tenantId: string) {
@@ -57,7 +70,11 @@ export class DashboardService {
         where: { tenantId },
         orderBy: { createdAt: 'desc' },
         take: 5,
-        include: { user: { select: { firstName: true, lastName: true, avatarUrl: true } } },
+        include: {
+          user: {
+            select: { firstName: true, lastName: true, avatarUrl: true },
+          },
+        },
       }),
     ]);
 
@@ -84,25 +101,48 @@ export class DashboardService {
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-    const [todayAppts, totalPatients, pendingPrescriptions, recentAppts] = await Promise.all([
-      this.prisma.appointment.count({
-        where: { tenantId, doctorId, scheduledAt: { gte: startOfDay, lte: endOfDay }, status: { in: ['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'] } },
-      }),
-      this.prisma.appointment.groupBy({
-        by: ['patientId'],
-        where: { tenantId, doctorId },
-        _count: { patientId: true },
-      }),
-      this.prisma.appointment.count({
-        where: { tenantId, doctorId, status: 'COMPLETED', prescriptions: { none: {} } },
-      }),
-      this.prisma.appointment.findMany({
-        where: { tenantId, doctorId, scheduledAt: { gte: startOfDay, lte: endOfDay } },
-        orderBy: { scheduledAt: 'asc' },
-        take: 10,
-        include: { patient: { include: { user: { select: { firstName: true, lastName: true, avatarUrl: true } } } } },
-      }),
-    ]);
+    const [todayAppts, totalPatients, pendingPrescriptions, recentAppts] =
+      await Promise.all([
+        this.prisma.appointment.count({
+          where: {
+            tenantId,
+            doctorId,
+            scheduledAt: { gte: startOfDay, lte: endOfDay },
+            status: { in: ['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'] },
+          },
+        }),
+        this.prisma.appointment.groupBy({
+          by: ['patientId'],
+          where: { tenantId, doctorId },
+          _count: { patientId: true },
+        }),
+        this.prisma.appointment.count({
+          where: {
+            tenantId,
+            doctorId,
+            status: 'COMPLETED',
+            prescriptions: { none: {} },
+          },
+        }),
+        this.prisma.appointment.findMany({
+          where: {
+            tenantId,
+            doctorId,
+            scheduledAt: { gte: startOfDay, lte: endOfDay },
+          },
+          orderBy: { scheduledAt: 'asc' },
+          take: 10,
+          include: {
+            patient: {
+              include: {
+                user: {
+                  select: { firstName: true, lastName: true, avatarUrl: true },
+                },
+              },
+            },
+          },
+        }),
+      ]);
 
     return {
       todayAppointments: todayAppts,
@@ -113,33 +153,62 @@ export class DashboardService {
   }
 
   async getPatientDashboard(patientId: string) {
-    const [upcomingAppts, activeMedicines, recentReports, recentPrescriptions] = await Promise.all([
-      this.prisma.appointment.findMany({
-        where: { patientId, scheduledAt: { gte: new Date() }, status: { in: ['SCHEDULED', 'CONFIRMED'] } },
-        orderBy: { scheduledAt: 'asc' },
-        take: 3,
-        include: { doctor: { include: { user: { select: { firstName: true, lastName: true, avatarUrl: true } } } } },
-      }),
-      this.prisma.medicineReminder.findMany({
-        where: { patientId, status: 'PENDING', scheduledAt: { gte: new Date() } },
-        orderBy: { scheduledAt: 'asc' },
-        take: 5,
-        include: { medicine: true },
-      }),
-      this.prisma.report.findMany({
-        where: { patientId },
-        orderBy: { createdAt: 'desc' },
-        take: 3,
-      }),
-      this.prisma.prescription.findMany({
-        where: { patientId },
-        orderBy: { createdAt: 'desc' },
-        take: 3,
-        include: { medicines: true, doctor: { include: { user: { select: { firstName: true, lastName: true } } } } },
-      }),
-    ]);
+    const [upcomingAppts, activeMedicines, recentReports, recentPrescriptions] =
+      await Promise.all([
+        this.prisma.appointment.findMany({
+          where: {
+            patientId,
+            scheduledAt: { gte: new Date() },
+            status: { in: ['SCHEDULED', 'CONFIRMED'] },
+          },
+          orderBy: { scheduledAt: 'asc' },
+          take: 3,
+          include: {
+            doctor: {
+              include: {
+                user: {
+                  select: { firstName: true, lastName: true, avatarUrl: true },
+                },
+              },
+            },
+          },
+        }),
+        this.prisma.medicineReminder.findMany({
+          where: {
+            patientId,
+            status: 'PENDING',
+            scheduledAt: { gte: new Date() },
+          },
+          orderBy: { scheduledAt: 'asc' },
+          take: 5,
+          include: { medicine: true },
+        }),
+        this.prisma.report.findMany({
+          where: { patientId },
+          orderBy: { createdAt: 'desc' },
+          take: 3,
+        }),
+        this.prisma.prescription.findMany({
+          where: { patientId },
+          orderBy: { createdAt: 'desc' },
+          take: 3,
+          include: {
+            medicines: true,
+            doctor: {
+              include: {
+                user: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+        }),
+      ]);
 
-    return { upcomingAppointments: upcomingAppts, activeMedicines, recentReports, recentPrescriptions };
+    return {
+      upcomingAppointments: upcomingAppts,
+      activeMedicines,
+      recentReports,
+      recentPrescriptions,
+    };
   }
 
   async getReceptionistDashboard(tenantId: string) {
@@ -195,8 +264,16 @@ export class DashboardService {
         where: { tenantId, scheduledAt: { gte: startOfDay, lte: endOfDay } },
         orderBy: { scheduledAt: 'asc' },
         include: {
-          patient: { include: { user: { select: { firstName: true, lastName: true, avatarUrl: true } } } },
-          doctor: { include: { user: { select: { firstName: true, lastName: true } } } },
+          patient: {
+            include: {
+              user: {
+                select: { firstName: true, lastName: true, avatarUrl: true },
+              },
+            },
+          },
+          doctor: {
+            include: { user: { select: { firstName: true, lastName: true } } },
+          },
           invoice: { select: { id: true, status: true, total: true } },
         },
       }),

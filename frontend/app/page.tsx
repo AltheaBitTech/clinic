@@ -221,6 +221,12 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 relative">
         <div className="absolute right-0 bottom-10 w-96 h-96 bg-emerald-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
         <ClinicRequestForm />
+        <p className="text-center text-sm text-slate-400 mt-6 font-light">
+          Own a pharmacy instead?{' '}
+          <Link href="/register/pharmacy-business" className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
+            Register your pharmacy independently
+          </Link>
+        </p>
       </section>
 
       {/* CTA */}

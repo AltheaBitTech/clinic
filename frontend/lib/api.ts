@@ -173,4 +173,68 @@ export const pharmaciesApi = {
   updateMine: (data: any) => api.put('/pharmacies/me', data),
 };
 
+export const pharmacyDashboardApi = {
+  getSummary: () => api.get('/pharmacy/dashboard'),
+};
+
+export const pharmacyMedicinesApi = {
+  create: (data: any) => api.post('/pharmacy/medicines', data),
+  getAll: (params?: any) => api.get('/pharmacy/medicines', { params }),
+  getOne: (id: string) => api.get(`/pharmacy/medicines/${id}`),
+  update: (id: string, data: any) => api.patch(`/pharmacy/medicines/${id}`, data),
+};
+
+export const pharmacyInventoryApi = {
+  getBatches: () => api.get('/pharmacy/inventory'),
+  getExpiry: (withinDays?: number) =>
+    api.get('/pharmacy/inventory/expiry', { params: { withinDays } }),
+  getLowStock: () => api.get('/pharmacy/inventory/low-stock'),
+  getMovements: (params?: any) => api.get('/pharmacy/inventory/movements', { params }),
+  createAdjustment: (data: any) => api.post('/pharmacy/inventory/adjustments', data),
+  createBatch: (data: any) => api.post('/pharmacy/inventory/batches', data),
+};
+
+export const pharmacySuppliersApi = {
+  create: (data: any) => api.post('/pharmacy/suppliers', data),
+  getAll: (params?: any) => api.get('/pharmacy/suppliers', { params }),
+  getOne: (id: string) => api.get(`/pharmacy/suppliers/${id}`),
+  update: (id: string, data: any) => api.patch(`/pharmacy/suppliers/${id}`, data),
+};
+
+export const pharmacyPurchasesApi = {
+  create: (data: any) => api.post('/pharmacy/purchases', data),
+  getAll: () => api.get('/pharmacy/purchases'),
+  getOne: (id: string) => api.get(`/pharmacy/purchases/${id}`),
+  receive: (id: string, data: any) => api.post(`/pharmacy/purchases/${id}/receive`, data),
+};
+
+export const pharmacyPatientsApi = {
+  create: (data: any) => api.post('/pharmacy/patients', data),
+  getAll: (params?: any) => api.get('/pharmacy/patients', { params }),
+  getOne: (id: string) => api.get(`/pharmacy/patients/${id}`),
+};
+
+export const pharmacyPrescriptionsApi = {
+  create: (data: any) => api.post('/pharmacy/prescriptions', data),
+  getAll: (params?: any) => api.get('/pharmacy/prescriptions', { params }),
+  getOne: (id: string) => api.get(`/pharmacy/prescriptions/${id}`),
+  verify: (id: string) => api.post(`/pharmacy/prescriptions/${id}/verify`),
+  dispense: (id: string, data: any) => api.post(`/pharmacy/prescriptions/${id}/dispense`, data),
+};
+
+export const pharmacySalesApi = {
+  create: (data: any) => api.post('/pharmacy/sales', data),
+  getAll: () => api.get('/pharmacy/sales'),
+  getOne: (id: string) => api.get(`/pharmacy/sales/${id}`),
+  createReturn: (id: string, data: any) => api.post(`/pharmacy/sales/${id}/return`, data),
+};
+
+export const pharmacyReportsApi = {
+  getSales: (params?: any) => api.get('/pharmacy/reports/sales', { params }),
+  getPurchases: (params?: any) => api.get('/pharmacy/reports/purchases', { params }),
+  getInventory: () => api.get('/pharmacy/reports/inventory'),
+  getExpiry: (withinDays?: number) =>
+    api.get('/pharmacy/reports/expiry', { params: { withinDays } }),
+};
+
 

@@ -7,7 +7,7 @@ import { join } from 'path';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 async function bootstrap() {
-    console.log('Starting NestJS application...');
+  console.log('Starting NestJS application...');
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Global prefix
@@ -60,11 +60,11 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3001;
- console.log('About to listen on port:', port);
+  console.log('About to listen on port:', port);
 
-await app.listen(port, '0.0.0.0');
+  await app.listen(port, '0.0.0.0');
 
-console.log('Server started successfully');
+  console.log('Server started successfully');
 
   console.log(`🚀 Arogyix API running on: http://localhost:${port}/api/v1`);
   console.log(`📚 Swagger Docs: http://localhost:${port}/api/docs`);

@@ -6,7 +6,9 @@ export class CreateInvoiceDto {
   @IsString()
   patientId: string;
 
-  @ApiPropertyOptional({ description: 'The unique identifier of the associated appointment' })
+  @ApiPropertyOptional({
+    description: 'The unique identifier of the associated appointment',
+  })
   @IsOptional()
   @IsString()
   appointmentId?: string;

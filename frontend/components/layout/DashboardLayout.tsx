@@ -11,7 +11,7 @@ import {
   Activity, LayoutDashboard, Calendar, Users, FileText, Bell,
   MessageSquare, BarChart3, Receipt, Settings, LogOut, ChevronRight,
   Stethoscope, Building2, UserCheck, Package, ClipboardList, Pill, Store,
-  Menu, X
+  Boxes, Menu, X, Truck, ShoppingCart
 } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import { notificationsApi } from '@/lib/api';
@@ -37,6 +37,12 @@ const navItems: NavItem[] = [
   { label: 'Medicines Catalog', href: '/dashboard/medicines', icon: Pill, roles: ['HOSPITAL_ADMIN', 'DOCTOR'] },
   { label: 'Pharmacies', href: '/dashboard/pharmacies', icon: Store, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { label: 'My Pharmacy', href: '/dashboard/pharmacy-portal', icon: Store, roles: ['PHARMACY'] },
+  { label: 'Medicine Catalog', href: '/dashboard/pharmacy-portal/medicines', icon: Pill, roles: ['PHARMACY'] },
+  { label: 'Inventory', href: '/dashboard/pharmacy-portal/inventory', icon: Boxes, roles: ['PHARMACY'] },
+  { label: 'Suppliers', href: '/dashboard/pharmacy-portal/suppliers', icon: Truck, roles: ['PHARMACY'] },
+  { label: 'Purchase Orders', href: '/dashboard/pharmacy-portal/purchases', icon: ShoppingCart, roles: ['PHARMACY'] },
+  { label: 'Sales', href: '/dashboard/pharmacy-portal/sales', icon: Receipt, roles: ['PHARMACY'] },
+  { label: 'Rx Queue', href: '/dashboard/pharmacy-portal/prescriptions', icon: ClipboardList, roles: ['PHARMACY'] },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'PATIENT'] },
   { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare, roles: ['DOCTOR', 'PATIENT'] },
   { label: 'Billing', href: '/dashboard/billing', icon: Receipt, roles: ['HOSPITAL_ADMIN', 'RECEPTIONIST'] },

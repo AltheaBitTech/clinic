@@ -11,9 +11,15 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post('rooms')
-  @ApiOperation({ summary: 'Get or create a chat room between doctor and patient' })
+  @ApiOperation({
+    summary: 'Get or create a chat room between doctor and patient',
+  })
   getOrCreateRoom(@Body() dto: CreateRoomDto, @CurrentUser() user: any) {
-    return this.chatService.getOrCreateRoom(dto.patientId, dto.doctorId, user.tenantId);
+    return this.chatService.getOrCreateRoom(
+      dto.patientId,
+      dto.doctorId,
+      user.tenantId,
+    );
   }
 
   @Get('rooms')

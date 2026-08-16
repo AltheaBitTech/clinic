@@ -1,6 +1,22 @@
-import { Controller, Get, Put, Post, Body, Param, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  Body,
+  Param,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiBearerAuth, ApiConsumes, ApiOperation, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiBody,
+} from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
@@ -32,7 +48,11 @@ export class UsersController {
   @Get()
   @Roles(UserRole.HOSPITAL_ADMIN, UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'List all users' })
-  findAll(@CurrentUser() user: any, @Query('role') role?: UserRole, @Query('page') page?: number) {
+  findAll(
+    @CurrentUser() user: any,
+    @Query('role') role?: UserRole,
+    @Query('page') page?: number,
+  ) {
     return this.svc.findAll(user.tenantId, role, page);
   }
 

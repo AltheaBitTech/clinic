@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsArray, ValidateNested, IsDateString, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsDateString,
+  IsNotEmpty,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -10,7 +17,10 @@ export class MedicineItemDto {
   @ApiProperty() @IsString() @IsNotEmpty() duration: string;
   @ApiPropertyOptional() @IsOptional() @IsString() timing?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() instructions?: string;
-  @ApiPropertyOptional({ type: [String] }) @IsOptional() @IsArray() reminderTimes?: string[];
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  reminderTimes?: string[];
 }
 
 export class CreatePrescriptionDto {

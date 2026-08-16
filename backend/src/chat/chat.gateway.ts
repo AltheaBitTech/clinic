@@ -39,18 +39,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join_room')
-  async handleJoinRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
+  async handleJoinRoom(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
     client.join(data.roomId);
     client.emit('joined_room', { roomId: data.roomId });
   }
 
   @SubscribeMessage('send_message')
   async handleMessage(
-    @MessageBody() data: { chatRoomId: string; senderId: string; content: string },
+    @MessageBody()
+    data: { chatRoomId: string; senderId: string; content: string },
     @ConnectedSocket() client: Socket,
   ) {
     try {
-      let room = await this.prisma.chatRoom.findUnique({
+      const room = await this.prisma.chatRoom.findUnique({
         where: { id: data.chatRoomId },
         include: {
           patient: { select: { userId: true } },
@@ -69,21 +73,35 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           content: data.content,
         },
         include: {
-          sender: { select: { id: true, firstName: true, lastName: true, avatarUrl: true, role: true } },
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+              role: true,
+            },
+          },
         },
       });
 
       this.server.to(data.chatRoomId).emit('new_message', message);
 
       const recipientUserId =
-        room.patient.userId === data.senderId ? room.doctor.userId : room.patient.userId;
-      const senderName = `${message.sender.firstName} ${message.sender.lastName}`.trim();
+        room.patient.userId === data.senderId
+          ? room.doctor.userId
+          : room.patient.userId;
+      const senderName =
+        `${message.sender.firstName} ${message.sender.lastName}`.trim();
 
       const notification = await this.prisma.notification.create({
         data: {
           userId: recipientUserId,
           title: `New message from ${senderName}`,
-          body: data.content.length > 120 ? `${data.content.slice(0, 120)}…` : data.content,
+          body:
+            data.content.length > 120
+              ? `${data.content.slice(0, 120)}…`
+              : data.content,
           channel: 'PUSH',
           scheduledAt: new Date(),
         },
@@ -91,7 +109,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const recipientSocketId = this.connectedUsers.get(recipientUserId);
       if (recipientSocketId) {
-        this.server.to(recipientSocketId).emit('new_notification', notification);
+        this.server
+          .to(recipientSocketId)
+          .emit('new_notification', notification);
       }
     } catch (err) {
       client.emit('error', { message: 'Failed to send message' });
@@ -103,9 +123,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { chatRoomId: string; userId: string },
   ) {
     await this.prisma.message.updateMany({
-      where: { chatRoomId: data.chatRoomId, senderId: { not: data.userId }, readAt: null },
+      where: {
+        chatRoomId: data.chatRoomId,
+        senderId: { not: data.userId },
+        readAt: null,
+      },
       data: { readAt: new Date() },
     });
-    this.server.to(data.chatRoomId).emit('messages_read', { chatRoomId: data.chatRoomId });
+    this.server
+      .to(data.chatRoomId)
+      .emit('messages_read', { chatRoomId: data.chatRoomId });
   }
 }

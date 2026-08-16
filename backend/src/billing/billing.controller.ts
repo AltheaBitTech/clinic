@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Body, Param, Query, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  Query,
+  Res,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { BillingService } from './billing.service';
@@ -33,7 +42,9 @@ export class BillingController {
 
   @Get('invoices/:id')
   @ApiOperation({ summary: 'Get invoice by ID' })
-  findOne(@Param('id') id: string) { return this.svc.findOne(id); }
+  findOne(@Param('id') id: string) {
+    return this.svc.findOne(id);
+  }
 
   @Get('invoices/:id/pdf')
   @ApiOperation({ summary: 'Download invoice PDF' })
@@ -45,5 +56,7 @@ export class BillingController {
   @Put('invoices/:id/pay')
   @Roles(UserRole.HOSPITAL_ADMIN, UserRole.RECEPTIONIST)
   @ApiOperation({ summary: 'Mark invoice as paid' })
-  markPaid(@Param('id') id: string) { return this.svc.markAsPaid(id); }
+  markPaid(@Param('id') id: string) {
+    return this.svc.markAsPaid(id);
+  }
 }

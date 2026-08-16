@@ -107,12 +107,7 @@ export class PharmaciesService {
     if (existing) throw new ConflictException('Email already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
-    const {
-      firstName,
-      lastName,
-      password: _password,
-      ...pharmacyFields
-    } = dto;
+    const { firstName, lastName, password: _password, ...pharmacyFields } = dto;
 
     const pharmacy = await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({

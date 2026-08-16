@@ -21,7 +21,10 @@ export class NotificationsService {
   }
 
   async markAsRead(id: string) {
-    return this.prisma.notification.update({ where: { id }, data: { readAt: new Date() } });
+    return this.prisma.notification.update({
+      where: { id },
+      data: { readAt: new Date() },
+    });
   }
 
   async markAllAsRead(userId: string) {
@@ -31,7 +34,13 @@ export class NotificationsService {
     });
   }
 
-  async create(userId: string, title: string, body: string, channel = 'PUSH', scheduledAt?: Date) {
+  async create(
+    userId: string,
+    title: string,
+    body: string,
+    channel = 'PUSH',
+    scheduledAt?: Date,
+  ) {
     return this.prisma.notification.create({
       data: { userId, title, body, channel: channel as any, scheduledAt },
     });

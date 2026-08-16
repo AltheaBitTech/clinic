@@ -17,21 +17,37 @@ export class UsersService {
       take: limit,
       orderBy: { createdAt: 'desc' },
       select: {
-        id: true, email: true, phone: true, firstName: true, lastName: true,
-        role: true, isActive: true, isVerified: true, avatarUrl: true, createdAt: true,
+        id: true,
+        email: true,
+        phone: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        isVerified: true,
+        avatarUrl: true,
+        createdAt: true,
       },
     });
   }
 
   async toggleActive(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    return this.prisma.user.update({ where: { id }, data: { isActive: !user?.isActive } });
+    return this.prisma.user.update({
+      where: { id },
+      data: { isActive: !user?.isActive },
+    });
   }
 
   async updateProfile(id: string, data: any) {
     return this.prisma.user.update({
       where: { id },
-      data: { firstName: data.firstName, lastName: data.lastName, phone: data.phone, avatarUrl: data.avatarUrl },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        avatarUrl: data.avatarUrl,
+      },
     });
   }
 }

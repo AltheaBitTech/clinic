@@ -1,5 +1,18 @@
-import { Controller, Get, Post, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { MedicalCatalogService } from './medical-catalog.service';
 import { CreateMedicalCatalogItemDto } from './dto/medical-catalog.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -21,7 +34,11 @@ export class MedicalCatalogController {
 
   @Get()
   @ApiOperation({ summary: 'List medicines/ointments from the catalogue' })
-  @ApiQuery({ name: 'type', required: false, description: 'MEDICINE or OINTMENT' })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    description: 'MEDICINE or OINTMENT',
+  })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
