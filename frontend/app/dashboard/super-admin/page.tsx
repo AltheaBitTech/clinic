@@ -52,8 +52,8 @@ function CredentialsModal({ isOpen, onClose, credentials }: CredentialsModalProp
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl border border-slate-100 overflow-hidden transform transition-all">
-        <div className="p-6 border-b border-slate-50 bg-cyan-50">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl border border-slate-100 overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
+        <div className="p-6 border-b border-slate-50 bg-cyan-50 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600">
               <CheckCircle2 className="w-6 h-6" />
@@ -65,7 +65,7 @@ function CredentialsModal({ isOpen, onClose, credentials }: CredentialsModalProp
           </div>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto">
           <div className="space-y-1">
             <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Hospital Name</label>
             <div className="text-sm font-semibold text-slate-800 bg-slate-50 px-3 py-2 rounded-lg">
@@ -107,7 +107,7 @@ function CredentialsModal({ isOpen, onClose, credentials }: CredentialsModalProp
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-50 bg-slate-50/50 flex justify-end">
+        <div className="p-4 border-t border-slate-50 bg-slate-50/50 flex justify-end shrink-0">
           <button
             onClick={onClose}
             className="btn-primary"
@@ -270,6 +270,7 @@ export default function SuperAdminDashboard() {
               <tr>
                 <th>Hospital / Clinic</th>
                 <th>Type</th>
+                <th>Plan</th>
                 <th>Admin details</th>
                 <th>Location</th>
                 <th>Submitted On</th>
@@ -299,6 +300,11 @@ export default function SuperAdminDashboard() {
                         : 'bg-slate-100 text-slate-600 border border-slate-200/50'
                     )}>
                       {req.type === 'PHARMACY' ? 'Pharmacy' : 'Hospital'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="badge font-semibold uppercase tracking-wider text-[10px] px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200/50">
+                      {req.plan || 'FREE'}
                     </span>
                   </td>
                   <td>
@@ -381,7 +387,7 @@ export default function SuperAdminDashboard() {
               ))}
               {filteredRequests.length === 0 && (
                 <tr>
-                  <td colSpan={activeTab === 'PENDING' ? 6 : 5} className="text-center py-12 text-slate-400">
+                  <td colSpan={activeTab === 'PENDING' ? 7 : 6} className="text-center py-12 text-slate-400">
                     <div className="flex flex-col items-center gap-2">
                       <Clock className="w-8 h-8 text-slate-300" />
                       <p className="text-sm font-medium">No {activeTab.toLowerCase()} requests found</p>

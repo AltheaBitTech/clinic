@@ -520,8 +520,8 @@ export default function PatientDetailPage() {
       {/* Link Family Member Modal */}
       {isFamilyModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-scale-in">
-            <div className="px-6 py-4 bg-cyan-50 border-b border-cyan-100 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-scale-in max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 bg-cyan-50 border-b border-cyan-100 flex items-center justify-between shrink-0">
               <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
                 <Users className="w-5 h-5 text-cyan-600" /> Link Family Member
               </h3>
@@ -534,7 +534,7 @@ export default function PatientDetailPage() {
               </button>
             </div>
 
-            <form onSubmit={handleAddFamilyMember} className="p-6 space-y-4">
+            <form onSubmit={handleAddFamilyMember} className="p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
                   Member Name <span className="text-red-500">*</span>

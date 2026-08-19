@@ -6,6 +6,14 @@ import { tenantRequestsApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Loader2, CheckCircle2, Building2, Mail, Phone, User, MapPin, Tag } from 'lucide-react';
 
+// Maps the plan names shown on the landing page's pricing cards to the
+// backend's SubscriptionPlan enum values.
+const PLAN_NAME_TO_ENUM: Record<string, string> = {
+  'Free Trial': 'FREE',
+  Professional: 'PROFESSIONAL',
+  Enterprise: 'ENTERPRISE',
+};
+
 export default function ClinicRequestForm() {
   return (
     <Suspense fallback={null}>
@@ -60,7 +68,8 @@ function ClinicRequestFormInner() {
 
     setLoading(true);
     try {
-      await tenantRequestsApi.create(form);
+      const plan = selectedPlan ? PLAN_NAME_TO_ENUM[selectedPlan] : undefined;
+      await tenantRequestsApi.create({ ...form, plan });
       setSubmitted(true);
       toast.success('Registration request submitted successfully!');
     } catch (err: any) {

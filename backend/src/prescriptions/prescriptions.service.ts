@@ -1,18 +1,65 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePrescriptionDto } from './dto/prescription.dto';
+import { UserRole } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+
+interface RequestUser {
+  id: string;
+  role: UserRole;
+  tenantId: string;
+}
 
 @Injectable()
 export class PrescriptionsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreatePrescriptionDto) {
+  async create(dto: CreatePrescriptionDto, user: RequestUser) {
+    let doctorId = dto.doctorId;
+
+    if (user.role === UserRole.DOCTOR) {
+      // Doctors always prescribe as themselves — resolve their Doctor
+      // record from the JWT user, ignoring any doctorId sent by the client.
+      const own = await this.prisma.doctor.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+      if (!own) {
+        throw new BadRequestException(
+          'Your doctor profile has not been configured yet. Ask your hospital admin to set it up before writing prescriptions.',
+        );
+      }
+      doctorId = own.id;
+    } else {
+      if (!doctorId) {
+        throw new BadRequestException('doctorId is required');
+      }
+      const doctor = await this.prisma.doctor.findFirst({
+        where: { id: doctorId, tenantId: user.tenantId },
+        select: { id: true },
+      });
+      if (!doctor) {
+        throw new NotFoundException('Doctor not found in this hospital');
+      }
+    }
+
+    const patient = await this.prisma.patient.findFirst({
+      where: { id: dto.patientId, tenantId: user.tenantId },
+      select: { id: true },
+    });
+    if (!patient) {
+      throw new NotFoundException('Patient not found in this hospital');
+    }
+
     const prescription = await this.prisma.prescription.create({
       data: {
         patientId: dto.patientId,
-        doctorId: dto.doctorId,
+        doctorId,
         appointmentId: dto.appointmentId,
         diagnosis: dto.diagnosis,
         notes: dto.notes,

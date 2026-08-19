@@ -25,7 +25,7 @@ export class MedicineItemDto {
 
 export class CreatePrescriptionDto {
   @ApiProperty() @IsString() patientId: string;
-  @ApiProperty() @IsString() doctorId: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() doctorId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() appointmentId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() diagnosis?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;

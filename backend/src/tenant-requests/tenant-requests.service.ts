@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTenantRequestDto } from './dto/create-tenant-request.dto';
-import { RequestStatus, TenantType, UserRole } from '@prisma/client';
+import {
+  RequestStatus,
+  TenantType,
+  UserRole,
+  SubscriptionPlan,
+} from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -51,6 +56,7 @@ export class TenantRequestsService {
         address: dto.address,
         city: dto.city,
         state: dto.state,
+        plan: dto.plan ?? SubscriptionPlan.FREE,
       },
     });
   }
@@ -104,6 +110,7 @@ export class TenantRequestsService {
                 address: request.address,
                 city: request.city,
                 state: request.state,
+                subscriptionPlan: request.plan,
               },
             });
 
@@ -145,6 +152,7 @@ export class TenantRequestsService {
                 address: request.address,
                 city: request.city,
                 state: request.state,
+                subscriptionPlan: request.plan,
               },
             });
 

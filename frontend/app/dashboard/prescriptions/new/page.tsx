@@ -95,20 +95,24 @@ function NewPrescriptionContent() {
   }, [paramPatientProfile]);
      
 
-  // Auto-populate doctor if user is DOCTOR
-  useEffect(() => {
-    if (user?.role === 'DOCTOR' && user?.doctor) {
-      setSelectedDoctor(user.doctor);
-      setDoctorSearch(`Dr. ${user.firstName} ${user.lastName}`);
-    }
-  }, [user]);
-
-  // Query Doctors (for Admin role only)
+  // Query Doctors (for Admin role, and as a fallback for a DOCTOR user
+  // whose own profile wasn't embedded on the auth response)
   const { data: doctorsData, isLoading: isLoadingDoctors } = useQuery({
     queryKey: ['doctors'],
     queryFn: () => doctorsApi.getAll().then((r) => r.data),
-    enabled: user?.role === 'HOSPITAL_ADMIN',
+    enabled: user?.role === 'HOSPITAL_ADMIN' || (user?.role === 'DOCTOR' && !user?.doctor),
   });
+
+  // Auto-populate doctor if user is DOCTOR, falling back to matching
+  // their own doctor record by userId if it wasn't already on `user`
+  useEffect(() => {
+    if (user?.role !== 'DOCTOR') return;
+    const own = user.doctor ?? doctorsData?.data?.find((d: any) => d.userId === user.id);
+    if (own) {
+      setSelectedDoctor(own);
+      setDoctorSearch(`Dr. ${user.firstName} ${user.lastName}`);
+    }
+  }, [user, doctorsData]);
 
   // Query Patients
   const { data: patientsData, isLoading: isLoadingPatients } = useQuery({
@@ -616,16 +620,31 @@ function NewPrescriptionContent() {
             </div>
 
             {user?.role === 'DOCTOR' ? (
-              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="w-10 h-10 rounded-full bg-cyan-100 text-cyan-700 text-sm font-bold flex items-center justify-center shrink-0">
-                  DR
+              selectedDoctor ? (
+                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="w-10 h-10 rounded-full bg-cyan-100 text-cyan-700 text-sm font-bold flex items-center justify-center shrink-0">
+                    DR
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 text-sm">Dr. {user?.firstName} {user?.lastName}</p>
+                    <p className="text-xs text-slate-500">{selectedDoctor?.specialization} · {selectedDoctor?.department?.name || 'General'}</p>
+                  </div>
+                  <span className="badge bg-cyan-100 text-cyan-800 text-xs ml-auto">Prescribing Self</span>
                 </div>
-                <div>
-                  <p className="font-semibold text-slate-800 text-sm">Dr. {user?.firstName} {user?.lastName}</p>
-                  <p className="text-xs text-slate-500">{user?.doctor?.specialization} · {user?.doctor?.department?.name || 'General'}</p>
+              ) : isLoadingDoctors ? (
+                <div className="flex items-center gap-2 p-4 text-sm text-slate-500">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading your doctor profile...
                 </div>
-                <span className="badge bg-cyan-100 text-cyan-800 text-xs ml-auto">Prescribing Self</span>
-              </div>
+              ) : (
+                <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                  <p className="text-sm text-amber-800">
+                    Your doctor profile hasn&apos;t been configured yet, so you can&apos;t write
+                    prescriptions. Ask your hospital admin to set it up under Doctors.
+                  </p>
+                </div>
+              )
             ) : (
               <div className="relative">
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
@@ -1274,7 +1293,7 @@ function NewPrescriptionContent() {
       {/* QUICK PATIENT REGISTRATION MODAL */}
       {isRegModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
               <User className="w-5 h-5 text-cyan-600" />
               Register Patient Profile

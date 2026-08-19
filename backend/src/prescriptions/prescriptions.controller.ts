@@ -33,8 +33,8 @@ export class PrescriptionsController {
   @ApiOperation({
     summary: 'Create prescription with medicines and auto-schedule reminders',
   })
-  create(@Body() dto: CreatePrescriptionDto) {
-    return this.prescriptionsService.create(dto);
+  create(@CurrentUser() user: any, @Body() dto: CreatePrescriptionDto) {
+    return this.prescriptionsService.create(dto, user);
   }
 
   @Get()

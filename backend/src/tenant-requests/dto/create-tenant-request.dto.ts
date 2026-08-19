@@ -1,6 +1,6 @@
 import { IsString, IsEmail, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TenantType } from '@prisma/client';
+import { TenantType, SubscriptionPlan } from '@prisma/client';
 
 export class CreateTenantRequestDto {
   @ApiPropertyOptional({
@@ -51,4 +51,13 @@ export class CreateTenantRequestDto {
   @IsOptional()
   @IsString()
   state?: string;
+
+  @ApiPropertyOptional({
+    description: 'Subscription plan selected on the landing page',
+    enum: SubscriptionPlan,
+    default: SubscriptionPlan.FREE,
+  })
+  @IsOptional()
+  @IsEnum(SubscriptionPlan)
+  plan?: SubscriptionPlan;
 }
