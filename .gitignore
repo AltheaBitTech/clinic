@@ -36,3 +36,9 @@ uploads/
 *.njsproj
 *.sln
 *.sw?
+
+# Cloudflare/OpenNext build output (not used by Vercel deploys)
+.open-next/
+**/.open-next/
+.wrangler/
+**/.wrangler/
