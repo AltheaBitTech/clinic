@@ -9,7 +9,7 @@ import {
   UpdateTenantDto,
   InviteUserDto,
 } from './dto/tenant.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class TenantsService {
@@ -69,7 +69,7 @@ export class TenantsService {
   async inviteUser(tenantId: string, dto: InviteUserDto) {
     const tenant = await this.findOne(tenantId);
 
-    const token = uuidv4();
+    const token = randomUUID();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     const invite = await this.prisma.hospitalInvite.create({
