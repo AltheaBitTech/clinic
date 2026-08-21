@@ -71,10 +71,13 @@ export class PrismaExceptionFilter implements ExceptionFilter {
             : 'This action references a related record that no longer exists.',
         );
       }
-      default:
-        return new BadRequestException(
-          `Database error [${exception.code}]: ${exception.message || 'The request could not be processed.'}`,
-        );
+      default: {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const message = isProduction
+          ? 'The request could not be processed. Please try again or contact support.'
+          : `Database error [${exception.code}]: ${exception.message || 'The request could not be processed.'}`;
+        return new BadRequestException(message);
+      }
     }
   }
 }
