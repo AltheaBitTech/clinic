@@ -8,6 +8,7 @@ import { CreatePrescriptionDto } from './dto/prescription.dto';
 import { UserRole } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getUploadDir } from '../common/utils/upload.util';
 
 interface RequestUser {
   id: string;
@@ -180,9 +181,7 @@ export class PrescriptionsService {
   private async generatePdf(prescription: any): Promise<string> {
     try {
       const PDFDocument = require('pdfkit');
-      const uploadDir = path.join(process.cwd(), 'uploads', 'prescriptions');
-      if (!fs.existsSync(uploadDir))
-        fs.mkdirSync(uploadDir, { recursive: true });
+      const uploadDir = getUploadDir('prescriptions');
 
       const fileName = `prescription_${prescription.id}.pdf`;
       const filePath = path.join(uploadDir, fileName);
@@ -444,6 +443,9 @@ export class PrescriptionsService {
     if (!logoUrl || !logoUrl.startsWith('/uploads/')) return null;
     const ext = path.extname(logoUrl).toLowerCase();
     if (!['.png', '.jpg', '.jpeg'].includes(ext)) return null;
+    const rel = logoUrl.replace(/^\/uploads\//, '');
+    const primary = path.join(getUploadDir('logos'), path.basename(rel));
+    if (fs.existsSync(primary)) return primary;
     const filePath = path.join(process.cwd(), logoUrl.replace(/^\//, ''));
     return fs.existsSync(filePath) ? filePath : null;
   }

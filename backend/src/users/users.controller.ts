@@ -19,20 +19,17 @@ import {
 } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { existsSync, mkdirSync } from 'fs';
 import { UsersService } from './users.service';
 import { UpdateProfileDto, UploadAvatarDto } from './dto/user.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
-
-const uploadDir = './uploads/avatars';
-if (!existsSync(uploadDir)) {
-  mkdirSync(uploadDir, { recursive: true });
-}
+import { getUploadDir } from '../common/utils/upload.util';
 
 const storage = diskStorage({
-  destination: uploadDir,
+  destination: (req, file, cb) => {
+    cb(null, getUploadDir('avatars'));
+  },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, `${uniqueSuffix}${extname(file.originalname)}`);

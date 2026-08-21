@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+import { getUploadDir } from './common/utils/upload.util';
 
 async function bootstrap() {
   console.log('Starting NestJS application...');
@@ -34,7 +35,8 @@ async function bootstrap() {
   app.useGlobalFilters(new PrismaExceptionFilter());
 
   // Static file serving (uploads)
-  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
+  const uploadsDir = getUploadDir();
+  app.useStaticAssets(uploadsDir, { prefix: '/uploads' });
 
   // Swagger
   const config = new DocumentBuilder()
