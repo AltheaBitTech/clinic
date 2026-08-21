@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
@@ -63,5 +65,7 @@ import { PharmacyDashboardModule } from './pharmacy-dashboard/pharmacy-dashboard
     PharmacyReportsModule,
     PharmacyDashboardModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
