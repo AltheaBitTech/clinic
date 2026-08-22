@@ -22,20 +22,21 @@ export default function HomePage() {
 
       {/* Nav */}
       <header className="sticky top-0 z-50 bg-slate-950/60 backdrop-blur-lg border-b border-white/5">
-        <nav className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 max-w-7xl mx-auto">
-          <div className="flex items-center gap-2.5">
-            <Image src="/arogyix-logo.svg" alt="Arogyix" width={36} height={36} className="drop-shadow-md" />
-            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
+        <nav className="flex items-center justify-between gap-2 px-4 sm:px-6 lg:px-8 py-4 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink-0">
+            <Image src="/arogyix-logo.svg" alt="Arogyix" width={36} height={36} className="drop-shadow-md w-8 h-8 sm:w-9 sm:h-9 shrink-0" />
+            <span className="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent whitespace-nowrap">Arogyix</span>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3 sm:gap-5 shrink-0">
             <a href="#pricing" className="hidden sm:inline text-slate-300 hover:text-white transition-colors text-sm font-semibold">
               Pricing
             </a>
-            <Link href="/login" className="text-slate-300 hover:text-white transition-colors text-sm font-semibold">
+            <Link href="/login" className="text-slate-300 hover:text-white transition-colors text-xs sm:text-sm font-semibold whitespace-nowrap">
               Sign In
             </Link>
-            <Link href="/register" className="btn-primary text-sm shadow-md">
-              Get Started Free
+            <Link href="/register" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 sm:py-2.5 shadow-md whitespace-nowrap">
+              <span className="sm:hidden">Get Started</span>
+              <span className="hidden sm:inline">Get Started Free</span>
             </Link>
           </div>
         </nav>

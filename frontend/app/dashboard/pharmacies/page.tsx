@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pharmaciesApi } from '@/lib/api';
 import {
@@ -161,7 +162,7 @@ export default function PharmaciesPage() {
       )}
 
       {/* Invite Pharmacy Modal */}
-      {isInviteModalOpen && (
+      {isInviteModalOpen && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
@@ -224,7 +225,8 @@ export default function PharmaciesPage() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -318,7 +320,7 @@ function PharmacyCard({
   );
 }
 
-/* ── Detail Drawer ─────────────────────────────────────────────────────────── */
+/* ── Detail Modal ──────────────────────────────────────────────────────────── */
 
 function PharmacyDetailDrawer({
   pharmacy: p,
@@ -331,26 +333,26 @@ function PharmacyDetailDrawer({
   onClose: () => void;
   onRemove: () => void;
 }) {
-  return (
-    <>
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
-        onClick={onClose}
-      />
-
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
       {/* Panel */}
-      <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col animate-slide-in-right overflow-hidden">
+      <div
+        className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 animate-scale-up relative max-h-[90vh] flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-cyan-600 to-emerald-600">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <Store className="w-5 h-5 text-white" />
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center shrink-0">
+              <Store className="w-5 h-5 text-cyan-600" />
             </div>
-            <div>
-              <h2 className="font-bold text-white text-base">{p.name}</h2>
+            <div className="min-w-0">
+              <h2 className="font-bold text-slate-800 text-base truncate">{p.name}</h2>
               {p.licenseNumber && (
-                <p className="text-white/70 text-xs">
+                <p className="text-slate-400 text-xs">
                   License: {p.licenseNumber}
                 </p>
               )}
@@ -358,7 +360,7 @@ function PharmacyDetailDrawer({
           </div>
           <button
             onClick={onClose}
-            className="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+            className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-100 shrink-0"
           >
             <XCircle className="w-5 h-5" />
           </button>
@@ -431,7 +433,7 @@ function PharmacyDetailDrawer({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-3">
+        <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-3 shrink-0">
           <Link
             href={`/dashboard/pharmacies/${p.id}/edit`}
             className="btn-secondary flex-1 text-center text-sm"
@@ -449,7 +451,8 @@ function PharmacyDetailDrawer({
           )}
         </div>
       </div>
-    </>
+    </div>,
+    document.body
   );
 }
 

@@ -147,52 +147,52 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-100 flex flex-col shrink-0',
+          'fixed inset-y-0 left-0 z-40 w-72 bg-[#083344] border-r border-white/5 flex flex-col shrink-0',
           'transform transition-transform duration-300 ease-in-out',
           'lg:static lg:z-auto lg:w-64 lg:translate-x-0',
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
         {/* User / Hospital / Brand */}
-        <div className="px-5 py-5 border-b border-slate-100">
+        <div className="px-5 py-5 border-b border-white/5">
           <div className="flex items-center justify-between gap-2">
             <Link href="/dashboard/settings" className="flex items-center gap-3 min-w-0 group">
               {user.avatarUrl ? (
                 <img
                   src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001'}${user.avatarUrl}`}
                   alt={`${user.firstName} ${user.lastName}`}
-                  className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-100"
+                  className="w-10 h-10 rounded-full object-cover shrink-0 border border-white/10"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 text-sm font-bold shrink-0">
+                <div className="w-10 h-10 rounded-full bg-cyan-400/15 flex items-center justify-center text-cyan-300 text-sm font-bold shrink-0">
                   {getInitials(user.firstName, user.lastName)}
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-cyan-600">{user.firstName} {user.lastName}</p>
+                <p className="text-sm font-semibold text-white truncate group-hover:text-cyan-300">{user.firstName} {user.lastName}</p>
                 <p className="text-xs text-slate-400 truncate">{user.role.replace('_', ' ')}</p>
               </div>
             </Link>
             <div className="flex items-center gap-0.5 shrink-0">
               <button
                 onClick={handleLogout}
-                className="p-1.5 hover:bg-red-50 rounded-lg"
+                className="p-1.5 hover:bg-red-500/10 rounded-lg"
                 aria-label="Logout"
                 title="Logout"
               >
-                <LogOut className="w-3.5 h-3.5 text-red-500" />
+                <LogOut className="w-3.5 h-3.5 text-red-400" />
               </button>
               <button
                 onClick={() => setMobileNavOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-slate-100 lg:hidden"
+                className="p-1.5 rounded-lg hover:bg-white/10 lg:hidden"
                 aria-label="Close menu"
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-5 h-5 text-slate-300" />
               </button>
             </div>
           </div>
           {user.tenant && (
-            <div className="mt-3 flex items-center gap-3 px-2.5 py-2.5 bg-cyan-50 rounded-lg">
+            <div className="mt-3 flex items-center gap-3 px-2.5 py-2.5 bg-white/5 rounded-lg">
               {user.tenant.logoUrl ? (
                 <img
                   src={user.tenant.logoUrl.startsWith('http') ? user.tenant.logoUrl : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001'}${user.tenant.logoUrl}`}
@@ -200,11 +200,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className="w-10 h-10 rounded-lg object-cover shrink-0"
                 />
               ) : null}
-              <p className="text-sm font-semibold text-cyan-600 truncate">{user.tenant.name}</p>
+              <p className="text-sm font-semibold text-cyan-300 truncate">{user.tenant.name}</p>
             </div>
           )}
           <Link href={getDashboardHref()} className="mt-3 flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity w-fit">
-            <Image src="/arogyix-logo.svg" alt="Arogyix" width={14} height={14} />
+            <Image src="/arogyix-logo.svg" alt="Arogyix" width={14} height={14} className="brightness-0 invert" />
             <span className="text-[11px] font-medium text-slate-400">by Arogyix</span>
           </Link>
         </div>
