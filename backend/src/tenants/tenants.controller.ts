@@ -21,7 +21,6 @@ import {
 } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { existsSync, mkdirSync } from 'fs';
 import { TenantsService } from './tenants.service';
 import {
   CreateTenantDto,
@@ -31,14 +30,12 @@ import {
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
-
-const logoUploadDir = './uploads/logos';
-if (!existsSync(logoUploadDir)) {
-  mkdirSync(logoUploadDir, { recursive: true });
-}
+import { getUploadDir } from '../common/utils/upload.util';
 
 const logoStorage = diskStorage({
-  destination: logoUploadDir,
+  destination: (req, file, cb) => {
+    cb(null, getUploadDir('logos'));
+  },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, `${uniqueSuffix}${extname(file.originalname)}`);

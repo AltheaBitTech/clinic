@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getUploadDir } from '../common/utils/upload.util';
 
 const INVOICE_INCLUDE = {
   patient: { include: { user: true } },
@@ -120,14 +121,20 @@ export class BillingService {
     });
     if (!invoice) throw new NotFoundException('Invoice not found');
 
-    let filePath = invoice.pdfUrl
-      ? path.join(process.cwd(), invoice.pdfUrl.replace(/^\//, ''))
-      : null;
+    const resolvePath = (url: string) => {
+      const rel = url.replace(/^\/uploads\//, '');
+      const primary = path.join(getUploadDir('invoices'), path.basename(rel));
+      if (fs.existsSync(primary)) return primary;
+      const cwdPath = path.join(process.cwd(), 'uploads', rel);
+      return fs.existsSync(cwdPath) ? cwdPath : primary;
+    };
+
+    let filePath = invoice.pdfUrl ? resolvePath(invoice.pdfUrl) : null;
 
     if (!filePath || !fs.existsSync(filePath)) {
       const pdfUrl = await this.generatePdf(invoice);
       await this.prisma.invoice.update({ where: { id }, data: { pdfUrl } });
-      filePath = path.join(process.cwd(), pdfUrl.replace(/^\//, ''));
+      filePath = resolvePath(pdfUrl);
     }
 
     return { filePath, fileName: `${invoice.invoiceNo}.pdf` };
@@ -135,8 +142,7 @@ export class BillingService {
 
   private async generatePdf(invoice: any): Promise<string> {
     const PDFDocument = require('pdfkit');
-    const uploadDir = path.join(process.cwd(), 'uploads', 'invoices');
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    const uploadDir = getUploadDir('invoices');
 
     const fileName = `invoice_${invoice.id}.pdf`;
     const filePath = path.join(uploadDir, fileName);

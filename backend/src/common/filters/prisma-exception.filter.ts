@@ -33,6 +33,10 @@ function extractConflictFields(
 @Catch(Prisma.PrismaClientKnownRequestError)
 export class PrismaExceptionFilter implements ExceptionFilter {
   catch(exception: Prisma.PrismaClientKnownRequestError, host: ArgumentsHost) {
+    console.error('Prisma Error Code:', exception.code);
+    console.error('Prisma Error Message:', exception.message);
+    console.error('Prisma Error Meta:', JSON.stringify(exception.meta));
+
     const response = host.switchToHttp().getResponse<Response>();
     const httpException = this.toHttpException(exception);
     response
@@ -67,10 +71,13 @@ export class PrismaExceptionFilter implements ExceptionFilter {
             : 'This action references a related record that no longer exists.',
         );
       }
-      default:
-        return new BadRequestException(
-          'The request could not be processed due to a database error.',
-        );
+      default: {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const message = isProduction
+          ? 'The request could not be processed. Please try again or contact support.'
+          : `Database error [${exception.code}]: ${exception.message || 'The request could not be processed.'}`;
+        return new BadRequestException(message);
+      }
     }
   }
 }
