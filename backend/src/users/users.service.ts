@@ -31,6 +31,32 @@ export class UsersService {
     });
   }
 
+  findAllPlatform(role?: UserRole, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const where: any = {};
+    if (role) where.role = role;
+
+    return this.prisma.user.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        isVerified: true,
+        avatarUrl: true,
+        createdAt: true,
+        tenant: { select: { id: true, name: true } },
+      },
+    });
+  }
+
   async toggleActive(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     return this.prisma.user.update({

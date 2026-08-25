@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi, tenantRequestsApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -13,10 +14,10 @@ import { cn, formatCurrency } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 function StatCard({
-  label, value, icon: Icon, color, subtext
-}: { label: string; value: string | number; icon: React.ElementType; color: string; subtext?: string }) {
-  return (
-    <div className="card hover:shadow-md transition-all duration-200">
+  label, value, icon: Icon, color, subtext, href
+}: { label: string; value: string | number; icon: React.ElementType; color: string; subtext?: string; href?: string }) {
+  const content = (
+    <>
       <div className="flex items-start justify-between mb-4">
         <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center', color)}>
           <Icon className="w-5 h-5 text-white" />
@@ -25,6 +26,20 @@ function StatCard({
       <p className="text-3xl font-bold text-slate-900 mb-1">{value}</p>
       <p className="text-sm font-medium text-slate-600">{label}</p>
       {subtext && <p className="text-xs text-slate-400 mt-1">{subtext}</p>}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className="card hover:shadow-md hover:border-cyan-200 transition-all duration-200 block">
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="card hover:shadow-md transition-all duration-200">
+      {content}
     </div>
   );
 }
@@ -207,7 +222,7 @@ export default function SuperAdminDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Total Hospitals" value={stats?.totalTenants || 0} icon={Building2} color="bg-cyan-500" />
-        <StatCard label="Platform Users" value={stats?.totalUsers || 0} icon={Users} color="bg-emerald-500" />
+        <StatCard label="Platform Users" value={stats?.totalUsers || 0} icon={Users} color="bg-emerald-500" href="/dashboard/super-admin/users" />
         <StatCard label="Total Patients" value={stats?.totalPatients || 0} icon={UserCheck} color="bg-purple-500" />
         <StatCard label="Total Appointments" value={stats?.totalAppointments || 0} icon={Calendar} color="bg-amber-500" />
       </div>

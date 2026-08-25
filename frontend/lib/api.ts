@@ -148,6 +148,7 @@ export const tenantRequestsApi = {
 
 export const usersApi = {
   getAll: (params?: any) => api.get('/users', { params }),
+  getPlatform: (params?: any) => api.get('/users/platform', { params }),
   updateProfile: (data: any) => api.put('/users/profile', data),
   toggleActive: (id: string) => api.put(`/users/${id}/toggle-active`),
   uploadAvatar: (formData: FormData) => api.post('/users/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),

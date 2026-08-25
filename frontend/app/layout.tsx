@@ -10,10 +10,39 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://arogyix.altheabit.in';
+const title = 'Arogyix — Healthcare management made simple.';
+const description = 'Arogyix: All-in-one clinic management platform — appointments, digital prescriptions, medicine reminders, and patient timelines for hospitals and clinics.';
+
 export const metadata: Metadata = {
-  title: 'Arogyix — Healthcare management made simple.',
-  description: 'Arogyix: All-in-one clinic management platform — appointments, prescriptions, reminders, and patient timelines.',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: title,
+    template: '%s | Arogyix',
+  },
+  description,
   keywords: 'clinic management, hospital software, patient portal, medical records, Arogyix',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    siteName: 'Arogyix',
+    title,
+    description,
+    images: [{ url: '/arogyix-logo.svg', width: 512, height: 512, alt: 'Arogyix' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+    images: ['/arogyix-logo.svg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

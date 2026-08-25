@@ -53,6 +53,16 @@ export class UsersController {
     return this.svc.findAll(user.tenantId, role, page);
   }
 
+  @Get('platform')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'List all users across every tenant (super admin only)' })
+  findAllPlatform(
+    @Query('role') role?: UserRole,
+    @Query('page') page?: number,
+  ) {
+    return this.svc.findAllPlatform(role, page);
+  }
+
   @Post('avatar')
   @UseInterceptors(FileInterceptor('file', { storage }))
   @ApiConsumes('multipart/form-data')

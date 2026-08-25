@@ -13,9 +13,29 @@ const featureColorMap: Record<string, { bg: string; text: string; border: string
   rose: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
 };
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Arogyix',
+  applicationCategory: 'HealthApplication',
+  operatingSystem: 'Web',
+  description:
+    'All-in-one clinic management platform — appointments, digital prescriptions, medicine reminders, and patient timelines for hospitals and clinics.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    description: 'Free 15-day trial, no credit card required',
+  },
+};
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-900 text-white overflow-x-hidden relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Visual Ambient Glows */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
       <div className="absolute top-40 right-1/4 w-[400px] h-[400px] bg-emerald-600/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
