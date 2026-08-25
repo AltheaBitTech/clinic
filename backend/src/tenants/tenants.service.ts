@@ -10,6 +10,7 @@ import {
   InviteUserDto,
 } from './dto/tenant.dto';
 import { randomUUID } from 'crypto';
+import { TenantType } from '@prisma/client';
 
 @Injectable()
 export class TenantsService {
@@ -24,6 +25,29 @@ export class TenantsService {
     if (existing) throw new ConflictException('Tenant slug already exists');
 
     return this.prisma.tenant.create({ data: { ...dto, slug } });
+  }
+
+  async findPublic(search?: string) {
+    const where: any = { isActive: true, type: TenantType.HOSPITAL };
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { city: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    return this.prisma.tenant.findMany({
+      where,
+      orderBy: { name: 'asc' },
+      take: 50,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        city: true,
+        state: true,
+        logoUrl: true,
+      },
+    });
   }
 
   async findAll(page = 1, limit = 20) {

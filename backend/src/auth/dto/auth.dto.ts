@@ -31,6 +31,10 @@ export class RegisterDto {
   @IsString()
   @MinLength(8)
   password: string;
+
+  @ApiProperty({ description: 'ID of the hospital the patient is registering with' })
+  @IsString()
+  tenantId: string;
 }
 
 export class LoginDto {

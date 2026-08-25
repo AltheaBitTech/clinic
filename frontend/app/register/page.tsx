@@ -1,15 +1,25 @@
 'use client';
 import Image from 'next/image';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Loader2, User, Mail, Phone, Lock, ShieldCheck } from 'lucide-react';
+import { tenantsApi } from '@/lib/api';
+import { Loader2, User, Mail, Phone, Lock, ShieldCheck, Building2, Search, Check, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+interface Hospital {
+  id: string;
+  name: string;
+  slug: string;
+  city: string | null;
+  state: string | null;
+  logoUrl: string | null;
+}
 
 const selfSignupSchema = z.object({
   firstName: z.string().min(1, 'First name required'),
@@ -17,6 +27,7 @@ const selfSignupSchema = z.object({
   email: z.string().email('Invalid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   phone: z.string().optional(),
+  tenantId: z.string().min(1, 'Please select your hospital'),
 });
 
 const inviteSchema = z.object({
@@ -28,15 +39,134 @@ const inviteSchema = z.object({
 type SelfSignupData = z.infer<typeof selfSignupSchema>;
 type InviteData = z.infer<typeof inviteSchema>;
 
+function HospitalPicker({
+  selected,
+  onSelect,
+  error,
+}: {
+  selected: Hospital | null;
+  onSelect: (hospital: Hospital) => void;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(!selected);
+  const [query, setQuery] = useState('');
+  const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await tenantsApi.getPublic(query || undefined);
+        if (!cancelled) setHospitals(data);
+      } catch {
+        if (!cancelled) setHospitals([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [open, query]);
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Your hospital</label>
+
+      {!open && selected ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="w-full flex items-center justify-between bg-white/[0.04] border border-white/15 rounded-xl pl-4 pr-3.5 py-3.5 text-left hover:border-cyan-400/50 transition-all"
+        >
+          <span className="flex items-center gap-2.5 text-sm text-white">
+            <Building2 className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>
+              {selected.name}
+              {selected.city && <span className="text-slate-400"> · {selected.city}</span>}
+            </span>
+          </span>
+          <span className="text-xs text-cyan-400 font-semibold flex items-center gap-1">
+            Change <ChevronDown className="w-3.5 h-3.5" />
+          </span>
+        </button>
+      ) : (
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+            <Search className="w-4 h-4" />
+          </span>
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search hospitals by name or city"
+            className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
+          />
+          <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-white/10 bg-white/[0.03] divide-y divide-white/5">
+            {loading && (
+              <div className="px-4 py-3 text-sm text-slate-400 flex items-center gap-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching...
+              </div>
+            )}
+            {!loading && hospitals.length === 0 && (
+              <div className="px-4 py-3 text-sm text-slate-400">No hospitals found.</div>
+            )}
+            {!loading && hospitals.map((h) => (
+              <button
+                key={h.id}
+                type="button"
+                onClick={() => {
+                  onSelect(h);
+                  setOpen(false);
+                }}
+                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/[0.05] transition-colors"
+              >
+                <span className="text-sm text-white">
+                  {h.name}
+                  {h.city && <span className="text-slate-400"> · {h.city}{h.state ? `, ${h.state}` : ''}</span>}
+                </span>
+                {selected?.id === h.id && <Check className="w-4 h-4 text-cyan-400" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {error && <p className="text-red-400 text-xs mt-1.5 font-medium">{error}</p>}
+    </div>
+  );
+}
+
 function RegisterForm() {
   const { register: authRegister, acceptInvite } = useAuth();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('token');
+  const hospitalSlug = searchParams.get('hospital');
   const [loading, setLoading] = useState(false);
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<SelfSignupData | InviteData>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<SelfSignupData | InviteData>({
     resolver: zodResolver(inviteToken ? inviteSchema : selfSignupSchema),
   });
+
+  useEffect(() => {
+    if (!hospitalSlug || inviteToken) return;
+    tenantsApi.getPublic(hospitalSlug).then(({ data }) => {
+      const match = (data as Hospital[]).find((h) => h.slug === hospitalSlug);
+      if (match) {
+        setSelectedHospital(match);
+        setValue('tenantId' as any, match.id);
+      }
+    }).catch(() => {});
+  }, [hospitalSlug, inviteToken, setValue]);
+
+  const handleHospitalSelect = (hospital: Hospital) => {
+    setSelectedHospital(hospital);
+    setValue('tenantId' as any, hospital.id, { shouldValidate: true });
+  };
 
   const onSubmit = async (data: SelfSignupData | InviteData) => {
     setLoading(true);
@@ -72,7 +202,7 @@ function RegisterForm() {
             {inviteToken ? 'Activate your account' : 'Create your account'}
           </h1>
           <p className="text-slate-400 mt-2 text-sm font-light">
-            {inviteToken ? 'You were invited to join a hospital team' : 'Start your free 30-day trial'}
+            {inviteToken ? 'You were invited to join a hospital team' : 'Register as a patient to get started'}
           </p>
         </div>
 
@@ -152,6 +282,17 @@ function RegisterForm() {
                   />
                 </div>
               </div>
+            )}
+
+            {!inviteToken && (
+              <>
+                <input type="hidden" {...register('tenantId' as any)} />
+                <HospitalPicker
+                  selected={selectedHospital}
+                  onSelect={handleHospitalSelect}
+                  error={'tenantId' in errors ? (errors as any).tenantId?.message : undefined}
+                />
+              </>
             )}
 
             <div>

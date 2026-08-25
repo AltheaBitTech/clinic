@@ -35,18 +35,49 @@ export class AuthService {
     });
     if (existing) throw new ConflictException('Email already registered');
 
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: dto.tenantId },
+    });
+    if (!tenant || !tenant.isActive)
+      throw new BadRequestException('Selected hospital is not available');
+
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        phone: dto.phone || null,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        passwordHash,
-        isVerified: true, // For MVP, skip email verification
-      },
-      include: this.userRelationsInclude,
+    const user = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email: dto.email,
+          phone: dto.phone || null,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          passwordHash,
+          role: 'PATIENT',
+          tenantId: dto.tenantId,
+          isVerified: true, // For MVP, skip email verification
+        },
+      });
+
+      const patient = await tx.patient.create({
+        data: {
+          userId: created.id,
+          tenantId: dto.tenantId,
+          patientCode: `P${Date.now().toString().slice(-8)}`,
+        },
+      });
+
+      await tx.patientTimeline.create({
+        data: {
+          patientId: patient.id,
+          eventType: 'NOTE_ADDED',
+          title: 'Patient Registered',
+          description: 'Patient self-registered online',
+        },
+      });
+
+      return tx.user.findUniqueOrThrow({
+        where: { id: created.id },
+        include: this.userRelationsInclude,
+      });
     });
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);

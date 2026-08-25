@@ -57,6 +57,7 @@ export const authApi = {
 export const tenantsApi = {
   create: (data: any) => api.post('/tenants', data),
   getAll: (params?: any) => api.get('/tenants', { params }),
+  getPublic: (search?: string) => api.get('/tenants/public', { params: { search } }),
   getMy: () => api.get('/tenants/my'),
   getMyStats: () => api.get('/tenants/my/stats'),
   update: (id: string, data: any) => api.put(`/tenants/${id}`, data),

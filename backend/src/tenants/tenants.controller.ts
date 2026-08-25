@@ -29,6 +29,7 @@ import {
 } from './dto/tenant.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import { UserRole } from '@prisma/client';
 import { getUploadDir } from '../common/utils/upload.util';
 
@@ -69,6 +70,16 @@ export class TenantsController {
   @ApiOperation({ summary: 'Get current user tenant profile' })
   getMyTenant(@CurrentUser() user: any) {
     return this.tenantsService.findOne(user.tenantId);
+  }
+
+  @Public()
+  @Get('public')
+  @ApiOperation({
+    summary: 'Browse active hospitals for patient signup [Public]',
+  })
+  @ApiQuery({ name: 'search', required: false })
+  findPublic(@Query('search') search?: string) {
+    return this.tenantsService.findPublic(search);
   }
 
   @Get('my/stats')
