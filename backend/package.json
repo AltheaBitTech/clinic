@@ -7,7 +7,9 @@
   "license": "UNLICENSED",
   "scripts": {
     "postinstall": "prisma generate",
-    "build": "prisma generate && nest build",
+    "build": "prisma generate && prisma db push && prisma db seed && nest build",
+    "seed": "prisma db seed",
+    "seed:plans": "ts-node prisma/seed-plans.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

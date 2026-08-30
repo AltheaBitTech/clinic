@@ -73,6 +73,8 @@ export class SubscriptionsService {
   }
 
   async createCheckout(tenantId: string, planId: string) {
+    this.logger.log(`createCheckout: tenant=${tenantId} plan=${planId}`);
+
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan || !plan.isActive) throw new NotFoundException('Plan not found');
 
@@ -81,7 +83,7 @@ export class SubscriptionsService {
     });
 
     if (plan.tier === 'FREE') {
-      await this.prisma.subscription.create({
+      const created = await this.prisma.subscription.create({
         data: {
           tenantId,
           planId: plan.id,
@@ -90,6 +92,7 @@ export class SubscriptionsService {
           currentPeriodEnd: null,
         },
       });
+      this.logger.log(`createCheckout: FREE subscription row inserted id=${created.id}`);
       await this.prisma.tenant.update({
         where: { id: tenantId },
         data: { subscriptionPlan: 'FREE', subscriptionEndsAt: null },
@@ -127,6 +130,9 @@ export class SubscriptionsService {
         notes: { tenantId },
       });
       razorpayCustomerId = customer.id;
+      this.logger.log(`createCheckout: created Razorpay customer ${razorpayCustomerId}`);
+    } else {
+      this.logger.log(`createCheckout: reusing Razorpay customer ${razorpayCustomerId}`);
     }
 
     // Never leave two overlapping Razorpay subscriptions active for the same
@@ -159,6 +165,9 @@ export class SubscriptionsService {
       total_count: INDEFINITE_TOTAL_COUNT,
       notes: { tenantId, planId },
     });
+    this.logger.log(
+      `createCheckout: Razorpay subscription created ${razorpaySubscription.id} (status=${razorpaySubscription.status})`,
+    );
 
     const subscription = await this.prisma.subscription.create({
       data: {
@@ -171,6 +180,9 @@ export class SubscriptionsService {
         notes: { tenantId, planId },
       },
     });
+    this.logger.log(
+      `createCheckout: subscription row inserted id=${subscription.id} razorpaySubscriptionId=${subscription.razorpaySubscriptionId}`,
+    );
 
     return {
       subscriptionId: subscription.id,
@@ -207,11 +219,17 @@ export class SubscriptionsService {
     signature: string | undefined,
     parsedBody: any,
   ): Promise<{ received: true }> {
+    this.logger.log(
+      `processWebhook: received event=${parsedBody?.event ?? 'unknown'} hasRawBody=${!!rawBody} hasSignature=${!!signature}`,
+    );
+
     if (!rawBody || !signature) {
+      this.logger.warn('processWebhook: rejected — missing rawBody or signature header');
       throw new UnauthorizedException('Missing webhook signature');
     }
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     if (!webhookSecret) {
+      this.logger.warn('processWebhook: rejected — RAZORPAY_WEBHOOK_SECRET not set');
       throw new ServiceUnavailableException(
         'Razorpay is not configured (missing RAZORPAY_WEBHOOK_SECRET)',
       );
@@ -227,7 +245,10 @@ export class SubscriptionsService {
     const valid =
       signatureBuf.length === expectedBuf.length &&
       crypto.timingSafeEqual(signatureBuf, expectedBuf);
-    if (!valid) throw new UnauthorizedException('Invalid webhook signature');
+    if (!valid) {
+      this.logger.warn('processWebhook: rejected — signature mismatch');
+      throw new UnauthorizedException('Invalid webhook signature');
+    }
 
     const eventId: string =
       parsedBody?.id ?? crypto.createHash('sha256').update(rawBody).digest('hex');
@@ -240,8 +261,10 @@ export class SubscriptionsService {
           payload: parsedBody,
         },
       });
+      this.logger.log(`processWebhook: webhook_events row inserted eventId=${eventId}`);
     } catch {
       // Unique constraint on eventId => already processed; ack without redoing work.
+      this.logger.log(`processWebhook: eventId=${eventId} already recorded, skipping`);
       return { received: true };
     }
 
@@ -251,6 +274,7 @@ export class SubscriptionsService {
         where: { eventId },
         data: { processedAt: new Date() },
       });
+      this.logger.log(`processWebhook: eventId=${eventId} processed successfully`);
     } catch (err: any) {
       this.logger.error(`Failed to process webhook ${eventId}: ${err?.message}`);
       await this.prisma.webhookEvent.update({
@@ -265,7 +289,10 @@ export class SubscriptionsService {
   private async handleEvent(body: any) {
     const event: string = body?.event;
     const entity = body?.payload?.subscription?.entity;
-    if (!entity?.id) return;
+    if (!entity?.id) {
+      this.logger.warn(`handleEvent: ${event} has no subscription entity, ignoring`);
+      return;
+    }
 
     const subscription = await this.prisma.subscription.findUnique({
       where: { razorpaySubscriptionId: entity.id },
@@ -275,6 +302,9 @@ export class SubscriptionsService {
       this.logger.warn(`Webhook ${event} for unknown subscription ${entity.id}`);
       return;
     }
+    this.logger.log(
+      `handleEvent: ${event} for subscription id=${subscription.id} (razorpay=${entity.id}), current status=${subscription.status}`,
+    );
 
     const periodStart = entity.current_start ? new Date(entity.current_start * 1000) : undefined;
     const periodEnd = entity.current_end ? new Date(entity.current_end * 1000) : undefined;

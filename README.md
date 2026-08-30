@@ -33,6 +33,9 @@ npx prisma generate
 # Run migrations
 npx prisma db push
 
+# Seed subscription plans + demo data (safe to re-run — upserts only)
+npx prisma db seed
+
 # Start dev server
 npm run start:dev
 ```

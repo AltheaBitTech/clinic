@@ -22,6 +22,7 @@ Run these from within `backend/` or `frontend/` respectively — there is no roo
 ```bash
 npx prisma generate         # regenerate Prisma client after any schema.prisma change
 npx prisma db push           # sync schema to DATABASE_URL (no migration files)
+npx prisma db seed           # run prisma/seed.ts (upserts — safe to re-run, incl. on prod after a db push)
 npm run start:dev            # dev server w/ watch, http://localhost:3001/api/v1
 npm run build                # nest build
 npm run lint                 # eslint --fix over src,apps,libs,test
