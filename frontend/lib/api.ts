@@ -65,6 +65,13 @@ export const tenantsApi = {
   uploadLogo: (id: string, formData: FormData) => api.post(`/tenants/${id}/logo`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
+export const subscriptionApi = {
+  getPlans: () => api.get('/subscriptions/plans'),
+  getCurrent: () => api.get('/subscriptions/me'),
+  checkout: (planId: string) => api.post('/subscriptions/checkout', { planId }),
+  cancel: (id: string) => api.post(`/subscriptions/${id}/cancel`),
+};
+
 export const patientsApi = {
   create: (data: any) => api.post('/patients', data),
   getAll: (params?: any) => api.get('/patients', { params }),

@@ -1,17 +1,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
-import { usersApi, tenantsApi } from '@/lib/api';
-import { 
-  Settings, User, Building2, Save, Loader2, Sparkles, Mail, Phone, MapPin, Upload 
+import { usersApi, tenantsApi, subscriptionApi } from '@/lib/api';
+import {
+  Settings, User, Building2, Save, Loader2, Sparkles, Mail, Phone, MapPin, Upload, Crown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { cn, formatDate } from '@/lib/utils';
+import { SubscriptionModal } from '@/components/SubscriptionModal';
+
+const TIER_STYLES: Record<string, string> = {
+  FREE: 'bg-slate-100 text-slate-700 border-slate-200/50',
+  BASIC: 'bg-blue-50 text-blue-700 border-blue-200/50',
+  PROFESSIONAL: 'bg-cyan-50 text-cyan-700 border-cyan-200/50',
+  ENTERPRISE: 'bg-purple-50 text-purple-700 border-purple-200/50',
+};
 
 export default function SettingsPage() {
   const { user, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'hospital'>('profile');
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+
+  const { data: currentSubscription } = useQuery({
+    queryKey: ['current-subscription'],
+    queryFn: () => subscriptionApi.getCurrent().then((r) => r.data),
+    enabled: user?.role === 'HOSPITAL_ADMIN',
+  });
 
   // Profile Form States
   const [firstName, setFirstName] = useState('');
@@ -350,7 +366,41 @@ export default function SettingsPage() {
           </div>
         </form>
       ) : (
-        <form onSubmit={handleHospitalSubmit} className="card space-y-6">
+        <>
+          <div className="card mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-200/50 flex items-center justify-center shrink-0">
+                <Crown className="w-5 h-5 text-cyan-600" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Current Plan</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span
+                    className={cn(
+                      'badge text-[10px] uppercase font-semibold px-2 py-0.5 border',
+                      TIER_STYLES[currentSubscription?.plan?.tier] || TIER_STYLES.FREE,
+                    )}
+                  >
+                    {currentSubscription?.plan?.tier || 'FREE'}
+                  </span>
+                  {currentSubscription?.currentPeriodEnd && (
+                    <span className="text-xs text-slate-400">
+                      Renews on {formatDate(currentSubscription.currentPeriodEnd)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsSubscriptionModalOpen(true)}
+              className="btn-primary text-sm shrink-0"
+            >
+              Manage Subscription
+            </button>
+          </div>
+
+          <form onSubmit={handleHospitalSubmit} className="card space-y-6">
           <div className="border-b border-slate-100 pb-3 flex items-center gap-2 mb-2">
             <Building2 className="w-4 h-4 text-cyan-600" />
             <h3 className="font-bold text-slate-800 text-sm">Hospital Branding Details</h3>
@@ -569,8 +619,11 @@ export default function SettingsPage() {
               )}
             </button>
           </div>
-        </form>
+          </form>
+        </>
       )}
+
+      <SubscriptionModal open={isSubscriptionModalOpen} onOpenChange={setIsSubscriptionModalOpen} />
     </div>
   );
 }

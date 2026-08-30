@@ -9,7 +9,9 @@ import { getUploadDir } from './common/utils/upload.util';
 
 async function bootstrap() {
   console.log('Starting NestJS application...');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
 
   // Global prefix
   app.setGlobalPrefix('api/v1');
@@ -78,6 +80,7 @@ async function bootstrap() {
     .addTag('chat', 'Chat System')
     .addTag('dashboard', 'Dashboard Analytics')
     .addTag('billing', 'Billing & Invoices')
+    .addTag('subscriptions', 'SaaS Plan Subscriptions')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

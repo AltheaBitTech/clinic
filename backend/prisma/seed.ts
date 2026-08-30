@@ -1,4 +1,10 @@
-import { PrismaClient, UserRole, SubscriptionPlan, Gender } from '@prisma/client';
+import {
+  PrismaClient,
+  UserRole,
+  SubscriptionPlan,
+  BillingCycle,
+  Gender,
+} from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcryptjs';
 
@@ -29,6 +35,69 @@ async function main() {
     },
   });
   console.log(`Tenant created: ${tenant.name} (${tenant.id})`);
+
+  // 1b. Create Subscription Plans. razorpayPlanId is null until the matching
+  // Plan objects are created in the Razorpay Dashboard (Test Mode) and pasted
+  // in here — paid checkout will 503 with a clear error until that's done,
+  // but everything else (browsing plans, FREE-tier checkout) works without it.
+  console.log('Creating Subscription Plans...');
+  const planSeeds: {
+    tier: SubscriptionPlan;
+    name: string;
+    priceInPaise: number;
+    features: string[];
+    maxDoctors: number | null;
+    maxPatients: number | null;
+  }[] = [
+    {
+      tier: SubscriptionPlan.FREE,
+      name: 'Free',
+      priceInPaise: 0,
+      features: ['Up to 2 doctors', 'Up to 50 patients', 'Basic appointment scheduling'],
+      maxDoctors: 2,
+      maxPatients: 50,
+    },
+    {
+      tier: SubscriptionPlan.BASIC,
+      name: 'Basic (Monthly)',
+      priceInPaise: 99900,
+      features: ['Up to 10 doctors', 'Unlimited patients', 'SMS & email reminders'],
+      maxDoctors: 10,
+      maxPatients: null,
+    },
+    {
+      tier: SubscriptionPlan.PROFESSIONAL,
+      name: 'Professional (Monthly)',
+      priceInPaise: 249900,
+      features: ['Unlimited doctors & patients', 'WhatsApp reminders', 'Pharmacy module'],
+      maxDoctors: null,
+      maxPatients: null,
+    },
+    {
+      tier: SubscriptionPlan.ENTERPRISE,
+      name: 'Enterprise (Monthly)',
+      priceInPaise: 499900,
+      features: ['Everything in Professional', 'Priority support', 'Custom onboarding'],
+      maxDoctors: null,
+      maxPatients: null,
+    },
+  ];
+  for (const p of planSeeds) {
+    await prisma.plan.upsert({
+      where: { tier_billingCycle: { tier: p.tier, billingCycle: BillingCycle.MONTHLY } },
+      update: {},
+      create: {
+        tier: p.tier,
+        billingCycle: BillingCycle.MONTHLY,
+        name: p.name,
+        priceInPaise: p.priceInPaise,
+        features: p.features,
+        maxDoctors: p.maxDoctors,
+        maxPatients: p.maxPatients,
+      },
+    });
+  }
+  console.log('Subscription Plans created.');
 
   // 2. Create Super Admin (No tenantId)
   console.log('Creating Super Admin...');

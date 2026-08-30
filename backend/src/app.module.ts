@@ -17,6 +17,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ChatModule } from './chat/chat.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { BillingModule } from './billing/billing.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TimelineModule } from './timeline/timeline.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { TenantRequestsModule } from './tenant-requests/tenant-requests.module';
@@ -50,6 +51,7 @@ import { PharmacyDashboardModule } from './pharmacy-dashboard/pharmacy-dashboard
     ChatModule,
     DashboardModule,
     BillingModule,
+    SubscriptionsModule,
     TimelineModule,
     RemindersModule,
     TenantRequestsModule,

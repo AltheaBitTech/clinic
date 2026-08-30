@@ -34,6 +34,24 @@ enum SubscriptionPlan {
   ENTERPRISE
 }
 
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+// Mirrors Razorpay subscription statuses (created, authenticated, active,
+// pending, halted, cancelled, completed, expired), folding "authenticated"
+// into CREATED until the first charge succeeds.
+enum SubscriptionStatus {
+  CREATED
+  ACTIVE
+  PENDING
+  HALTED
+  CANCELLED
+  COMPLETED
+  EXPIRED
+}
+
 enum AppointmentStatus {
   SCHEDULED
   CONFIRMED
@@ -177,8 +195,69 @@ model Tenant {
   medicalCatalogItems MedicalCatalogItem[]
   pharmacies          Pharmacy[]
   pharmacyInvites     PharmacyInvite[]
+  subscriptions       Subscription[]
 
   @@map("tenants")
+}
+
+// ─────────────────────────────────────────
+// SAAS SUBSCRIPTION BILLING (Razorpay)
+// ─────────────────────────────────────────
+
+model Plan {
+  id             String           @id @default(cuid())
+  tier           SubscriptionPlan
+  billingCycle   BillingCycle
+  name           String
+  priceInPaise   Int // Razorpay amounts are integer paise, not Decimal rupees
+  currency       String           @default("INR")
+  razorpayPlanId String?          @unique // null for the FREE tier (no gateway plan)
+  features       Json
+  maxDoctors     Int? // nullable = unlimited
+  maxPatients    Int?
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  subscriptions Subscription[]
+
+  @@unique([tier, billingCycle])
+  @@map("plans")
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  tenantId               String
+  planId                 String
+  razorpaySubscriptionId String?            @unique
+  razorpayCustomerId     String?
+  status                 SubscriptionStatus @default(CREATED)
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean            @default(false)
+  shortUrl               String?
+  notes                  Json?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  @@index([tenantId])
+  @@map("subscriptions")
+}
+
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String    @default("razorpay")
+  eventId     String    @unique
+  eventType   String
+  payload     Json
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime  @default(now())
+
+  @@map("webhook_events")
 }
 
 // ─────────────────────────────────────────
