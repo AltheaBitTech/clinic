@@ -8,8 +8,8 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { tenantsApi } from '@/lib/api';
-import { Loader2, User, Mail, Phone, Lock, ShieldCheck, Building2, Search, Check, ChevronDown } from 'lucide-react';
+import { tenantsApi, authApi } from '@/lib/api';
+import { Loader2, User, Mail, Phone, Lock, ShieldCheck, Building2, Search, Check, ChevronDown, KeyRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Hospital {
@@ -147,8 +147,11 @@ function RegisterForm() {
   const hospitalSlug = searchParams.get('hospital');
   const [loading, setLoading] = useState(false);
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpError, setOtpError] = useState('');
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<SelfSignupData | InviteData>({
+  const { register, handleSubmit, setValue, getValues, formState: { errors } } = useForm<SelfSignupData | InviteData>({
     resolver: zodResolver(inviteToken ? inviteSchema : selfSignupSchema),
   });
 
@@ -168,18 +171,64 @@ function RegisterForm() {
     setValue('tenantId' as any, hospital.id, { shouldValidate: true });
   };
 
+  const apiErrorMessage = (err: any, fallback: string) =>
+    err.response?.data?.message || fallback;
+
   const onSubmit = async (data: SelfSignupData | InviteData) => {
     setLoading(true);
+    setOtpError('');
     try {
       if (inviteToken) {
         await acceptInvite({ ...data, token: inviteToken });
         toast.success('Account activated!');
-      } else {
-        await authRegister(data);
-        toast.success('Account created!');
+        return;
       }
+
+      const signup = data as SelfSignupData;
+      if (!otpStep) {
+        await authApi.sendRegisterEmailOtp({
+          email: signup.email,
+          firstName: signup.firstName,
+        });
+        setOtpStep(true);
+        toast.success('Verification code sent to your email');
+        return;
+      }
+
+      if (!/^\d{6}$/.test(otpCode.trim())) {
+        setOtpError('Enter the 6-digit code from your email');
+        return;
+      }
+
+      const { data: verified } = await authApi.verifyRegisterEmailOtp({
+        email: signup.email,
+        otp: otpCode.trim(),
+      });
+      await authRegister({
+        ...signup,
+        emailVerificationToken: verified.emailVerificationToken,
+      });
+      toast.success('Account created!');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      toast.error(apiErrorMessage(err, otpStep ? 'Verification failed' : 'Registration failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    const signup = getValues() as SelfSignupData;
+    if (!signup.email) return;
+    setLoading(true);
+    setOtpError('');
+    try {
+      await authApi.sendRegisterEmailOtp({
+        email: signup.email,
+        firstName: signup.firstName,
+      });
+      toast.success('A new verification code was sent');
+    } catch (err: any) {
+      toast.error(apiErrorMessage(err, 'Could not resend code'));
     } finally {
       setLoading(false);
     }
@@ -261,7 +310,8 @@ function RegisterForm() {
                     {...register('email' as any)}
                     type="email"
                     placeholder="you@example.com"
-                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
+                    readOnly={otpStep}
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm read-only:opacity-60"
                   />
                 </div>
                 {'email' in errors && errors.email && <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.email.message}</p>}
@@ -311,6 +361,50 @@ function RegisterForm() {
               {errors.password && <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.password.message}</p>}
             </div>
 
+            {!inviteToken && otpStep && (
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email verification code</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                    <KeyRound className="w-4 h-4" />
+                  </span>
+                  <input
+                    value={otpCode}
+                    onChange={(e) => {
+                      setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                      setOtpError('');
+                    }}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="6-digit code"
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm tracking-[0.3em]"
+                  />
+                </div>
+                {otpError && <p className="text-red-400 text-xs mt-1.5 font-medium">{otpError}</p>}
+                <div className="mt-2 flex items-center justify-between gap-3 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpStep(false);
+                      setOtpCode('');
+                      setOtpError('');
+                    }}
+                    className="text-slate-400 hover:text-slate-200 transition-colors"
+                  >
+                    Use a different email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={loading}
+                    className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors disabled:opacity-50"
+                  >
+                    Resend code
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -319,10 +413,22 @@ function RegisterForm() {
               {loading ? (
                 <>
                   <Loader2 className="w-4.5 h-4.5 animate-spin" />
-                  <span>{inviteToken ? 'Activating account...' : 'Creating account...'}</span>
+                  <span>
+                    {inviteToken
+                      ? 'Activating account...'
+                      : otpStep
+                        ? 'Verifying...'
+                        : 'Sending code...'}
+                  </span>
                 </>
               ) : (
-                <span>{inviteToken ? 'Activate Account' : 'Create Account'}</span>
+                <span>
+                  {inviteToken
+                    ? 'Activate Account'
+                    : otpStep
+                      ? 'Verify and create account'
+                      : 'Send verification code'}
+                </span>
               )}
             </button>
           </form>

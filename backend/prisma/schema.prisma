@@ -295,6 +295,25 @@ model User {
 }
 
 // ─────────────────────────────────────────
+// EMAIL REGISTRATION CHALLENGE (pre-user OTP)
+// ─────────────────────────────────────────
+
+model EmailRegistrationChallenge {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  otpHash      String
+  expiresAt    DateTime
+  attemptCount Int       @default(0)
+  verifiedAt   DateTime?
+  consumedAt   DateTime?
+  lastSentAt   DateTime
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("email_registration_challenges")
+}
+
+// ─────────────────────────────────────────
 // HOSPITAL INVITE
 // ─────────────────────────────────────────
 

@@ -3,14 +3,18 @@ import {
   IsString,
   IsOptional,
   MinLength,
-  IsEnum,
-  IsMobilePhone,
+  Matches,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+
+function normalizeEmail(value: unknown): unknown {
+  return typeof value === 'string' ? value.trim().toLowerCase() : value;
+}
 
 export class RegisterDto {
   @ApiProperty({ example: 'john@example.com' })
+  @Transform(({ value }) => normalizeEmail(value))
   @IsEmail()
   email: string;
 
@@ -32,9 +36,18 @@ export class RegisterDto {
   @MinLength(8)
   password: string;
 
-  @ApiProperty({ description: 'ID of the hospital the patient is registering with' })
+  @ApiProperty({
+    description: 'ID of the hospital the patient is registering with',
+  })
   @IsString()
   tenantId: string;
+
+  @ApiProperty({
+    description:
+      'Short-lived token from POST /auth/register/verify-email-otp proving this email was verified',
+  })
+  @IsString()
+  emailVerificationToken: string;
 }
 
 export class LoginDto {
@@ -86,4 +99,28 @@ export class AcceptInviteDto {
   @ApiProperty()
   @IsString()
   lastName: string;
+}
+
+export class SendRegisterEmailOtpDto {
+  @ApiProperty({ example: 'john@example.com' })
+  @Transform(({ value }) => normalizeEmail(value))
+  @IsEmail()
+  email: string;
+
+  @ApiPropertyOptional({ example: 'John' })
+  @IsOptional()
+  @IsString()
+  firstName?: string;
+}
+
+export class VerifyRegisterEmailOtpDto {
+  @ApiProperty({ example: 'john@example.com' })
+  @Transform(({ value }) => normalizeEmail(value))
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @Matches(/^\d{6}$/, { message: 'OTP must be a 6-digit code' })
+  otp: string;
 }

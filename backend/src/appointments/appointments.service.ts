@@ -1,9 +1,11 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
@@ -11,7 +13,12 @@ import {
 
 @Injectable()
 export class AppointmentsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(AppointmentsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async create(user: any, dto: CreateAppointmentDto) {
     let finalTenantId = user.tenantId;
@@ -73,8 +80,12 @@ export class AppointmentsService {
         doctor: {
           include: { user: { select: { firstName: true, lastName: true } } },
         },
+        // Loaded only for confirmation email; stripped before the API response.
+        tenant: { select: { name: true } },
       },
     });
+
+    const { tenant, ...appointmentResponse } = appointment;
 
     // Add to patient timeline
     await this.prisma.patientTimeline.create({
@@ -99,7 +110,25 @@ export class AppointmentsService {
       },
     });
 
-    return appointment;
+    try {
+      const patientUser = appointment.patient.user;
+      await this.emailService.sendAppointmentConfirmation({
+        recipientEmail: patientUser.email,
+        patientName: `${patientUser.firstName} ${patientUser.lastName}`.trim(),
+        doctorName:
+          `Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`.trim(),
+        hospitalName: tenant?.name,
+        scheduledAt,
+        appointmentId: appointment.id,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Appointment confirmation email failed (appointmentId=${appointment.id}, error=${message})`,
+      );
+    }
+
+    return appointmentResponse;
   }
 
   async findAll(user: any, filters: any = {}, page = 1, limit = 20) {

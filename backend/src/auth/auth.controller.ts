@@ -8,6 +8,8 @@ import {
   VerifyOtpDto,
   RefreshTokenDto,
   AcceptInviteDto,
+  SendRegisterEmailOtpDto,
+  VerifyRegisterEmailOtpDto,
 } from './dto/auth.dto';
 import { Public } from './decorators/public.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -17,6 +19,20 @@ import { CurrentUser } from './decorators/current-user.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Post('register/send-email-otp')
+  @ApiOperation({ summary: 'Send email OTP for patient self-registration' })
+  sendRegisterEmailOtp(@Body() dto: SendRegisterEmailOtpDto) {
+    return this.authService.sendRegisterEmailOtp(dto);
+  }
+
+  @Public()
+  @Post('register/verify-email-otp')
+  @ApiOperation({ summary: 'Verify email OTP and receive registration proof' })
+  verifyRegisterEmailOtp(@Body() dto: VerifyRegisterEmailOtpDto) {
+    return this.authService.verifyRegisterEmailOtp(dto);
+  }
 
   @Public()
   @Post('register')

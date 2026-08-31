@@ -1,9 +1,11 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import {
   CreatePatientDto,
   UpdatePatientDto,
@@ -13,7 +15,12 @@ import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class PatientsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(PatientsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async create(tenantId: string, dto: CreatePatientDto) {
     // Check if user already exists
@@ -91,6 +98,28 @@ export class PatientsService {
         description: `Patient registered at hospital`,
       },
     });
+
+    // Welcome email only when a new login account was created (not re-linked).
+    if (temporaryPassword) {
+      try {
+        const tenant = await this.prisma.tenant.findUnique({
+          where: { id: tenantId },
+          select: { name: true },
+        });
+        await this.emailService.sendRegistrationWelcome({
+          recipientEmail: user.email,
+          userName: `${user.firstName} ${user.lastName}`.trim(),
+          role: 'PATIENT',
+          hospitalName: tenant?.name,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'unknown error';
+        this.logger.error(
+          `Registration welcome email failed (patientId=${patient.id}, error=${message})`,
+        );
+      }
+    }
 
     return temporaryPassword ? { ...patient, temporaryPassword } : patient;
   }
