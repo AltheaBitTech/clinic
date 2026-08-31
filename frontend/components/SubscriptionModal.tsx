@@ -157,14 +157,18 @@ export function SubscriptionModal({
                           <span className="text-xs font-medium text-slate-400"> / {plan.billingCycle.toLowerCase()}</span>
                         )}
                       </p>
-                      {isCurrent && currentSubscription?.currentPeriodStart && (
-                        <p className="text-[11px] text-slate-500 mt-1">
-                          {formatDate(currentSubscription.currentPeriodStart)}
-                          {currentSubscription?.currentPeriodEnd && (
-                            <> &ndash; {formatDate(currentSubscription.currentPeriodEnd)}</>
-                          )}
-                        </p>
-                      )}
+                      {isCurrent &&
+                        (currentSubscription?.currentPeriodStart ||
+                          currentSubscription?.currentPeriodEnd) && (
+                          <p className="text-[11px] text-slate-500 mt-1">
+                            {currentSubscription?.currentPeriodStart
+                              ? formatDate(currentSubscription.currentPeriodStart)
+                              : 'Started'}
+                            {currentSubscription?.currentPeriodEnd && (
+                              <> &ndash; {formatDate(currentSubscription.currentPeriodEnd)}</>
+                            )}
+                          </p>
+                        )}
                     </div>
 
                     <ul className="space-y-1.5 flex-1">
