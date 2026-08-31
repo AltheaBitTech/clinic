@@ -2,11 +2,13 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import {
   CompletePharmacyInviteDto,
   CreatePharmacyDto,
@@ -17,7 +19,12 @@ const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 @Injectable()
 export class PharmaciesService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PharmaciesService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async create(tenantId: string, dto: CreatePharmacyDto) {
     return this.prisma.pharmacy.create({
@@ -109,7 +116,7 @@ export class PharmaciesService {
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const { firstName, lastName, password: _password, ...pharmacyFields } = dto;
 
-    const pharmacy = await this.prisma.$transaction(async (tx) => {
+    const created = await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email: dto.email,
@@ -139,7 +146,21 @@ export class PharmaciesService {
       return pharmacy;
     });
 
-    return pharmacy;
+    try {
+      await this.emailService.sendRegistrationWelcome({
+        recipientEmail: dto.email,
+        userName: `${firstName} ${lastName}`.trim(),
+        role: UserRole.PHARMACY,
+        hospitalName: invite.tenant.name,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Registration welcome email failed (pharmacyId=${created.id}, error=${message})`,
+      );
+    }
+
+    return created;
   }
 
   async getMine(userId: string) {

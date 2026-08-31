@@ -1,10 +1,12 @@
 import {
   Injectable,
+  Logger,
   ConflictException,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreateTenantRequestDto } from './dto/create-tenant-request.dto';
 import {
   RequestStatus,
@@ -16,7 +18,12 @@ import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class TenantRequestsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(TenantRequestsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async create(dto: CreateTenantRequestDto) {
     const type = dto.type ?? TenantType.HOSPITAL;
@@ -178,6 +185,20 @@ export class TenantRequestsService {
       where: { id },
       data: { status: RequestStatus.APPROVED },
     });
+
+    try {
+      await this.emailService.sendRegistrationWelcome({
+        recipientEmail: user.email,
+        userName: `${user.firstName} ${user.lastName}`.trim(),
+        role: user.role,
+        hospitalName: tenant.name,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Registration welcome email failed (tenantId=${tenant.id}, error=${message})`,
+      );
+    }
 
     return {
       message: 'Registration request approved successfully',

@@ -132,18 +132,18 @@ export default function LoginPage() {
           <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-300">
             <div className="bg-white/[0.03] border border-white/5 rounded-xl p-2.5 hover:bg-white/[0.06] transition-colors">
               <div className="font-bold text-purple-400 mb-1 truncate">Super Admin</div>
-              <div className="truncate text-slate-400 mb-0.5" title="superadmin@Arogyix.com">superadmin@Arogyix.com</div>
-              <div className="font-mono text-slate-500">admin123</div>
+              <div className="truncate text-slate-400 mb-0.5" title="superadmin@Arogyix.health">superadmin@Arogyix.health</div>
+              <div className="font-mono text-slate-500">Password123!</div>
             </div>
             <div className="bg-white/[0.03] border border-white/5 rounded-xl p-2.5 hover:bg-white/[0.06] transition-colors">
               <div className="font-bold text-cyan-400 mb-1 truncate">Hospital Admin</div>
-              <div className="truncate text-slate-400 mb-0.5" title="admin@demo.com">admin@demo.com</div>
-              <div className="font-mono text-slate-500">password123</div>
+              <div className="truncate text-slate-400 mb-0.5" title="admin@Arogyix.health">admin@Arogyix.health</div>
+              <div className="font-mono text-slate-500">Password123!</div>
             </div>
             <div className="bg-white/[0.03] border border-white/5 rounded-xl p-2.5 hover:bg-white/[0.06] transition-colors">
               <div className="font-bold text-emerald-400 mb-1 truncate">Doctor</div>
-              <div className="truncate text-slate-400 mb-0.5" title="doctor@demo.com">doctor@demo.com</div>
-              <div className="font-mono text-slate-500">password123</div>
+              <div className="truncate text-slate-400 mb-0.5" title="doctor@Arogyix.health">doctor@Arogyix.health</div>
+              <div className="font-mono text-slate-500">Password123!</div>
             </div>
           </div>
         </div>

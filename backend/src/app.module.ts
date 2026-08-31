@@ -32,11 +32,13 @@ import { PharmacyPrescriptionsModule } from './pharmacy-prescriptions/pharmacy-p
 import { PharmacySalesModule } from './pharmacy-sales/pharmacy-sales.module';
 import { PharmacyReportsModule } from './pharmacy-reports/pharmacy-reports.module';
 import { PharmacyDashboardModule } from './pharmacy-dashboard/pharmacy-dashboard.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    EmailModule,
     PrismaModule,
     AuthModule,
     TenantsModule,
