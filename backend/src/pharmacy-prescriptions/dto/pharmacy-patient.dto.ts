@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
 
 export class CreatePharmacyPatientDto {
   @ApiProperty({ example: 'Anita Sharma' })
@@ -7,9 +8,8 @@ export class CreatePharmacyPatientDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({ example: '+91 98765 43210' })
-  @IsString()
-  @IsOptional()
+  @ApiPropertyOptional({ example: '9876543210' })
+  @IsOptionalPhoneNumber10()
   phone?: string;
 
   @ApiPropertyOptional({ example: 'anita@example.com' })

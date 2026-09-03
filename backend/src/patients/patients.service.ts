@@ -52,6 +52,8 @@ export class PatientsService {
           role: 'PATIENT',
           tenantId,
           isVerified: true,
+          whatsappOptIn: !!dto.whatsappOptIn,
+          whatsappOptInAt: dto.whatsappOptIn ? new Date() : null,
         },
       });
     }

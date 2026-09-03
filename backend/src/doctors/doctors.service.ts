@@ -1,10 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreateDoctorDto, UpdateDoctorDto } from './dto/doctor.dto';
 
 @Injectable()
 export class DoctorsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(DoctorsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async create(tenantId: string, dto: CreateDoctorDto) {
     // Update user role to DOCTOR
@@ -13,7 +19,7 @@ export class DoctorsService {
       data: { role: 'DOCTOR', tenantId },
     });
 
-    return this.prisma.doctor.create({
+    const doctor = await this.prisma.doctor.create({
       data: {
         userId: dto.userId,
         tenantId,
@@ -49,6 +55,25 @@ export class DoctorsService {
         department: true,
       },
     });
+
+    try {
+      const tenant = await this.prisma.tenant.findUnique({
+        where: { id: tenantId },
+        select: { name: true },
+      });
+      await this.emailService.sendDoctorProfileCreated({
+        recipientEmail: doctor.user.email,
+        doctorName: `${doctor.user.firstName} ${doctor.user.lastName}`.trim(),
+        hospitalName: tenant?.name,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Doctor profile created email failed (doctorId=${doctor.id}, error=${message})`,
+      );
+    }
+
+    return doctor;
   }
 
   async findAll(tenantId: string, departmentId?: string, page = 1, limit = 20) {

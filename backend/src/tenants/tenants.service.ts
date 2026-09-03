@@ -1,9 +1,12 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import {
   CreateTenantDto,
   UpdateTenantDto,
@@ -14,7 +17,13 @@ import { TenantType } from '@prisma/client';
 
 @Injectable()
 export class TenantsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(TenantsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+    private config: ConfigService,
+  ) {}
 
   async create(dto: CreateTenantDto) {
     const slug = dto.name
@@ -96,7 +105,7 @@ export class TenantsService {
     const token = randomUUID();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    const invite = await this.prisma.hospitalInvite.create({
+    await this.prisma.hospitalInvite.create({
       data: {
         tenantId,
         email: dto.email,
@@ -106,8 +115,23 @@ export class TenantsService {
       },
     });
 
-    // TODO: Send invite email
-    console.log(`Invite link: http://localhost:3000/invite/${token}`);
+    const frontendUrl =
+      this.config.get<string>('FRONTEND_URL')?.trim() ||
+      'http://localhost:3000';
+
+    try {
+      await this.emailService.sendStaffInvite({
+        recipientEmail: dto.email,
+        hospitalName: tenant.name,
+        role: dto.role,
+        inviteUrl: `${frontendUrl}/invite/${token}`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Staff invite email failed (tenantId=${tenantId}, error=${message})`,
+      );
+    }
 
     return { message: 'Invite sent', inviteToken: token };
   }

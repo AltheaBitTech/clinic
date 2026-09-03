@@ -52,7 +52,7 @@ export class TenantRequestsService {
       );
     }
 
-    return this.prisma.tenantRequest.create({
+    const request = await this.prisma.tenantRequest.create({
       data: {
         type,
         name: dto.name,
@@ -66,6 +66,30 @@ export class TenantRequestsService {
         plan: dto.plan ?? SubscriptionPlan.FREE,
       },
     });
+
+    try {
+      const superAdmins = await this.prisma.user.findMany({
+        where: { role: UserRole.SUPER_ADMIN, isActive: true },
+        select: { email: true },
+      });
+      await Promise.all(
+        superAdmins.map((admin) =>
+          this.emailService.sendTenantRequestSubmitted({
+            recipientEmail: admin.email,
+            applicantName: `${dto.firstName} ${dto.lastName}`.trim(),
+            hospitalName: dto.name,
+            type,
+          }),
+        ),
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Tenant request submitted email failed (requestId=${request.id}, error=${message})`,
+      );
+    }
+
+    return request;
   }
 
   async findAll() {
@@ -223,9 +247,24 @@ export class TenantRequestsService {
       );
     }
 
-    return this.prisma.tenantRequest.update({
+    const updated = await this.prisma.tenantRequest.update({
       where: { id },
       data: { status: RequestStatus.REJECTED },
     });
+
+    try {
+      await this.emailService.sendTenantRequestRejected({
+        recipientEmail: request.email,
+        applicantName: `${request.firstName} ${request.lastName}`.trim(),
+        hospitalName: request.name,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Tenant request rejected email failed (requestId=${id}, error=${message})`,
+      );
+    }
+
+    return updated;
   }
 }

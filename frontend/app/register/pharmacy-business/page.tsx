@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { tenantRequestsApi } from '@/lib/api';
+import { isValidPhone } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import {
   Store, Phone, Mail, MapPin, Building2, User,
@@ -161,6 +162,7 @@ function PharmacyBusinessRegisterForm() {
     const errs: Partial<Record<keyof FormData, string>> = {};
     if (!form.name.trim()) errs.name = 'Pharmacy business name is required';
     if (!form.phone.trim()) errs.phone = 'Phone number is required';
+    else if (!isValidPhone(form.phone)) errs.phone = 'Enter a valid 10-digit phone number';
     if (!form.address.trim()) errs.address = 'Address is required';
     if (!form.email.trim()) {
       errs.email = 'Email is required to create your login';
@@ -225,8 +227,10 @@ function PharmacyBusinessRegisterForm() {
                   <input
                     id="pharmacy-business-phone"
                     value={form.phone}
-                    onChange={(e) => set('phone', e.target.value)}
-                    placeholder="+91 98765 43210"
+                    onChange={(e) => set('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="9876543210"
                     className={`${inputWithIcon} ${errors.phone ? 'border-red-400/50 focus:ring-red-500/30' : ''}`}
                   />
                 </div>

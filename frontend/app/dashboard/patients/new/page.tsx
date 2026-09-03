@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { patientsApi } from '@/lib/api';
+import { isValidPhone } from '@/lib/utils';
 import {
   ArrowLeft, User, Mail, Phone, Calendar, Heart, Plus, X,
   MapPin, ShieldAlert, FileText, Loader2, Sparkles, ChevronDown,
@@ -95,6 +96,7 @@ export default function NewPatientPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [whatsappOptIn, setWhatsappOptIn] = useState(false);
 
   // Demographics
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -158,6 +160,14 @@ export default function NewPatientPage() {
       toast.error('First Name, Last Name, and Email are required.');
       return;
     }
+    if (phone && !isValidPhone(phone)) {
+      toast.error('Enter a valid 10-digit phone number.');
+      return;
+    }
+    if (emergencyPhone && !isValidPhone(emergencyPhone)) {
+      toast.error('Enter a valid 10-digit emergency contact phone number.');
+      return;
+    }
 
     setIsSubmitting(true);
     const loadingToast = toast.loading('Registering new patient...');
@@ -168,6 +178,7 @@ export default function NewPatientPage() {
         lastName,
         email,
         phone: phone || undefined,
+        whatsappOptIn,
         dateOfBirth: dateOfBirth || undefined,
         gender,
         bloodGroup,
@@ -280,13 +291,32 @@ export default function NewPatientPage() {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="9876543210"
                   className="input pl-10"
                 />
               </div>
             </div>
           </div>
+
+          <label className="flex items-start gap-3 mt-6 p-4 bg-slate-50/50 rounded-xl border border-slate-100 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={whatsappOptIn}
+              onChange={(e) => setWhatsappOptIn(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-slate-700">
+                Notify patient on WhatsApp
+              </span>
+              <span className="block text-xs text-slate-500 mt-0.5">
+                Send appointment and medicine reminders to the phone number above via WhatsApp.
+              </span>
+            </span>
+          </label>
         </div>
 
         {/* Section 2: Demographics & Address */}
@@ -427,8 +457,10 @@ export default function NewPatientPage() {
                 <input
                   type="tel"
                   value={emergencyPhone}
-                  onChange={(e) => setEmergencyPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
+                  onChange={(e) => setEmergencyPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="9876543210"
                   className="input pl-10"
                 />
               </div>

@@ -7,6 +7,7 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
+import { IsPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
 
 export class CreatePharmacyDto {
   @ApiProperty({ example: 'MedPlus Pharmacy', description: 'Pharmacy name' })
@@ -31,11 +32,11 @@ export class CreatePharmacyDto {
   licenseNumber?: string;
 
   @ApiProperty({
-    example: '+91 98765 43210',
+    example: '9876543210',
     description: 'Primary contact phone number',
   })
-  @IsString()
   @IsNotEmpty()
+  @IsPhoneNumber10()
   phone: string;
 
   @ApiPropertyOptional({ example: 'medplus@example.com' })
@@ -128,11 +129,11 @@ export class CompletePharmacyInviteDto {
   licenseNumber?: string;
 
   @ApiProperty({
-    example: '+91 98765 43210',
+    example: '9876543210',
     description: 'Primary contact phone number',
   })
-  @IsString()
   @IsNotEmpty()
+  @IsPhoneNumber10()
   phone: string;
 
   @ApiProperty({

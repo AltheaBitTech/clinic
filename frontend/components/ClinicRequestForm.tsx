@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { tenantRequestsApi } from '@/lib/api';
+import { isValidPhone } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { Loader2, CheckCircle2, Building2, Mail, Phone, User, MapPin, Tag } from 'lucide-react';
 
@@ -50,6 +51,9 @@ function ClinicRequestFormInner() {
     }
     if (!form.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!form.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (form.phone.trim() && !isValidPhone(form.phone)) {
+      newErrors.phone = 'Enter a valid 10-digit phone number';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -217,10 +221,19 @@ function ClinicRequestFormInner() {
                 type="text"
                 name="phone"
                 value={form.phone}
-                onChange={handleChange}
-                placeholder="+1 (555) 000-0000"
-                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setForm({ ...form, phone: digits });
+                  if (errors.phone) setErrors({ ...errors, phone: '' });
+                }}
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="9876543210"
+                className={`w-full bg-white/5 border ${
+                  errors.phone ? 'border-red-500/50 focus:ring-red-500' : 'border-white/20 focus:ring-cyan-500'
+                } rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all`}
               />
+              {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
             </div>
           </div>
         </div>

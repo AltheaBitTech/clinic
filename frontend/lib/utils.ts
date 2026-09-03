@@ -6,6 +6,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function isValidPhone(phone: string): boolean {
+  return /^\d{10}$/.test(phone.trim());
+}
+
 export function formatDate(date: string | Date, fmt = 'dd MMM yyyy') {
   return format(new Date(date), fmt);
 }

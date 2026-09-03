@@ -6,9 +6,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { SubscriptionStatus } from '@prisma/client';
+import { SubscriptionStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RazorpayService } from './razorpay.service';
+import { EmailService } from '../email/email.service';
 
 // Razorpay's Subscriptions API requires a finite total_count even for plans
 // that should recur indefinitely until cancelled. 120 monthly cycles (10
@@ -23,7 +24,42 @@ export class SubscriptionsService {
   constructor(
     private prisma: PrismaService,
     private razorpay: RazorpayService,
+    private emailService: EmailService,
   ) {}
+
+  private async notifyTenantAdmin(
+    tenantId: string,
+    send: (params: {
+      recipientEmail: string;
+      adminName?: string;
+      hospitalName: string;
+    }) => Promise<void>,
+  ) {
+    try {
+      const [tenant, admin] = await Promise.all([
+        this.prisma.tenant.findUnique({
+          where: { id: tenantId },
+          select: { name: true },
+        }),
+        this.prisma.user.findFirst({
+          where: { tenantId, role: UserRole.HOSPITAL_ADMIN },
+          select: { email: true, firstName: true, lastName: true },
+        }),
+      ]);
+      if (!tenant || !admin) return;
+
+      await send({
+        recipientEmail: admin.email,
+        adminName: `${admin.firstName} ${admin.lastName}`.trim(),
+        hospitalName: tenant.name,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Subscription notification email failed (tenantId=${tenantId}, error=${message})`,
+      );
+    }
+  }
 
   getPlans() {
     return this.prisma.plan.findMany({
@@ -45,7 +81,9 @@ export class SubscriptionsService {
     // tenant-requests.service.ts) without ever going through checkout, so
     // no Subscription row exists yet. Fall back to the tenant's tier so the
     // matching plan still shows as "current" instead of none at all.
-    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+    });
     if (!tenant) return null;
 
     const plan = await this.prisma.plan.findFirst({
@@ -92,7 +130,9 @@ export class SubscriptionsService {
           currentPeriodEnd: null,
         },
       });
-      this.logger.log(`createCheckout: FREE subscription row inserted id=${created.id}`);
+      this.logger.log(
+        `createCheckout: FREE subscription row inserted id=${created.id}`,
+      );
       await this.prisma.tenant.update({
         where: { id: tenantId },
         data: { subscriptionPlan: 'FREE', subscriptionEndsAt: null },
@@ -130,9 +170,13 @@ export class SubscriptionsService {
         notes: { tenantId },
       });
       razorpayCustomerId = customer.id;
-      this.logger.log(`createCheckout: created Razorpay customer ${razorpayCustomerId}`);
+      this.logger.log(
+        `createCheckout: created Razorpay customer ${razorpayCustomerId}`,
+      );
     } else {
-      this.logger.log(`createCheckout: reusing Razorpay customer ${razorpayCustomerId}`);
+      this.logger.log(
+        `createCheckout: reusing Razorpay customer ${razorpayCustomerId}`,
+      );
     }
 
     // Never leave two overlapping Razorpay subscriptions active for the same
@@ -147,7 +191,9 @@ export class SubscriptionsService {
       nonTerminalStatuses.includes(previous.status)
     ) {
       try {
-        await this.razorpay.client.subscriptions.cancel(previous.razorpaySubscriptionId);
+        await this.razorpay.client.subscriptions.cancel(
+          previous.razorpaySubscriptionId,
+        );
       } catch (err) {
         this.logger.warn(
           `Failed to cancel previous Razorpay subscription ${previous.razorpaySubscriptionId}: ${err}`,
@@ -159,12 +205,13 @@ export class SubscriptionsService {
       });
     }
 
-    const razorpaySubscription = await this.razorpay.client.subscriptions.create({
-      plan_id: plan.razorpayPlanId,
-      customer_notify: 1,
-      total_count: INDEFINITE_TOTAL_COUNT,
-      notes: { tenantId, planId },
-    });
+    const razorpaySubscription =
+      await this.razorpay.client.subscriptions.create({
+        plan_id: plan.razorpayPlanId,
+        customer_notify: 1,
+        total_count: INDEFINITE_TOTAL_COUNT,
+        notes: { tenantId, planId },
+      });
     this.logger.log(
       `createCheckout: Razorpay subscription created ${razorpaySubscription.id} (status=${razorpaySubscription.status})`,
     );
@@ -200,7 +247,9 @@ export class SubscriptionsService {
     });
     if (!subscription) throw new NotFoundException('Subscription not found');
     if (!subscription.razorpaySubscriptionId) {
-      throw new NotFoundException('Subscription has no gateway record to cancel');
+      throw new NotFoundException(
+        'Subscription has no gateway record to cancel',
+      );
     }
 
     await this.razorpay.client.subscriptions.cancel(
@@ -208,10 +257,19 @@ export class SubscriptionsService {
       true,
     );
 
-    return this.prisma.subscription.update({
+    const updated = await this.prisma.subscription.update({
       where: { id: subscription.id },
       data: { cancelAtPeriodEnd: true },
     });
+
+    await this.notifyTenantAdmin(tenantId, (params) =>
+      this.emailService.sendSubscriptionCancelled({
+        ...params,
+        periodEnd: updated.currentPeriodEnd ?? undefined,
+      }),
+    );
+
+    return updated;
   }
 
   async processWebhook(
@@ -224,12 +282,16 @@ export class SubscriptionsService {
     );
 
     if (!rawBody || !signature) {
-      this.logger.warn('processWebhook: rejected — missing rawBody or signature header');
+      this.logger.warn(
+        'processWebhook: rejected — missing rawBody or signature header',
+      );
       throw new UnauthorizedException('Missing webhook signature');
     }
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      this.logger.warn('processWebhook: rejected — RAZORPAY_WEBHOOK_SECRET not set');
+      this.logger.warn(
+        'processWebhook: rejected — RAZORPAY_WEBHOOK_SECRET not set',
+      );
       throw new ServiceUnavailableException(
         'Razorpay is not configured (missing RAZORPAY_WEBHOOK_SECRET)',
       );
@@ -251,7 +313,8 @@ export class SubscriptionsService {
     }
 
     const eventId: string =
-      parsedBody?.id ?? crypto.createHash('sha256').update(rawBody).digest('hex');
+      parsedBody?.id ??
+      crypto.createHash('sha256').update(rawBody).digest('hex');
 
     try {
       await this.prisma.webhookEvent.create({
@@ -261,10 +324,14 @@ export class SubscriptionsService {
           payload: parsedBody,
         },
       });
-      this.logger.log(`processWebhook: webhook_events row inserted eventId=${eventId}`);
+      this.logger.log(
+        `processWebhook: webhook_events row inserted eventId=${eventId}`,
+      );
     } catch {
       // Unique constraint on eventId => already processed; ack without redoing work.
-      this.logger.log(`processWebhook: eventId=${eventId} already recorded, skipping`);
+      this.logger.log(
+        `processWebhook: eventId=${eventId} already recorded, skipping`,
+      );
       return { received: true };
     }
 
@@ -274,9 +341,13 @@ export class SubscriptionsService {
         where: { eventId },
         data: { processedAt: new Date() },
       });
-      this.logger.log(`processWebhook: eventId=${eventId} processed successfully`);
+      this.logger.log(
+        `processWebhook: eventId=${eventId} processed successfully`,
+      );
     } catch (err: any) {
-      this.logger.error(`Failed to process webhook ${eventId}: ${err?.message}`);
+      this.logger.error(
+        `Failed to process webhook ${eventId}: ${err?.message}`,
+      );
       await this.prisma.webhookEvent.update({
         where: { eventId },
         data: { error: String(err?.message ?? err) },
@@ -290,7 +361,9 @@ export class SubscriptionsService {
     const event: string = body?.event;
     const entity = body?.payload?.subscription?.entity;
     if (!entity?.id) {
-      this.logger.warn(`handleEvent: ${event} has no subscription entity, ignoring`);
+      this.logger.warn(
+        `handleEvent: ${event} has no subscription entity, ignoring`,
+      );
       return;
     }
 
@@ -299,15 +372,21 @@ export class SubscriptionsService {
       include: { plan: true },
     });
     if (!subscription) {
-      this.logger.warn(`Webhook ${event} for unknown subscription ${entity.id}`);
+      this.logger.warn(
+        `Webhook ${event} for unknown subscription ${entity.id}`,
+      );
       return;
     }
     this.logger.log(
       `handleEvent: ${event} for subscription id=${subscription.id} (razorpay=${entity.id}), current status=${subscription.status}`,
     );
 
-    const periodStart = entity.current_start ? new Date(entity.current_start * 1000) : undefined;
-    const periodEnd = entity.current_end ? new Date(entity.current_end * 1000) : undefined;
+    const periodStart = entity.current_start
+      ? new Date(entity.current_start * 1000)
+      : undefined;
+    const periodEnd = entity.current_end
+      ? new Date(entity.current_end * 1000)
+      : undefined;
 
     switch (event) {
       case 'subscription.authenticated':
@@ -334,6 +413,13 @@ export class SubscriptionsService {
             subscriptionEndsAt: periodEnd,
           },
         });
+        await this.notifyTenantAdmin(subscription.tenantId, (params) =>
+          this.emailService.sendSubscriptionActivated({
+            ...params,
+            planName: subscription.plan.name,
+            periodEnd,
+          }),
+        );
         break;
 
       case 'subscription.pending':
@@ -348,6 +434,9 @@ export class SubscriptionsService {
           where: { id: subscription.id },
           data: { status: SubscriptionStatus.HALTED },
         });
+        await this.notifyTenantAdmin(subscription.tenantId, (params) =>
+          this.emailService.sendSubscriptionPaymentFailed(params),
+        );
         break;
 
       case 'subscription.cancelled':
@@ -355,6 +444,12 @@ export class SubscriptionsService {
           where: { id: subscription.id },
           data: { status: SubscriptionStatus.CANCELLED },
         });
+        await this.notifyTenantAdmin(subscription.tenantId, (params) =>
+          this.emailService.sendSubscriptionCancelled({
+            ...params,
+            periodEnd: subscription.currentPeriodEnd ?? undefined,
+          }),
+        );
         break;
 
       case 'subscription.completed':

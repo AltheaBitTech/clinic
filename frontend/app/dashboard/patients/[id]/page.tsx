@@ -11,7 +11,7 @@ import {
   Activity, ClipboardList, Clock, Bell, HeartPulse, Stethoscope,
   Users
 } from 'lucide-react';
-import { formatDate, getInitials } from '@/lib/utils';
+import { formatDate, getInitials, isValidPhone } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export default function PatientDetailPage() {
@@ -67,6 +67,10 @@ export default function PatientDetailPage() {
     e.preventDefault();
     if (!fmName || !fmRelation) {
       toast.error('Name and relation are required');
+      return;
+    }
+    if (fmPhone && !isValidPhone(fmPhone)) {
+      toast.error('Enter a valid 10-digit phone number');
       return;
     }
 
@@ -571,8 +575,10 @@ export default function PatientDetailPage() {
                   <input
                     type="tel"
                     value={fmPhone}
-                    onChange={(e) => setFmPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
+                    onChange={(e) => setFmPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="9876543210"
                     className="input"
                   />
                 </div>

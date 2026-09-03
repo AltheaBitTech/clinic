@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
@@ -18,6 +19,7 @@ export class AppointmentsService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private whatsappService: WhatsappService,
   ) {}
 
   async create(user: any, dto: CreateAppointmentDto) {
@@ -69,6 +71,7 @@ export class AppointmentsService {
           include: {
             user: {
               select: {
+                id: true,
                 firstName: true,
                 lastName: true,
                 email: true,
@@ -78,7 +81,9 @@ export class AppointmentsService {
           },
         },
         doctor: {
-          include: { user: { select: { firstName: true, lastName: true } } },
+          include: {
+            user: { select: { firstName: true, lastName: true, email: true } },
+          },
         },
         // Loaded only for confirmation email; stripped before the API response.
         tenant: { select: { name: true } },
@@ -110,13 +115,18 @@ export class AppointmentsService {
       },
     });
 
+    const patientUser = appointment.patient.user;
+    const doctorUser = appointment.doctor.user;
+    const patientName =
+      `${patientUser.firstName} ${patientUser.lastName}`.trim();
+    const doctorName =
+      `Dr. ${doctorUser.firstName} ${doctorUser.lastName}`.trim();
+
     try {
-      const patientUser = appointment.patient.user;
       await this.emailService.sendAppointmentConfirmation({
         recipientEmail: patientUser.email,
-        patientName: `${patientUser.firstName} ${patientUser.lastName}`.trim(),
-        doctorName:
-          `Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`.trim(),
+        patientName,
+        doctorName,
         hospitalName: tenant?.name,
         scheduledAt,
         appointmentId: appointment.id,
@@ -125,6 +135,39 @@ export class AppointmentsService {
       const message = error instanceof Error ? error.message : 'unknown error';
       this.logger.error(
         `Appointment confirmation email failed (appointmentId=${appointment.id}, error=${message})`,
+      );
+    }
+
+    try {
+      await this.whatsappService.sendAppointmentConfirmationWhatsapp({
+        recipientUserId: patientUser.id,
+        recipientPhone: patientUser.phone,
+        patientName,
+        doctorName,
+        hospitalName: tenant?.name,
+        scheduledAt,
+        appointmentId: appointment.id,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Appointment confirmation WhatsApp failed (appointmentId=${appointment.id}, error=${message})`,
+      );
+    }
+
+    try {
+      await this.emailService.sendDoctorAppointmentBooked({
+        recipientEmail: doctorUser.email,
+        doctorName,
+        patientName,
+        hospitalName: tenant?.name,
+        scheduledAt,
+        appointmentId: appointment.id,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Doctor appointment notification email failed (appointmentId=${appointment.id}, error=${message})`,
       );
     }
 
@@ -225,6 +268,10 @@ export class AppointmentsService {
 
   async update(id: string, dto: UpdateAppointmentDto) {
     const appointment = await this.findOne(id);
+    const previousScheduledAt = appointment.scheduledAt;
+    const isReschedule =
+      !!dto.scheduledAt &&
+      new Date(dto.scheduledAt).getTime() !== previousScheduledAt.getTime();
 
     const data: any = { ...dto };
     if (dto.scheduledAt) {
@@ -254,18 +301,114 @@ export class AppointmentsService {
       });
     }
 
-    return this.prisma.appointment.update({
+    const updated = await this.prisma.appointment.update({
       where: { id },
       data,
       include: {
         patient: {
-          include: { user: { select: { firstName: true, lastName: true } } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
         },
         doctor: {
-          include: { user: { select: { firstName: true, lastName: true } } },
+          include: {
+            user: { select: { firstName: true, lastName: true, email: true } },
+          },
         },
       },
     });
+
+    const isCancellation = dto.status === 'CANCELLED';
+    if (isCancellation || isReschedule) {
+      try {
+        const tenant = await this.prisma.tenant.findUnique({
+          where: { id: updated.tenantId },
+          select: { name: true },
+        });
+        const patientUser = updated.patient.user;
+        const doctorUser = updated.doctor.user;
+        const patientName =
+          `${patientUser.firstName} ${patientUser.lastName}`.trim();
+        const doctorName =
+          `Dr. ${doctorUser.firstName} ${doctorUser.lastName}`.trim();
+
+        if (isCancellation) {
+          await this.emailService.sendAppointmentCancellation({
+            recipientEmail: patientUser.email,
+            patientName,
+            doctorName,
+            hospitalName: tenant?.name,
+            scheduledAt: updated.scheduledAt,
+            appointmentId: updated.id,
+            reason: dto.cancelReason,
+          });
+          await this.emailService.sendDoctorAppointmentCancelled({
+            recipientEmail: doctorUser.email,
+            doctorName,
+            patientName,
+            hospitalName: tenant?.name,
+            scheduledAt: updated.scheduledAt,
+            appointmentId: updated.id,
+            reason: dto.cancelReason,
+          });
+          await this.whatsappService.sendAppointmentCancellationWhatsapp({
+            recipientUserId: patientUser.id,
+            recipientPhone: patientUser.phone,
+            patientName,
+            doctorName,
+            hospitalName: tenant?.name,
+            scheduledAt: updated.scheduledAt,
+            appointmentId: updated.id,
+            reason: dto.cancelReason,
+          });
+        } else if (isReschedule) {
+          await this.emailService.sendAppointmentReschedule({
+            recipientEmail: patientUser.email,
+            patientName,
+            doctorName,
+            hospitalName: tenant?.name,
+            scheduledAt: updated.scheduledAt,
+            previousScheduledAt,
+            appointmentId: updated.id,
+          });
+          await this.emailService.sendDoctorAppointmentRescheduled({
+            recipientEmail: doctorUser.email,
+            doctorName,
+            patientName,
+            hospitalName: tenant?.name,
+            scheduledAt: updated.scheduledAt,
+            previousScheduledAt,
+            appointmentId: updated.id,
+          });
+          await this.whatsappService.sendAppointmentRescheduleWhatsapp({
+            recipientUserId: patientUser.id,
+            recipientPhone: patientUser.phone,
+            patientName,
+            doctorName,
+            hospitalName: tenant?.name,
+            scheduledAt: updated.scheduledAt,
+            previousScheduledAt,
+            appointmentId: updated.id,
+          });
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'unknown error';
+        this.logger.error(
+          `Appointment update email failed (appointmentId=${updated.id}, error=${message})`,
+        );
+      }
+    }
+
+    return updated;
   }
 
   async getTodayAppointments(tenantId: string, doctorId?: string) {

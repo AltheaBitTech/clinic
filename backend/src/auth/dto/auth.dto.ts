@@ -7,6 +7,7 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
 
 function normalizeEmail(value: unknown): unknown {
   return typeof value === 'string' ? value.trim().toLowerCase() : value;
@@ -18,9 +19,8 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
-  @ApiPropertyOptional({ example: '+919876543210' })
-  @IsOptional()
-  @IsString()
+  @ApiPropertyOptional({ example: '9876543210' })
+  @IsOptionalPhoneNumber10()
   phone?: string;
 
   @ApiProperty({ example: 'John' })

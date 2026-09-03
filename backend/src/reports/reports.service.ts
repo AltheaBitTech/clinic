@@ -1,12 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { ReportType } from '@prisma/client';
 import * as path from 'path';
 import * as fs from 'fs';
 
 @Injectable()
 export class ReportsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(ReportsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async create(
     tenantId: string,
@@ -44,6 +50,30 @@ export class ReportsService {
         metadata: { reportId: report.id, type: report.type },
       },
     });
+
+    try {
+      const patient = await this.prisma.patient.findUnique({
+        where: { id: patientId },
+        include: {
+          user: { select: { firstName: true, lastName: true, email: true } },
+        },
+      });
+      if (patient) {
+        await this.emailService.sendReportAvailable({
+          recipientEmail: patient.user.email,
+          patientName:
+            `${patient.user.firstName} ${patient.user.lastName}`.trim(),
+          reportTitle: report.title,
+          reportType: report.type,
+          reportId: report.id,
+        });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Report available email failed (reportId=${report.id}, error=${message})`,
+      );
+    }
 
     return report;
   }

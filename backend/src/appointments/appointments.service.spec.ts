@@ -3,6 +3,7 @@ import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppointmentsService } from './appointments.service';
 import { EmailService } from '../email/email.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('AppointmentsService.create', () => {
@@ -16,6 +17,7 @@ describe('AppointmentsService.create', () => {
     patient: {
       userId: 'user_patient_1',
       user: {
+        id: 'user_patient_1',
         firstName: 'Ada',
         lastName: 'Lovelace',
         email: 'patient@example.com',
@@ -38,6 +40,7 @@ describe('AppointmentsService.create', () => {
   let createResendClient: jest.SpyInstance;
   let configValues: Record<string, string | undefined>;
   let emailService: EmailService;
+  let whatsappService: { sendAppointmentConfirmationWhatsapp: jest.Mock };
   let service: AppointmentsService;
 
   beforeEach(() => {
@@ -63,9 +66,14 @@ describe('AppointmentsService.create', () => {
         emails: { send },
       } as never);
 
+    whatsappService = {
+      sendAppointmentConfirmationWhatsapp: jest.fn().mockResolvedValue(undefined),
+    };
+
     service = new AppointmentsService(
       prisma as unknown as PrismaService,
       emailService,
+      whatsappService as unknown as WhatsappService,
     );
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();

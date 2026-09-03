@@ -6,6 +6,7 @@ import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { pharmaciesApi } from '@/lib/api';
+import { isValidPhone } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import {
   Store, Phone, Mail, MapPin, Clock, Truck, FileText,
@@ -121,6 +122,7 @@ function PharmacyRegisterForm() {
     const errs: Partial<Record<keyof FormData, string>> = {};
     if (!form.name.trim()) errs.name = 'Pharmacy name is required';
     if (!form.phone.trim()) errs.phone = 'Phone number is required';
+    else if (!isValidPhone(form.phone)) errs.phone = 'Enter a valid 10-digit phone number';
     if (!form.address.trim()) errs.address = 'Address is required';
     if (!form.email.trim()) {
       errs.email = 'Email is required to create your login';
@@ -262,8 +264,10 @@ function PharmacyRegisterForm() {
                 <input
                   id="pharmacy-phone"
                   value={form.phone}
-                  onChange={(e) => set('phone', e.target.value)}
-                  placeholder="+91 98765 43210"
+                  onChange={(e) => set('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="9876543210"
                   className={`input pl-10 ${errors.phone ? 'border-red-300' : ''}`}
                 />
               </div>

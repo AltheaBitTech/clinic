@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getUploadDir } from '../common/utils/upload.util';
@@ -14,7 +15,12 @@ const INVOICE_INCLUDE = {
 
 @Injectable()
 export class BillingService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(BillingService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   private generateInvoiceNo(): string {
     return `INV-${Date.now().toString().slice(-8)}`;
@@ -39,11 +45,30 @@ export class BillingService {
     });
 
     const pdfUrl = await this.generatePdf(invoice);
-    return this.prisma.invoice.update({
+    const updated = await this.prisma.invoice.update({
       where: { id: invoice.id },
       data: { pdfUrl },
       include: INVOICE_INCLUDE,
     });
+
+    try {
+      const patientUser = updated.patient.user;
+      await this.emailService.sendInvoiceCreated({
+        recipientEmail: patientUser.email,
+        patientName: `${patientUser.firstName} ${patientUser.lastName}`.trim(),
+        invoiceNo: updated.invoiceNo,
+        amount: Number(updated.total),
+        hospitalName: updated.tenant.name,
+        invoiceId: updated.id,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Invoice created email failed (invoiceId=${updated.id}, error=${message})`,
+      );
+    }
+
+    return updated;
   }
 
   async findAll(
@@ -91,10 +116,31 @@ export class BillingService {
   }
 
   async markAsPaid(id: string) {
-    return this.prisma.invoice.update({
+    const updated = await this.prisma.invoice.update({
       where: { id },
       data: { status: 'PAID', paidAt: new Date() },
+      include: INVOICE_INCLUDE,
     });
+
+    try {
+      const patientUser = updated.patient.user;
+      await this.emailService.sendPaymentReceived({
+        recipientEmail: patientUser.email,
+        patientName: `${patientUser.firstName} ${patientUser.lastName}`.trim(),
+        invoiceNo: updated.invoiceNo,
+        amount: Number(updated.total),
+        hospitalName: updated.tenant.name,
+        invoiceId: updated.id,
+        paidAt: updated.paidAt ?? undefined,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Payment received email failed (invoiceId=${updated.id}, error=${message})`,
+      );
+    }
+
+    return updated;
   }
 
   async findOne(id: string) {

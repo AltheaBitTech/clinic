@@ -1,6 +1,7 @@
 import { IsString, IsEmail, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TenantType, SubscriptionPlan } from '@prisma/client';
+import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
 
 export class CreateTenantRequestDto {
   @ApiPropertyOptional({
@@ -31,8 +32,7 @@ export class CreateTenantRequestDto {
   @ApiPropertyOptional({
     description: 'Contact Phone Number (required when type is PHARMACY)',
   })
-  @IsOptional()
-  @IsString()
+  @IsOptionalPhoneNumber10()
   phone?: string;
 
   @ApiPropertyOptional({

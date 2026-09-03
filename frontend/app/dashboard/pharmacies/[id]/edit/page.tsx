@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pharmaciesApi } from '@/lib/api';
+import { isValidPhone } from '@/lib/utils';
 import {
   Store, Phone, Mail, MapPin, Clock, Truck, FileText,
   User, ChevronLeft, Check, AlertCircle, Building2,
@@ -99,6 +100,7 @@ export default function EditPharmacyPage() {
     const errs: Partial<Record<keyof FormData, string>> = {};
     if (!form.name.trim()) errs.name = 'Pharmacy name is required';
     if (!form.phone.trim()) errs.phone = 'Phone number is required';
+    else if (!isValidPhone(form.phone)) errs.phone = 'Enter a valid 10-digit phone number';
     if (!form.address.trim()) errs.address = 'Address is required';
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = 'Enter a valid email address';
@@ -248,8 +250,10 @@ export default function EditPharmacyPage() {
                 <input
                   id="pharmacy-phone"
                   value={form.phone}
-                  onChange={(e) => set('phone', e.target.value)}
-                  placeholder="+91 98765 43210"
+                  onChange={(e) => set('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="9876543210"
                   className={`input pl-10 ${errors.phone ? 'border-red-300' : ''}`}
                 />
               </div>

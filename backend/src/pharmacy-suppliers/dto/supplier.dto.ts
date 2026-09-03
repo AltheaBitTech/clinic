@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
 
 export class CreateSupplierDto {
   @ApiProperty({ example: 'Wellness Distributors Pvt Ltd' })
@@ -13,9 +14,8 @@ export class CreateSupplierDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({ example: '+91 98765 43210' })
-  @IsString()
-  @IsOptional()
+  @ApiPropertyOptional({ example: '9876543210' })
+  @IsOptionalPhoneNumber10()
   phone?: string;
 
   @ApiPropertyOptional({ example: 'orders@wellnessdist.com' })

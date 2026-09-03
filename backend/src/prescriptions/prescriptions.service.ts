@@ -1,9 +1,11 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreatePrescriptionDto } from './dto/prescription.dto';
 import { UserRole } from '@prisma/client';
 import * as fs from 'fs';
@@ -18,7 +20,12 @@ interface RequestUser {
 
 @Injectable()
 export class PrescriptionsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(PrescriptionsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async create(dto: CreatePrescriptionDto, user: RequestUser) {
     let doctorId = dto.doctorId;
@@ -119,6 +126,24 @@ export class PrescriptionsService {
 
     // Create medicine reminders
     await this.createReminders(prescription);
+
+    try {
+      const patientUser = prescription.patient.user;
+      await this.emailService.sendPrescriptionAvailable({
+        recipientEmail: patientUser.email,
+        patientName: `${patientUser.firstName} ${patientUser.lastName}`.trim(),
+        doctorName:
+          `Dr. ${prescription.doctor.user.firstName} ${prescription.doctor.user.lastName}`.trim(),
+        diagnosis: prescription.diagnosis ?? undefined,
+        medicineCount: prescription.medicines.length,
+        prescriptionId: prescription.id,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Prescription available email failed (prescriptionId=${prescription.id}, error=${message})`,
+      );
+    }
 
     return { ...prescription, pdfUrl: pdfPath };
   }

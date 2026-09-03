@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { pharmacySalesApi, pharmacyInventoryApi, pharmacyPatientsApi } from '@/lib/api';
-import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { formatCurrency, formatDateTime, isValidPhone } from '@/lib/utils';
 import {
   Receipt, Plus, Loader2, Sparkles, Search, Trash2, X, User, ChevronRight, CreditCard,
 } from 'lucide-react';
@@ -321,7 +321,7 @@ function PosModal({ onClose }: { onClose: () => void }) {
             {isNewCustomer ? (
               <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <input type="text" placeholder="Name *" value={newCustName} onChange={(e) => setNewCustName(e.target.value)} className="input text-sm" />
-                <input type="text" placeholder="Phone" value={newCustPhone} onChange={(e) => setNewCustPhone(e.target.value)} className="input text-sm" />
+                <input type="text" placeholder="Phone" value={newCustPhone} onChange={(e) => setNewCustPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} inputMode="numeric" maxLength={10} className="input text-sm" />
                 <input type="email" placeholder="Email" value={newCustEmail} onChange={(e) => setNewCustEmail(e.target.value)} className="input text-sm" />
                 <div className="col-span-3 flex justify-end gap-2">
                   <button type="button" onClick={() => setIsNewCustomer(false)} className="btn-secondary text-xs px-3 py-1.5">
@@ -333,6 +333,10 @@ function PosModal({ onClose }: { onClose: () => void }) {
                     onClick={() => {
                       if (!newCustName.trim()) {
                         toast.error('Customer name is required');
+                        return;
+                      }
+                      if (newCustPhone.trim() && !isValidPhone(newCustPhone)) {
+                        toast.error('Enter a valid 10-digit phone number');
                         return;
                       }
                       createCustomerMutation.mutate({

@@ -13,6 +13,7 @@ interface User {
   role: 'SUPER_ADMIN' | 'HOSPITAL_ADMIN' | 'DOCTOR' | 'RECEPTIONIST' | 'PATIENT' | 'PHARMACY';
   tenantId?: string;
   avatarUrl?: string;
+  whatsappOptIn?: boolean;
   isVerified: boolean;
   doctor?: any;
   patient?: any;

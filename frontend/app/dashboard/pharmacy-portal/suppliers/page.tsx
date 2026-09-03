@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pharmacySuppliersApi } from '@/lib/api';
+import { isValidPhone } from '@/lib/utils';
 import { Truck, Plus, Search, Loader2, Sparkles, Pencil, Power } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -102,6 +103,10 @@ export default function PharmacySuppliersPage() {
     e.preventDefault();
     if (!form.name.trim()) {
       toast.error('Supplier name is required');
+      return;
+    }
+    if (form.phone.trim() && !isValidPhone(form.phone)) {
+      toast.error('Enter a valid 10-digit phone number');
       return;
     }
     const payload = {
@@ -258,7 +263,9 @@ export default function PharmacySuppliersPage() {
                   <input
                     type="text"
                     value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                    inputMode="numeric"
+                    maxLength={10}
                     className="input text-sm"
                   />
                 </div>

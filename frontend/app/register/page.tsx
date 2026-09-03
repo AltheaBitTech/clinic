@@ -26,7 +26,10 @@ const selfSignupSchema = z.object({
   lastName: z.string().min(1, 'Last name required'),
   email: z.string().email('Invalid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d{10}$/.test(val), { message: 'Enter a valid 10-digit phone number' }),
   tenantId: z.string().min(1, 'Please select your hospital'),
 });
 
@@ -327,10 +330,13 @@ function RegisterForm() {
                   </span>
                   <input
                     {...register('phone' as any)}
-                    placeholder="+91 98765 43210"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="9876543210"
                     className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
                   />
                 </div>
+                {'phone' in errors && errors.phone && <p className="text-red-400 text-xs mt-1.5 font-medium">{(errors as any).phone?.message}</p>}
               </div>
             )}
 

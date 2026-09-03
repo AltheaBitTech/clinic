@@ -1,10 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class RemindersService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(RemindersService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private whatsappService: WhatsappService,
+  ) {}
 
   @Cron('0 */15 * * * *') // Every 15 minutes
   async processReminders() {
@@ -19,7 +25,9 @@ export class RemindersService {
       include: {
         patient: {
           include: {
-            user: { select: { email: true, phone: true, firstName: true } },
+            user: {
+              select: { id: true, email: true, phone: true, firstName: true },
+            },
           },
         },
         medicine: true,
@@ -29,10 +37,20 @@ export class RemindersService {
 
     for (const reminder of pending) {
       try {
-        // TODO: Replace with real channel dispatch (Twilio/Email)
-        console.log(
-          `[REMINDER] ${reminder.patient.user.firstName}: Take ${reminder.medicine.name} (${reminder.medicine.dosage}) — ${reminder.channel}`,
-        );
+        if (reminder.channel === 'WHATSAPP') {
+          await this.whatsappService.sendMedicineReminderWhatsapp({
+            recipientUserId: reminder.patient.user.id,
+            recipientPhone: reminder.patient.user.phone,
+            patientName: reminder.patient.user.firstName,
+            medicineName: reminder.medicine.name,
+            dosage: reminder.medicine.dosage,
+          });
+        } else {
+          // TODO: Replace with real channel dispatch (Email/SMS)
+          console.log(
+            `[REMINDER] ${reminder.patient.user.firstName}: Take ${reminder.medicine.name} (${reminder.medicine.dosage}) — ${reminder.channel}`,
+          );
+        }
 
         await this.prisma.medicineReminder.update({
           where: { id: reminder.id },
@@ -79,12 +97,21 @@ export class RemindersService {
       include: {
         patient: {
           include: {
-            user: { select: { email: true, phone: true, firstName: true } },
+            user: {
+              select: {
+                id: true,
+                email: true,
+                phone: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
         },
         doctor: {
           include: { user: { select: { firstName: true, lastName: true } } },
         },
+        tenant: { select: { name: true } },
       },
     });
 
@@ -92,6 +119,26 @@ export class RemindersService {
       console.log(
         `[APPT REMINDER] ${appt.patient.user.firstName}: Appointment tomorrow with Dr. ${appt.doctor.user.firstName} at ${appt.scheduledAt.toLocaleTimeString()}`,
       );
+
+      try {
+        await this.whatsappService.sendAppointmentReminderWhatsapp({
+          recipientUserId: appt.patient.user.id,
+          recipientPhone: appt.patient.user.phone,
+          patientName:
+            `${appt.patient.user.firstName} ${appt.patient.user.lastName}`.trim(),
+          doctorName:
+            `Dr. ${appt.doctor.user.firstName} ${appt.doctor.user.lastName}`.trim(),
+          hospitalName: appt.tenant?.name,
+          scheduledAt: appt.scheduledAt,
+          appointmentId: appt.id,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'unknown error';
+        this.logger.error(
+          `Appointment reminder WhatsApp failed (appointmentId=${appt.id}, error=${message})`,
+        );
+      }
 
       await this.prisma.notification.create({
         data: {

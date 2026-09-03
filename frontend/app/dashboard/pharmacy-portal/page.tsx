@@ -9,7 +9,7 @@ import {
   User, Check, AlertCircle, Building2, Loader2, Pencil, X,
   Pill, Boxes, ClipboardList, TrendingDown, AlertTriangle, Receipt, ShoppingCart,
 } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { formatDate, isValidPhone } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 type FormData = {
@@ -86,6 +86,7 @@ export default function PharmacyPortalPage() {
     const errs: Partial<Record<keyof FormData, string>> = {};
     if (!form.name.trim()) errs.name = 'Pharmacy name is required';
     if (!form.phone.trim()) errs.phone = 'Phone number is required';
+    else if (!isValidPhone(form.phone)) errs.phone = 'Enter a valid 10-digit phone number';
     if (!form.address.trim()) errs.address = 'Address is required';
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -206,7 +207,9 @@ export default function PharmacyPortalPage() {
                   <input
                     id="edit-pharmacy-phone"
                     value={form.phone}
-                    onChange={(e) => set('phone', e.target.value)}
+                    onChange={(e) => set('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    inputMode="numeric"
+                    maxLength={10}
                     className={`input pl-10 ${errors.phone ? 'border-red-300' : ''}`}
                   />
                 </div>

@@ -33,12 +33,14 @@ import { PharmacySalesModule } from './pharmacy-sales/pharmacy-sales.module';
 import { PharmacyReportsModule } from './pharmacy-reports/pharmacy-reports.module';
 import { PharmacyDashboardModule } from './pharmacy-dashboard/pharmacy-dashboard.module';
 import { EmailModule } from './email/email.module';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     EmailModule,
+    WhatsappModule,
     PrismaModule,
     AuthModule,
     TenantsModule,

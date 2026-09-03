@@ -8,7 +8,7 @@ import {
   Settings, User, Building2, Save, Loader2, Sparkles, Mail, Phone, MapPin, Upload, Crown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, isValidPhone } from '@/lib/utils';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
 
 const TIER_STYLES: Record<string, string> = {
@@ -33,6 +33,7 @@ export default function SettingsPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [whatsappOptIn, setWhatsappOptIn] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
@@ -53,6 +54,7 @@ export default function SettingsPage() {
       setFirstName(user.firstName || '');
       setLastName(user.lastName || '');
       setPhone(user.phone || '');
+      setWhatsappOptIn(!!user.whatsappOptIn);
       setAvatarUrl(user.avatarUrl || '');
 
       if (user.tenant) {
@@ -99,11 +101,16 @@ export default function SettingsPage() {
       toast.error('First name and last name are required');
       return;
     }
+    if (phone && !isValidPhone(phone)) {
+      toast.error('Enter a valid 10-digit phone number');
+      return;
+    }
     updateProfileMutation.mutate({
       firstName,
       lastName,
       phone: phone || undefined,
       avatarUrl: avatarUrl || undefined,
+      whatsappOptIn,
     });
   };
 
@@ -111,6 +118,10 @@ export default function SettingsPage() {
     e.preventDefault();
     if (!hospitalName.trim()) {
       toast.error('Hospital name is required');
+      return;
+    }
+    if (hospitalPhone && !isValidPhone(hospitalPhone)) {
+      toast.error('Enter a valid 10-digit hospital phone number');
       return;
     }
     updateHospitalMutation.mutate({
@@ -224,13 +235,32 @@ export default function SettingsPage() {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 XXXXX XXXXX"
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="9876543210"
                   className="input pl-10"
                 />
               </div>
             </div>
           </div>
+
+          <label className="flex items-start gap-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={whatsappOptIn}
+              onChange={(e) => setWhatsappOptIn(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-slate-700">
+                Notify me on WhatsApp
+              </span>
+              <span className="block text-xs text-slate-500 mt-0.5">
+                Get appointment and medicine reminders on WhatsApp at the phone number above.
+              </span>
+            </span>
+          </label>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -539,8 +569,10 @@ export default function SettingsPage() {
                 <input
                   type="tel"
                   value={hospitalPhone}
-                  onChange={(e) => setHospitalPhone(e.target.value)}
-                  placeholder="+1 (234) 567-890"
+                  onChange={(e) => setHospitalPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="9876543210"
                   className="input pl-10"
                 />
               </div>
