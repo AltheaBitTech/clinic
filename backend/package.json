@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "postinstall": "prisma generate",
-    "build": "prisma generate && nest build",
+    "build": "prisma generate && prisma db push --url \"${DIRECT_URL:-$DATABASE_URL}\" && prisma db seed && nest build",
     "seed": "prisma db seed",
     "seed:plans": "ts-node prisma/seed-plans.ts",
     "db:migrate:deploy": "prisma migrate deploy",

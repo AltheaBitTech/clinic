@@ -303,14 +303,14 @@ export default function DoctorsPage() {
       {/* CONFIGURE DOCTOR MODAL */}
       {isConfigModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-scale-up relative">
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col overflow-hidden animate-scale-up relative">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 px-6 pt-6 pb-3 border-b border-slate-100 shrink-0 sticky top-0 bg-white z-10">
               <Sparkles className="w-5 h-5 text-cyan-600" />
               {editingDoctor ? `Edit Profile: Dr. ${editingDoctor.user.firstName}` : 'Configure Doctor Profile'}
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
+            <form onSubmit={handleSubmit} className="space-y-4 px-6 pb-6 pt-4 overflow-y-auto">
+
               {/* Account Selection (Only for Create) */}
               {!editingDoctor && (
                 <div>
