@@ -124,7 +124,7 @@ export class TenantsService {
         recipientEmail: dto.email,
         hospitalName: tenant.name,
         role: dto.role,
-        inviteUrl: `${frontendUrl}/invite/${token}`,
+        inviteUrl: `${frontendUrl}/register?token=${token}`,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';
