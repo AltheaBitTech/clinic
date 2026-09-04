@@ -9,6 +9,7 @@ import { formatDate, getInitials } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 const REPORT_TYPES = ['ALL', 'BLOOD_TEST', 'XRAY', 'MRI', 'CT_SCAN', 'ULTRASOUND', 'ECG', 'PRESCRIPTION', 'OTHER'];
+const DOCUMENT_TYPES = REPORT_TYPES.filter((t) => t !== 'ALL');
 
 const TYPE_ICONS: Record<string, string> = {
   BLOOD_TEST: '🩸', XRAY: '🫁', MRI: '🧠', CT_SCAN: '💉',
@@ -22,6 +23,7 @@ export default function ReportsPage() {
 
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [uploading, setUploading] = useState(false);
+  const [uploadType, setUploadType] = useState('');
 
   // Which patient the next upload will be linked to. Staff pick one; patients use their own profile.
   const [uploadPatient, setUploadPatient] = useState<any>(null);
@@ -60,24 +62,29 @@ export default function ReportsPage() {
       toast.error('Select a patient before uploading a report');
       return;
     }
+    if (!uploadType) {
+      toast.error('Select a document type before uploading');
+      return;
+    }
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !uploadPatient) return;
+    if (!file || !uploadPatient || !uploadType) return;
 
     const fd = new FormData();
     fd.append('file', file);
     fd.append('title', file.name);
-    fd.append('type', 'OTHER');
+    fd.append('type', uploadType);
     fd.append('patientId', uploadPatient.id);
 
     setUploading(true);
     try {
       await reportsApi.upload(fd);
       toast.success('Report uploaded');
+      setUploadType('');
       refetch();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to upload report');
@@ -168,9 +175,25 @@ export default function ReportsPage() {
             </div>
           )}
 
+          <select
+            value={uploadType}
+            onChange={(e) => setUploadType(e.target.value)}
+            aria-label="Document type to upload"
+            className="input text-xs py-1.5 w-full sm:w-64"
+          >
+            <option value="" disabled>
+              Select document type...
+            </option>
+            {DOCUMENT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {TYPE_ICONS[t]} {t.replace('_', ' ')}
+              </option>
+            ))}
+          </select>
+
           <button
             onClick={handleUploadClick}
-            disabled={uploading || (!isPatient && !uploadPatient)}
+            disabled={uploading || (!isPatient && !uploadPatient) || !uploadType}
             className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}

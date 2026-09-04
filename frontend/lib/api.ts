@@ -117,7 +117,7 @@ export const prescriptionsApi = {
 };
 
 export const reportsApi = {
-  upload: (formData: FormData) => api.post('/reports', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  upload: (formData: FormData) => api.post('/reports', formData),
   getAll: (params?: any) => api.get('/reports', { params }),
   getOne: (id: string) => api.get(`/reports/${id}`),
   delete: (id: string) => api.delete(`/reports/${id}`),
