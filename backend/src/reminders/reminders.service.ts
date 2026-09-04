@@ -117,7 +117,7 @@ export class RemindersService {
 
     for (const appt of upcoming) {
       console.log(
-        `[APPT REMINDER] ${appt.patient.user.firstName}: Appointment tomorrow with Dr. ${appt.doctor.user.firstName} at ${appt.scheduledAt.toLocaleTimeString()}`,
+        `[APPT REMINDER] ${appt.patient.user.firstName}: Appointment tomorrow with Dr. ${appt.doctor.user.firstName} at ${appt.scheduledAt.toLocaleTimeString('en-IN', { timeStyle: 'short', timeZone: 'Asia/Kolkata' })}`,
       );
 
       try {
@@ -144,7 +144,7 @@ export class RemindersService {
         data: {
           userId: appt.patient.userId,
           title: 'Appointment Tomorrow',
-          body: `Your appointment with Dr. ${appt.doctor.user.firstName} ${appt.doctor.user.lastName} is tomorrow at ${appt.scheduledAt.toLocaleTimeString()}`,
+          body: `Your appointment with Dr. ${appt.doctor.user.firstName} ${appt.doctor.user.lastName} is tomorrow at ${appt.scheduledAt.toLocaleTimeString('en-IN', { timeStyle: 'short', timeZone: 'Asia/Kolkata' })}`,
           channel: 'EMAIL',
           scheduledAt: new Date(),
         },

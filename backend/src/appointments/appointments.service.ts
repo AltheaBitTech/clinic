@@ -109,7 +109,7 @@ export class AppointmentsService {
       data: {
         userId: appointment.patient.userId,
         title: 'Appointment Confirmed',
-        body: `Your appointment with Dr. ${appointment.doctor.user.firstName} is scheduled for ${scheduledAt.toLocaleString()}`,
+        body: `Your appointment with Dr. ${appointment.doctor.user.firstName} is scheduled for ${scheduledAt.toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Asia/Kolkata' })}`,
         channel: 'EMAIL',
         scheduledAt: new Date(),
       },

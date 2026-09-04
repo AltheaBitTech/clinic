@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { CreateDoctorDto, UpdateDoctorDto } from './dto/doctor.dto';
 
+const CLINIC_TIMEZONE = 'Asia/Kolkata';
+
 @Injectable()
 export class DoctorsService {
   private readonly logger = new Logger(DoctorsService.name);
@@ -185,9 +187,29 @@ export class DoctorsService {
     const endMin = endH * 60 + endM;
     const slots: string[] = [];
 
-    const now = new Date();
-    const isToday = now.toDateString() === new Date(date).toDateString();
-    const nowMin = now.getHours() * 60 + now.getMinutes();
+    // Compare against "now" in the clinic's own timezone, not the server
+    // process's timezone, since the server may run in UTC (or any other TZ)
+    // while the clinic operates in IST — a naive Date-object comparison here
+    // would let already-passed slots stay visible (or hide valid ones).
+    const nowParts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: CLINIC_TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+      .formatToParts(new Date())
+      .reduce<Record<string, string>>((acc, part) => {
+        acc[part.type] = part.value;
+        return acc;
+      }, {});
+
+    const todayStr = `${nowParts.year}-${nowParts.month}-${nowParts.day}`;
+    const isToday = date === todayStr;
+    const nowMin =
+      parseInt(nowParts.hour, 10) * 60 + parseInt(nowParts.minute, 10);
 
     for (let min = startMin; min < endMin; min += doctor.slotDuration) {
       if (isToday && min <= nowMin) continue;

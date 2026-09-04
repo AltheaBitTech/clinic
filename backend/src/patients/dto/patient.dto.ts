@@ -11,6 +11,7 @@ import {
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Gender } from '@prisma/client';
 import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
+import { IsNotFutureDate } from '../../common/validators/is-not-future-date.validator';
 
 export class CreatePatientDto {
   @ApiProperty() @IsEmail() email: string;
@@ -23,7 +24,7 @@ export class CreatePatientDto {
   @IsOptional()
   @IsBoolean()
   whatsappOptIn?: boolean;
-  @ApiPropertyOptional() @IsOptional() @IsDateString() dateOfBirth?: string;
+  @ApiPropertyOptional() @IsOptional() @IsDateString() @IsNotFutureDate() dateOfBirth?: string;
   @ApiPropertyOptional({ enum: Gender })
   @IsOptional()
   @IsEnum(Gender)
@@ -50,7 +51,7 @@ export class UpdatePatientDto extends PartialType(CreatePatientDto) {}
 export class AddFamilyMemberDto {
   @ApiProperty() @IsString() name: string;
   @ApiProperty() @IsString() relation: string;
-  @ApiPropertyOptional() @IsOptional() @IsDateString() dateOfBirth?: string;
+  @ApiPropertyOptional() @IsOptional() @IsDateString() @IsNotFutureDate() dateOfBirth?: string;
   @ApiPropertyOptional({ enum: Gender })
   @IsOptional()
   @IsEnum(Gender)

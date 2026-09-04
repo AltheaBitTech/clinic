@@ -29,6 +29,7 @@ export default function PatientDetailPage() {
   const [fmPhone, setFmPhone] = useState('');
   const [fmAllergies, setFmAllergies] = useState('');
   const [isFmSubmitting, setIsFmSubmitting] = useState(false);
+  const todayStr = new Date().toISOString().split('T')[0];
 
   // Queries
   const { data: patient, isLoading, error, refetch } = useQuery({
@@ -632,6 +633,7 @@ export default function PatientDetailPage() {
                   </label>
                   <input
                     type="date"
+                    max={todayStr}
                     value={fmDob}
                     onChange={(e) => setFmDob(e.target.value)}
                     className="input px-2"

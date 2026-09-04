@@ -811,6 +811,7 @@ Sign in to your account to review and complete your profile details and availabi
     return date.toLocaleString('en-IN', {
       dateStyle: 'full',
       timeStyle: 'short',
+      timeZone: 'Asia/Kolkata',
     });
   }
 
