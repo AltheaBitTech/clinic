@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
-import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class RemindersService {
@@ -12,7 +11,6 @@ export class RemindersService {
     private whatsappService: WhatsappService,
   ) {}
 
-  @Cron('0 */15 * * * *') // Every 15 minutes
   async processReminders() {
     const now = new Date();
     const windowEnd = new Date(now.getTime() + 16 * 60 * 1000); // next 16 min
@@ -81,9 +79,10 @@ export class RemindersService {
     if (pending.length > 0) {
       console.log(`[CRON] Processed ${pending.length} medicine reminders`);
     }
+
+    return { processed: pending.length };
   }
 
-  @Cron('0 0 * * * *') // Every hour
   async processAppointmentReminders() {
     // Send reminders for appointments in the next 24 hours
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -154,5 +153,7 @@ export class RemindersService {
     if (upcoming.length > 0) {
       console.log(`[CRON] Sent ${upcoming.length} appointment reminders`);
     }
+
+    return { processed: upcoming.length };
   }
 }
