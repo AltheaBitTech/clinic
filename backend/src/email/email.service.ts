@@ -16,6 +16,7 @@ export type RegistrationWelcomeEmail = {
   userName: string;
   role: string;
   hospitalName?: string;
+  temporaryPassword?: string;
 };
 
 export type EmailVerificationOtpEmail = {
@@ -234,6 +235,7 @@ If you need to make a change, please contact the clinic.`,
     const hospitalLine = hospitalName
       ? `Hospital / clinic: ${hospitalName}`
       : null;
+    const temporaryPassword = params.temporaryPassword;
 
     const htmlParts = [
       `<p>Hello ${this.escapeHtml(userName)},</p>`,
@@ -241,6 +243,16 @@ If you need to make a change, please contact the clinic.`,
     ];
     if (hospitalLine) {
       htmlParts.push(`<p>${this.escapeHtml(hospitalLine)}</p>`);
+    }
+    if (temporaryPassword) {
+      htmlParts.push(
+        `<p>Here are your login credentials:</p>` +
+          `<ul>` +
+          `<li><strong>Email:</strong> ${this.escapeHtml(params.recipientEmail)}</li>` +
+          `<li><strong>Temporary password:</strong> ${this.escapeHtml(temporaryPassword)}</li>` +
+          `</ul>` +
+          `<p>Please sign in and change your password as soon as possible.</p>`,
+      );
     }
     if (nextStep) {
       htmlParts.push(`<p>${this.escapeHtml(nextStep)}</p>`);
@@ -252,6 +264,13 @@ If you need to make a change, please contact the clinic.`,
       '',
       successLine,
       hospitalLine,
+      temporaryPassword ? '' : null,
+      temporaryPassword ? 'Here are your login credentials:' : null,
+      temporaryPassword ? `Email: ${params.recipientEmail}` : null,
+      temporaryPassword ? `Temporary password: ${temporaryPassword}` : null,
+      temporaryPassword
+        ? 'Please sign in and change your password as soon as possible.'
+        : null,
       nextStep,
       '',
       '— The Arogyix Team',

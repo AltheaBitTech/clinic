@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { tenantRequestsApi } from '@/lib/api';
 import { isValidPhone } from '@/lib/utils';
 import toast from 'react-hot-toast';
-import { Loader2, CheckCircle2, Building2, Mail, Phone, User, MapPin, Tag } from 'lucide-react';
+import { Loader2, CheckCircle2, Building2, Mail, Phone, User, MapPin, Tag, Gift } from 'lucide-react';
 
 // Maps the plan names shown on the landing page's pricing cards to the
 // backend's SubscriptionPlan enum values.
@@ -37,6 +37,7 @@ function ClinicRequestFormInner() {
     address: '',
     city: '',
     state: '',
+    referralCode: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -109,6 +110,7 @@ function ClinicRequestFormInner() {
               address: '',
               city: '',
               state: '',
+              referralCode: '',
             });
           }}
           className="text-cyan-400 hover:text-cyan-300 font-medium text-sm transition-colors duration-200"
@@ -280,6 +282,30 @@ function ClinicRequestFormInner() {
                 className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Section 4: Referral */}
+        <div className="space-y-4 pt-2">
+          <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <Gift className="w-4 h-4" /> 4. Referral (Optional)
+          </h4>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              Referral Code
+            </label>
+            <input
+              type="text"
+              name="referralCode"
+              value={form.referralCode}
+              onChange={(e) =>
+                setForm({ ...form, referralCode: e.target.value.toUpperCase() })
+              }
+              placeholder="e.g. REF-AB12CD"
+              className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
+            />
+            <p className="text-slate-500 text-xs mt-1">Were you referred by an Arogyix partner? Leave blank if you don't have one.</p>
           </div>
         </div>
 

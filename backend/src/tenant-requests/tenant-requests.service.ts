@@ -258,6 +258,7 @@ export class TenantRequestsService {
         userName: `${user.firstName} ${user.lastName}`.trim(),
         role: user.role,
         hospitalName: tenant.name,
+        temporaryPassword: tempPassword,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';
