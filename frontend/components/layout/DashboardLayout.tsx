@@ -30,6 +30,7 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['ALL'] },
   { label: 'Hospitals', href: '/dashboard/hospitals', icon: Building2, roles: ['SUPER_ADMIN'] },
   { label: 'Referral Signups', href: '/dashboard/super-admin/referrals', icon: Share2, roles: ['SUPER_ADMIN'] },
+  { label: 'Revenue Analytics', href: '/dashboard/super-admin/analytics', icon: BarChart3, roles: ['SUPER_ADMIN'] },
   { label: 'My Referral', href: '/dashboard/referral', icon: Share2, roles: ['REFERRAL'] },
   { label: 'Appointments', href: '/dashboard/appointments', icon: Calendar, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST', 'PATIENT'] },
   { label: 'Patients', href: '/dashboard/patients', icon: Users, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
@@ -49,7 +50,7 @@ const navItems: NavItem[] = [
   { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare, roles: ['DOCTOR', 'PATIENT'] },
   { label: 'Billing', href: '/dashboard/billing', icon: Receipt, roles: ['HOSPITAL_ADMIN', 'RECEPTIONIST'] },
   { label: 'Staff', href: '/dashboard/staff', icon: UserCheck, roles: ['HOSPITAL_ADMIN'] },
-  { label: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'HOSPITAL_ADMIN'] },
+  { label: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['HOSPITAL_ADMIN'] },
   { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, roles: ['ALL'] },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['ALL'] },
 ];

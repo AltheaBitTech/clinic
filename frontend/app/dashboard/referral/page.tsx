@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dashboardApi, referralApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Building2, Store, Copy, Loader2, Save, Gift, ShieldCheck, Upload, FileText, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import { Building2, Store, Copy, Loader2, Save, Gift, ShieldCheck, Upload, FileText, Mail, Phone, MapPin, Calendar, Wallet, IndianRupee, Landmark, History } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog';
@@ -120,7 +120,10 @@ function StatCard({
 export default function ReferralDashboard() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [profile, setProfile] = useState({ phone: '', address: '', city: '', state: '' });
+  const [profile, setProfile] = useState({
+    phone: '', address: '', city: '', state: '',
+    bankAccountHolderName: '', bankAccountNumber: '', bankIfscCode: '', upiId: '',
+  });
   const [saving, setSaving] = useState(false);
   const [kycFile, setKycFile] = useState<File | null>(null);
   const [submittingKyc, setSubmittingKyc] = useState(false);
@@ -141,6 +144,16 @@ export default function ReferralDashboard() {
     queryFn: () => referralApi.getMyKyc().then((r) => r.data),
   });
 
+  const { data: earnings, isLoading: earningsLoading } = useQuery({
+    queryKey: ['referrals', 'me', 'earnings-summary'],
+    queryFn: () => referralApi.getMyEarningsSummary().then((r) => r.data),
+  });
+
+  const { data: payouts, isLoading: payoutsLoading } = useQuery({
+    queryKey: ['referrals', 'me', 'payouts'],
+    queryFn: () => referralApi.getMyPayouts().then((r) => r.data),
+  });
+
   useEffect(() => {
     if (me) {
       setProfile({
@@ -148,9 +161,16 @@ export default function ReferralDashboard() {
         address: me.address || '',
         city: me.city || '',
         state: me.state || '',
+        bankAccountHolderName: me.bankAccountHolderName || '',
+        bankAccountNumber: me.bankAccountNumber || '',
+        bankIfscCode: me.bankIfscCode || '',
+        upiId: me.upiId || '',
       });
     }
   }, [me]);
+
+  const formatPaise = (amountInPaise: number) =>
+    (amountInPaise / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
 
   const handleCopy = () => {
     if (!me?.referralCode) return;
@@ -237,6 +257,75 @@ export default function ReferralDashboard() {
         type={referredTenantsType}
         onOpenChange={(open) => !open && setReferredTenantsType(null)}
       />
+
+      {/* Earnings */}
+      <div className="card mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center shrink-0">
+            <IndianRupee className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-slate-800 text-lg">Commission Earnings</h3>
+            <p className="text-xs text-slate-400">Commission accrues automatically each time a referred tenant's subscription is charged.</p>
+          </div>
+        </div>
+        {earningsLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[...Array(3)].map((_, i) => <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="border border-slate-100 rounded-xl px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Total Earned</p>
+              <p className="text-lg font-bold text-slate-800">{formatPaise(earnings?.totalEarnedInPaise || 0)}</p>
+            </div>
+            <div className="border border-slate-100 rounded-xl px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Total Paid</p>
+              <p className="text-lg font-bold text-emerald-600">{formatPaise(earnings?.totalPaidInPaise || 0)}</p>
+            </div>
+            <div className="border border-slate-100 rounded-xl px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Pending Balance</p>
+              <p className="text-lg font-bold text-amber-600">{formatPaise(earnings?.totalPendingInPaise || 0)}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Payout History */}
+      <div className="card mb-8 max-w-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0">
+            <History className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-slate-800 text-lg">Payout History</h3>
+            <p className="text-xs text-slate-400">Payments recorded by the Arogyix team once transferred to your account.</p>
+          </div>
+        </div>
+        {payoutsLoading ? (
+          <div className="space-y-2">
+            {[...Array(2)].map((_, i) => <div key={i} className="h-14 bg-slate-100 rounded-xl animate-pulse" />)}
+          </div>
+        ) : !payouts || payouts.length === 0 ? (
+          <p className="text-sm text-slate-400 py-4 text-center">No payouts recorded yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {payouts.map((p: any) => (
+              <div key={p.id} className="border border-slate-100 rounded-xl px-3.5 py-2.5">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-slate-800">{formatPaise(p.amountInPaise)}</span>
+                  <span className="text-[10px] text-slate-400">{formatDate(p.paidAt)}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <Landmark className="w-3.5 h-3.5" />
+                  <span>{p.method === 'UPI' ? 'UPI' : 'Bank Transfer'}</span>
+                  {p.referenceNo && <span className="font-mono">· {p.referenceNo}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Referral Code */}
       <div className="card mb-8">
@@ -375,6 +464,51 @@ export default function ReferralDashboard() {
               />
             </div>
           </div>
+          <div className="pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-2 mb-3">
+              <Wallet className="w-4 h-4 text-slate-400" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Payout Details</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Account Holder Name</label>
+                <input
+                  value={profile.bankAccountHolderName}
+                  onChange={(e) => setProfile((p) => ({ ...p, bankAccountHolderName: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Bank Account Number</label>
+                <input
+                  value={profile.bankAccountNumber}
+                  onChange={(e) => setProfile((p) => ({ ...p, bankAccountNumber: e.target.value.replace(/\D/g, '') }))}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">IFSC Code</label>
+                <input
+                  value={profile.bankIfscCode}
+                  onChange={(e) => setProfile((p) => ({ ...p, bankIfscCode: e.target.value.toUpperCase() }))}
+                  placeholder="HDFC0001234"
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">UPI ID</label>
+                <input
+                  value={profile.upiId}
+                  onChange={(e) => setProfile((p) => ({ ...p, upiId: e.target.value }))}
+                  placeholder="name@bank"
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                />
+              </div>
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={saving}

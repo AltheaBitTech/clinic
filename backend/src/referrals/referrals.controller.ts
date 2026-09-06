@@ -21,6 +21,8 @@ import { ReferralsService } from './referrals.service';
 import { RegisterReferralDto } from './dto/register-referral.dto';
 import { UpdateReferralProfileDto } from './dto/update-referral-profile.dto';
 import { RejectReferralKycDto } from './dto/reject-referral-kyc.dto';
+import { UpdateReferralCommissionDto } from './dto/update-referral-commission.dto';
+import { RecordReferralPayoutDto } from './dto/record-referral-payout.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -65,6 +67,95 @@ export class ReferralsController {
   @ApiOperation({ summary: 'Reject a referral signup [SuperAdmin]' })
   reject(@Param('id') id: string, @CurrentUser('id') rejecterId: string) {
     return this.referralsService.reject(id, rejecterId);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/commission')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: "Set a referral partner's commission percentage [SuperAdmin]",
+  })
+  updateCommission(
+    @Param('id') id: string,
+    @Body() dto: UpdateReferralCommissionDto,
+  ) {
+    return this.referralsService.updateCommission(id, dto.commissionPercent);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/commissions')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'List commission ledger entries for a referral partner [SuperAdmin]',
+  })
+  getCommissions(@Param('id') id: string) {
+    return this.referralsService.getCommissions(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('pending-payouts')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'List referral partners with an outstanding payout balance [SuperAdmin]',
+  })
+  getPendingPayouts() {
+    return this.referralsService.getPendingPayoutsOverview();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/earnings-summary')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: "Get a referral partner's earned/paid/pending totals [SuperAdmin]",
+  })
+  getEarningsSummary(@Param('id') id: string) {
+    return this.referralsService.getEarningsSummary(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/payouts')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Record a manual commission payout for a referral partner [SuperAdmin]',
+  })
+  recordPayout(
+    @Param('id') id: string,
+    @CurrentUser('id') recorderId: string,
+    @Body() dto: RecordReferralPayoutDto,
+  ) {
+    return this.referralsService.recordPayout(id, recorderId, dto);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/payouts')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'List payout history for a referral partner [SuperAdmin]' })
+  getPayouts(@Param('id') id: string) {
+    return this.referralsService.getPayouts(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('me/earnings-summary')
+  @Roles(UserRole.REFERRAL)
+  @ApiOperation({ summary: 'Get my earned/paid/pending totals [Referral]' })
+  getMyEarningsSummary(@CurrentUser('id') userId: string) {
+    return this.referralsService.getMyEarningsSummary(userId);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('me/payouts')
+  @Roles(UserRole.REFERRAL)
+  @ApiOperation({ summary: 'List my payout history [Referral]' })
+  getMyPayouts(@CurrentUser('id') userId: string) {
+    return this.referralsService.getMyPayouts(userId);
   }
 
   @ApiBearerAuth()

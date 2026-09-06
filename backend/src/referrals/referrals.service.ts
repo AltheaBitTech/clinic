@@ -11,6 +11,7 @@ import { AuthService } from '../auth/auth.service';
 import { RegisterReferralDto } from './dto/register-referral.dto';
 import { UpdateReferralProfileDto } from './dto/update-referral-profile.dto';
 import { RejectReferralKycDto } from './dto/reject-referral-kyc.dto';
+import { RecordReferralPayoutDto } from './dto/record-referral-payout.dto';
 import { RequestStatus, KycStatus, UserRole, TenantType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
@@ -149,6 +150,10 @@ export class ReferralsService {
         address: dto.address,
         city: dto.city,
         state: dto.state,
+        bankAccountHolderName: dto.bankAccountHolderName,
+        bankAccountNumber: dto.bankAccountNumber,
+        bankIfscCode: dto.bankIfscCode,
+        upiId: dto.upiId,
       },
     });
   }
@@ -175,6 +180,175 @@ export class ReferralsService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async updateCommission(id: string, commissionPercent: number) {
+    const referral = await this.prisma.referral.findUnique({ where: { id } });
+    if (!referral) throw new NotFoundException('Referral request not found');
+
+    return this.prisma.referral.update({
+      where: { id },
+      data: { commissionPercent },
+    });
+  }
+
+  async getCommissions(id: string) {
+    const referral = await this.prisma.referral.findUnique({ where: { id } });
+    if (!referral) throw new NotFoundException('Referral request not found');
+
+    return this.prisma.referralCommission.findMany({
+      where: { referralId: id },
+      include: {
+        tenant: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getEarningsSummary(id: string) {
+    const referral = await this.prisma.referral.findUnique({ where: { id } });
+    if (!referral) throw new NotFoundException('Referral request not found');
+
+    const [earned, paid] = await Promise.all([
+      this.prisma.referralCommission.aggregate({
+        where: { referralId: id },
+        _sum: { amountInPaise: true },
+      }),
+      this.prisma.referralCommission.aggregate({
+        where: { referralId: id, payoutId: { not: null } },
+        _sum: { amountInPaise: true },
+      }),
+    ]);
+
+    const totalEarnedInPaise = earned._sum.amountInPaise ?? 0;
+    const totalPaidInPaise = paid._sum.amountInPaise ?? 0;
+
+    return {
+      totalEarnedInPaise,
+      totalPaidInPaise,
+      totalPendingInPaise: totalEarnedInPaise - totalPaidInPaise,
+    };
+  }
+
+  async getPendingPayoutsOverview() {
+    const grouped = await this.prisma.referralCommission.groupBy({
+      by: ['referralId'],
+      where: { payoutId: null },
+      _sum: { amountInPaise: true },
+    });
+    if (grouped.length === 0) return [];
+
+    const referrals = await this.prisma.referral.findMany({
+      where: { id: { in: grouped.map((g) => g.referralId) } },
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+      },
+    });
+    const referralsById = new Map(referrals.map((r) => [r.id, r]));
+
+    return grouped
+      .map((g) => ({
+        referral: referralsById.get(g.referralId) ?? null,
+        pendingAmountInPaise: g._sum.amountInPaise ?? 0,
+      }))
+      .filter((row) => row.pendingAmountInPaise > 0);
+  }
+
+  async recordPayout(
+    referralId: string,
+    recorderId: string,
+    dto: RecordReferralPayoutDto,
+  ) {
+    const referral = await this.prisma.referral.findUnique({
+      where: { id: referralId },
+    });
+    if (!referral) throw new NotFoundException('Referral request not found');
+
+    const uniqueCommissionIds = [...new Set(dto.commissionIds)];
+    const commissions = await this.prisma.referralCommission.findMany({
+      where: { id: { in: uniqueCommissionIds } },
+    });
+
+    if (commissions.length !== uniqueCommissionIds.length) {
+      throw new BadRequestException(
+        'One or more commission entries were not found',
+      );
+    }
+    const invalid = commissions.find(
+      (c) => c.referralId !== referralId || c.payoutId !== null,
+    );
+    if (invalid) {
+      throw new BadRequestException(
+        'One or more commission entries do not belong to this referral or have already been paid',
+      );
+    }
+
+    const amountInPaise = commissions.reduce(
+      (sum, c) => sum + c.amountInPaise,
+      0,
+    );
+
+    const payout = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.referralPayout.create({
+        data: {
+          referralId,
+          amountInPaise,
+          method: dto.method,
+          referenceNo: dto.referenceNo,
+          notes: dto.notes,
+          recordedById: recorderId,
+        },
+      });
+      await tx.referralCommission.updateMany({
+        where: { id: { in: uniqueCommissionIds } },
+        data: { payoutId: created.id },
+      });
+      return created;
+    });
+
+    return this.prisma.referralPayout.findUnique({
+      where: { id: payout.id },
+      include: {
+        commissions: {
+          include: { tenant: { select: { id: true, name: true } } },
+        },
+      },
+    });
+  }
+
+  async getPayouts(referralId: string) {
+    const referral = await this.prisma.referral.findUnique({
+      where: { id: referralId },
+    });
+    if (!referral) throw new NotFoundException('Referral request not found');
+
+    return this.prisma.referralPayout.findMany({
+      where: { referralId },
+      include: {
+        commissions: {
+          include: { tenant: { select: { id: true, name: true } } },
+        },
+      },
+      orderBy: { paidAt: 'desc' },
+    });
+  }
+
+  async getMyEarningsSummary(userId: string) {
+    const referral = await this.prisma.referral.findUnique({
+      where: { userId },
+    });
+    if (!referral) throw new NotFoundException('Referral profile not found');
+    return this.getEarningsSummary(referral.id);
+  }
+
+  async getMyPayouts(userId: string) {
+    const referral = await this.prisma.referral.findUnique({
+      where: { userId },
+    });
+    if (!referral) throw new NotFoundException('Referral profile not found');
+    return this.getPayouts(referral.id);
   }
 
   private async generateUniqueReferralCode(): Promise<string> {

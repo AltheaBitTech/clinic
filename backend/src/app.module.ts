@@ -16,6 +16,7 @@ import { ReportsModule } from './reports/reports.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ChatModule } from './chat/chat.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { BillingModule } from './billing/billing.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TimelineModule } from './timeline/timeline.module';
@@ -55,6 +56,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     NotificationsModule,
     ChatModule,
     DashboardModule,
+    AnalyticsModule,
     BillingModule,
     SubscriptionsModule,
     TimelineModule,

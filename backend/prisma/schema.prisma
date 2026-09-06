@@ -199,6 +199,7 @@ model Tenant {
   pharmacyInvites     PharmacyInvite[]
   subscriptions       Subscription[]
   referredBy          Referral?            @relation("TenantReferredBy", fields: [referredById], references: [id])
+  referralCommissions ReferralCommission[]
 
   @@map("tenants")
 }
@@ -243,8 +244,9 @@ model Subscription {
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-  plan   Plan   @relation(fields: [planId], references: [id])
+  tenant              Tenant               @relation(fields: [tenantId], references: [id])
+  plan                Plan                 @relation(fields: [planId], references: [id])
+  referralCommissions ReferralCommission[]
 
   @@index([tenantId])
   @@map("subscriptions")
@@ -290,14 +292,15 @@ model User {
   whatsappOptIn   Boolean   @default(false)
   whatsappOptInAt DateTime?
 
-  tenant              Tenant?              @relation(fields: [tenantId], references: [id])
-  doctor              Doctor?
-  patient             Patient?
-  pharmacy            Pharmacy?
-  referral            Referral?
-  sentMessages        Message[]            @relation("SentMessages")
-  notifications       Notification[]
-  whatsappMessageLogs WhatsappMessageLog[]
+  tenant                  Tenant?              @relation(fields: [tenantId], references: [id])
+  doctor                  Doctor?
+  patient                 Patient?
+  pharmacy                Pharmacy?
+  referral                Referral?
+  sentMessages            Message[]            @relation("SentMessages")
+  notifications           Notification[]
+  whatsappMessageLogs     WhatsappMessageLog[]
+  referralPayoutsRecorded ReferralPayout[]
 
   @@map("users")
 }
@@ -742,37 +745,98 @@ enum KycStatus {
   REJECTED
 }
 
+enum PayoutMethod {
+  BANK_TRANSFER
+  UPI
+}
+
 // ─────────────────────────────────────────
 // REFERRAL PARTNER
 // ─────────────────────────────────────────
 
 model Referral {
-  id                   String        @id @default(cuid())
-  userId               String        @unique
-  status               RequestStatus @default(PENDING)
-  referralCode         String?       @unique // generated only when approved
-  phone                String?
-  address              String?
-  city                 String?
-  state                String?
-  approvedAt           DateTime?
-  approvedById         String? // audit-only id of the approving SUPER_ADMIN, no relation
-  rejectedAt           DateTime?
-  rejectedById         String?
-  kycStatus            KycStatus     @default(NOT_SUBMITTED)
-  kycGovtIdDocumentUrl String?
-  kycSubmittedAt       DateTime?
-  kycReviewedAt        DateTime?
-  kycReviewedById      String?
-  kycRejectionReason   String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  id                    String        @id @default(cuid())
+  userId                String        @unique
+  status                RequestStatus @default(PENDING)
+  referralCode          String?       @unique // generated only when approved
+  phone                 String?
+  address               String?
+  city                  String?
+  state                 String?
+  approvedAt            DateTime?
+  approvedById          String? // audit-only id of the approving SUPER_ADMIN, no relation
+  rejectedAt            DateTime?
+  rejectedById          String?
+  kycStatus             KycStatus     @default(NOT_SUBMITTED)
+  kycGovtIdDocumentUrl  String?
+  kycSubmittedAt        DateTime?
+  kycReviewedAt         DateTime?
+  kycReviewedById       String?
+  kycRejectionReason    String?
+  // Super-admin configurable payout rate for this partner, e.g. 10.00 or 15.00.
+  commissionPercent     Decimal       @default(10) @db.Decimal(5, 2)
+  // Payout destination details, self-reported by the partner.
+  bankAccountHolderName String?
+  bankAccountNumber     String?
+  bankIfscCode          String?
+  upiId                 String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 
-  user            User     @relation(fields: [userId], references: [id])
-  referredTenants Tenant[] @relation("TenantReferredBy")
-  // Phase 2 will add: commissionPercent, payout/transaction ledger models attached here.
+  user            User                 @relation(fields: [userId], references: [id])
+  referredTenants Tenant[]             @relation("TenantReferredBy")
+  commissions     ReferralCommission[]
+  payouts         ReferralPayout[]
 
   @@map("referrals")
+}
+
+// Ledger of commission earned each time a referred tenant's subscription is
+// charged, computed from Referral.commissionPercent at charge time so later
+// rate changes don't retroactively alter already-recorded entries.
+model ReferralCommission {
+  id                String    @id @default(cuid())
+  referralId        String
+  tenantId          String
+  subscriptionId    String
+  commissionPercent Decimal   @db.Decimal(5, 2)
+  amountInPaise     Int
+  periodStart       DateTime?
+  periodEnd         DateTime?
+  // Null until a super admin records a manual payout covering this entry.
+  payoutId          String?
+  createdAt         DateTime  @default(now())
+
+  referral     Referral        @relation(fields: [referralId], references: [id])
+  tenant       Tenant          @relation(fields: [tenantId], references: [id])
+  subscription Subscription    @relation(fields: [subscriptionId], references: [id])
+  payout       ReferralPayout? @relation(fields: [payoutId], references: [id])
+
+  @@unique([subscriptionId, periodStart])
+  @@index([referralId])
+  @@index([payoutId])
+  @@map("referral_commissions")
+}
+
+// One row per manual payout event recorded by a super admin, covering one or
+// more ReferralCommission entries for a single referral partner.
+model ReferralPayout {
+  id            String       @id @default(cuid())
+  referralId    String
+  amountInPaise Int
+  method        PayoutMethod
+  referenceNo   String?
+  notes         String?
+  paidAt        DateTime     @default(now())
+  recordedById  String
+  createdAt     DateTime     @default(now())
+
+  referral    Referral             @relation(fields: [referralId], references: [id])
+  recordedBy  User                 @relation(fields: [recordedById], references: [id])
+  commissions ReferralCommission[]
+
+  @@index([referralId])
+  @@map("referral_payouts")
 }
 
 // ─────────────────────────────────────────

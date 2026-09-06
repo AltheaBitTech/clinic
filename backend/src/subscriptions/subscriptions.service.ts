@@ -357,6 +357,50 @@ export class SubscriptionsService {
     return { received: true };
   }
 
+  private async recordReferralCommission(
+    subscription: { id: string; tenantId: string; plan: { priceInPaise: number } },
+    periodStart: Date | undefined,
+    periodEnd: Date | undefined,
+  ) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: subscription.tenantId },
+      select: { referredById: true },
+    });
+    if (!tenant?.referredById) return;
+
+    const referral = await this.prisma.referral.findUnique({
+      where: { id: tenant.referredById },
+    });
+    if (!referral || referral.status !== 'APPROVED') return;
+
+    const commissionPercent = Number(referral.commissionPercent);
+    const amountInPaise = Math.round(
+      (subscription.plan.priceInPaise * commissionPercent) / 100,
+    );
+
+    try {
+      await this.prisma.referralCommission.create({
+        data: {
+          referralId: referral.id,
+          tenantId: subscription.tenantId,
+          subscriptionId: subscription.id,
+          commissionPercent,
+          amountInPaise,
+          periodStart,
+          periodEnd,
+        },
+      });
+    } catch (err: any) {
+      // Unique constraint on [subscriptionId, periodStart] => this charge
+      // was already recorded (e.g. a redelivered webhook), skip silently.
+      if (err?.code !== 'P2002') {
+        this.logger.error(
+          `Failed to record referral commission for subscription=${subscription.id}: ${err?.message}`,
+        );
+      }
+    }
+  }
+
   private async handleEvent(body: any) {
     const event: string = body?.event;
     const entity = body?.payload?.subscription?.entity;
@@ -413,6 +457,9 @@ export class SubscriptionsService {
             subscriptionEndsAt: periodEnd,
           },
         });
+        if (event === 'subscription.charged') {
+          await this.recordReferralCommission(subscription, periodStart, periodEnd);
+        }
         await this.notifyTenantAdmin(subscription.tenantId, (params) =>
           this.emailService.sendSubscriptionActivated({
             ...params,

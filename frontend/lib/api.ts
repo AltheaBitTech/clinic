@@ -135,6 +135,10 @@ export const chatApi = {
   getMessages: (roomId: string, params?: any) => api.get(`/chat/rooms/${roomId}/messages`, { params }),
 };
 
+export const analyticsApi = {
+  getRevenueOverview: () => api.get('/analytics/revenue'),
+};
+
 export const dashboardApi = {
   getSuperAdmin: () => api.get('/dashboard/super-admin'),
   getHospital: () => api.get('/dashboard/hospital'),
@@ -179,6 +183,15 @@ export const referralApi = {
   getKycRequests: (status?: string) => api.get('/referrals/kyc-requests', { params: { status } }),
   approveKyc: (id: string) => api.post(`/referrals/${id}/kyc/approve`),
   rejectKyc: (id: string, reason?: string) => api.post(`/referrals/${id}/kyc/reject`, { reason }),
+  updateCommission: (id: string, commissionPercent: number) =>
+    api.patch(`/referrals/${id}/commission`, { commissionPercent }),
+  getCommissions: (id: string) => api.get(`/referrals/${id}/commissions`),
+  getPendingPayouts: () => api.get('/referrals/pending-payouts'),
+  getEarningsSummary: (id: string) => api.get(`/referrals/${id}/earnings-summary`),
+  recordPayout: (id: string, data: any) => api.post(`/referrals/${id}/payouts`, data),
+  getPayouts: (id: string) => api.get(`/referrals/${id}/payouts`),
+  getMyEarningsSummary: () => api.get('/referrals/me/earnings-summary'),
+  getMyPayouts: () => api.get('/referrals/me/payouts'),
 };
 
 export const usersApi = {
