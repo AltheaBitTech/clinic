@@ -10,7 +10,8 @@ import { EmailService } from '../email/email.service';
 import { AuthService } from '../auth/auth.service';
 import { RegisterReferralDto } from './dto/register-referral.dto';
 import { UpdateReferralProfileDto } from './dto/update-referral-profile.dto';
-import { RequestStatus, UserRole } from '@prisma/client';
+import { RejectReferralKycDto } from './dto/reject-referral-kyc.dto';
+import { RequestStatus, KycStatus, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const REFERRAL_CODE_MAX_ATTEMPTS = 5;
@@ -246,6 +247,168 @@ export class ReferralsService {
       const message = error instanceof Error ? error.message : 'unknown error';
       this.logger.error(
         `Referral rejected email failed (referralId=${id}, error=${message})`,
+      );
+    }
+
+    return updated;
+  }
+
+  async submitKyc(userId: string, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('A government ID document is required');
+    }
+
+    const referral = await this.prisma.referral.findUnique({
+      where: { userId },
+    });
+    if (!referral) throw new NotFoundException('Referral profile not found');
+
+    const kycGovtIdDocumentUrl = `/uploads/kyc/${file.filename}`;
+
+    const updated = await this.prisma.referral.update({
+      where: { userId },
+      data: {
+        kycStatus: KycStatus.PENDING,
+        kycGovtIdDocumentUrl,
+        kycSubmittedAt: new Date(),
+        kycReviewedAt: null,
+        kycReviewedById: null,
+        kycRejectionReason: null,
+      },
+    });
+
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      const superAdmins = await this.prisma.user.findMany({
+        where: { role: UserRole.SUPER_ADMIN, isActive: true },
+        select: { email: true },
+      });
+      await Promise.all(
+        superAdmins.map((admin) =>
+          this.emailService.sendReferralKycSubmitted({
+            recipientEmail: admin.email,
+            applicantName: user
+              ? `${user.firstName} ${user.lastName}`.trim()
+              : 'A referral partner',
+          }),
+        ),
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Referral KYC submitted email failed (userId=${userId}, error=${message})`,
+      );
+    }
+
+    return updated;
+  }
+
+  async getMyKyc(userId: string) {
+    const referral = await this.prisma.referral.findUnique({
+      where: { userId },
+      select: {
+        kycStatus: true,
+        kycGovtIdDocumentUrl: true,
+        kycSubmittedAt: true,
+        kycReviewedAt: true,
+        kycRejectionReason: true,
+      },
+    });
+    if (!referral) throw new NotFoundException('Referral profile not found');
+    return referral;
+  }
+
+  async findKycRequests(status?: KycStatus) {
+    return this.prisma.referral.findMany({
+      where: status ? { kycStatus: status } : undefined,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+          },
+        },
+      },
+      orderBy: { kycSubmittedAt: 'desc' },
+    });
+  }
+
+  async approveKyc(id: string, approverId: string) {
+    const referral = await this.prisma.referral.findUnique({ where: { id } });
+    if (!referral) throw new NotFoundException('Referral request not found');
+    if (referral.kycStatus !== KycStatus.PENDING) {
+      throw new BadRequestException(
+        `KYC has already been ${referral.kycStatus.toLowerCase()}`,
+      );
+    }
+
+    const updated = await this.prisma.referral.update({
+      where: { id },
+      data: {
+        kycStatus: KycStatus.APPROVED,
+        kycReviewedAt: new Date(),
+        kycReviewedById: approverId,
+        kycRejectionReason: null,
+      },
+    });
+
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: referral.userId },
+      });
+      if (user) {
+        await this.emailService.sendReferralKycApproved({
+          recipientEmail: user.email,
+          userName: `${user.firstName} ${user.lastName}`.trim(),
+        });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Referral KYC approved email failed (referralId=${id}, error=${message})`,
+      );
+    }
+
+    return updated;
+  }
+
+  async rejectKyc(id: string, rejecterId: string, dto: RejectReferralKycDto) {
+    const referral = await this.prisma.referral.findUnique({ where: { id } });
+    if (!referral) throw new NotFoundException('Referral request not found');
+    if (referral.kycStatus !== KycStatus.PENDING) {
+      throw new BadRequestException(
+        `KYC has already been ${referral.kycStatus.toLowerCase()}`,
+      );
+    }
+
+    const updated = await this.prisma.referral.update({
+      where: { id },
+      data: {
+        kycStatus: KycStatus.REJECTED,
+        kycReviewedAt: new Date(),
+        kycReviewedById: rejecterId,
+        kycRejectionReason: dto.reason || null,
+      },
+    });
+
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: referral.userId },
+      });
+      if (user) {
+        await this.emailService.sendReferralKycRejected({
+          recipientEmail: user.email,
+          userName: `${user.firstName} ${user.lastName}`.trim(),
+          reason: dto.reason,
+        });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Referral KYC rejected email failed (referralId=${id}, error=${message})`,
       );
     }
 

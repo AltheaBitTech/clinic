@@ -166,6 +166,17 @@ export const referralApi = {
   reject: (id: string) => api.post(`/referrals/${id}/reject`),
   getMe: () => api.get('/referrals/me'),
   updateMe: (data: any) => api.patch('/referrals/me', data),
+  submitKyc: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/referrals/me/kyc', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  getMyKyc: () => api.get('/referrals/me/kyc'),
+  getKycRequests: (status?: string) => api.get('/referrals/kyc-requests', { params: { status } }),
+  approveKyc: (id: string) => api.post(`/referrals/${id}/kyc/approve`),
+  rejectKyc: (id: string, reason?: string) => api.post(`/referrals/${id}/kyc/reject`, { reason }),
 };
 
 export const usersApi = {

@@ -13,6 +13,7 @@ import {
   TenantType,
   UserRole,
   SubscriptionPlan,
+  KycStatus,
 } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
@@ -58,7 +59,11 @@ export class TenantRequestsService {
       const referral = await this.prisma.referral.findUnique({
         where: { referralCode },
       });
-      if (!referral || referral.status !== RequestStatus.APPROVED) {
+      if (
+        !referral ||
+        referral.status !== RequestStatus.APPROVED ||
+        referral.kycStatus !== KycStatus.APPROVED
+      ) {
         throw new BadRequestException('Invalid or inactive referral code');
       }
       referredById = referral.id;

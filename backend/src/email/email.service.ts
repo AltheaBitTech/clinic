@@ -140,6 +140,22 @@ export type ReferralCodeUsedEmail = {
   tenantType: string;
 };
 
+export type ReferralKycSubmittedEmail = {
+  recipientEmail: string;
+  applicantName: string;
+};
+
+export type ReferralKycApprovedEmail = {
+  recipientEmail: string;
+  userName: string;
+};
+
+export type ReferralKycRejectedEmail = {
+  recipientEmail: string;
+  userName: string;
+  reason?: string;
+};
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OTP_EMAIL_SUFFIX = '@otp.arogyix.health';
 
@@ -814,6 +830,66 @@ Name: ${tenantName}
 Type: ${typeLabel}
 
 Sign in to your referral dashboard to see your full referral activity.`,
+    });
+  }
+
+  async sendReferralKycSubmitted(
+    params: ReferralKycSubmittedEmail,
+  ): Promise<void> {
+    const applicantName = this.toSafePlainText(params.applicantName);
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: 'Referral Partner KYC Submitted',
+      context: `referral KYC submitted (applicant=${applicantName})`,
+      html: `<p>Hello,</p>
+<p>A referral partner has submitted KYC documents for review.</p>
+<ul>
+  <li><strong>Applicant:</strong> ${this.escapeHtml(applicantName)}</li>
+</ul>`,
+      text: `Hello,
+
+A referral partner has submitted KYC documents for review.
+
+Applicant: ${applicantName}`,
+    });
+  }
+
+  async sendReferralKycApproved(
+    params: ReferralKycApprovedEmail,
+  ): Promise<void> {
+    const userName = this.toSafePlainText(params.userName) || 'there';
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: 'Your Arogyix Referral KYC Is Approved',
+      context: `referral KYC approved`,
+      html: `<p>Hello ${this.escapeHtml(userName)},</p>
+<p>Your KYC documents have been verified and approved. Your referral code is now active and can be shared for new signups.</p>`,
+      text: `Hello ${userName},
+
+Your KYC documents have been verified and approved. Your referral code is now active and can be shared for new signups.`,
+    });
+  }
+
+  async sendReferralKycRejected(
+    params: ReferralKycRejectedEmail,
+  ): Promise<void> {
+    const userName = this.toSafePlainText(params.userName) || 'there';
+    const reason = this.toSafePlainText(params.reason || '');
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: 'Your Arogyix Referral KYC Needs Attention',
+      context: `referral KYC rejected`,
+      html: `<p>Hello ${this.escapeHtml(userName)},</p>
+<p>We were unable to verify your KYC documents.${reason ? ` Reason: ${this.escapeHtml(reason)}` : ''}</p>
+<p>Please sign in to your referral dashboard to resubmit your documents.</p>`,
+      text: `Hello ${userName},
+
+We were unable to verify your KYC documents.${reason ? ` Reason: ${reason}` : ''}
+
+Please sign in to your referral dashboard to resubmit your documents.`,
     });
   }
 

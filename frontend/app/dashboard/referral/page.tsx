@@ -4,9 +4,23 @@ import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dashboardApi, referralApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Building2, Store, Copy, Loader2, Save, Gift } from 'lucide-react';
+import { Building2, Store, Copy, Loader2, Save, Gift, ShieldCheck, Upload, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
+
+const KYC_STATUS_STYLES: Record<string, string> = {
+  NOT_SUBMITTED: 'bg-slate-100 text-slate-600',
+  PENDING: 'bg-amber-100 text-amber-700',
+  APPROVED: 'bg-emerald-100 text-emerald-700',
+  REJECTED: 'bg-red-100 text-red-700',
+};
+
+const KYC_STATUS_LABELS: Record<string, string> = {
+  NOT_SUBMITTED: 'Not submitted',
+  PENDING: 'Under review',
+  APPROVED: 'Verified',
+  REJECTED: 'Rejected',
+};
 
 function StatCard({
   label, value, icon: Icon, color,
@@ -29,6 +43,8 @@ export default function ReferralDashboard() {
   const queryClient = useQueryClient();
   const [profile, setProfile] = useState({ phone: '', address: '', city: '', state: '' });
   const [saving, setSaving] = useState(false);
+  const [kycFile, setKycFile] = useState<File | null>(null);
+  const [submittingKyc, setSubmittingKyc] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard', 'referral'],
@@ -38,6 +54,11 @@ export default function ReferralDashboard() {
   const { data: me, isLoading: meLoading } = useQuery({
     queryKey: ['referrals', 'me'],
     queryFn: () => referralApi.getMe().then((r) => r.data),
+  });
+
+  const { data: kyc, isLoading: kycLoading } = useQuery({
+    queryKey: ['referrals', 'me', 'kyc'],
+    queryFn: () => referralApi.getMyKyc().then((r) => r.data),
   });
 
   useEffect(() => {
@@ -57,6 +78,25 @@ export default function ReferralDashboard() {
     toast.success('Referral code copied to clipboard!');
   };
 
+  const handleKycSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!kycFile) {
+      toast.error('Please choose a document to upload');
+      return;
+    }
+    setSubmittingKyc(true);
+    try {
+      await referralApi.submitKyc(kycFile);
+      toast.success('KYC document submitted for review');
+      setKycFile(null);
+      queryClient.invalidateQueries({ queryKey: ['referrals', 'me', 'kyc'] });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to submit KYC document');
+    } finally {
+      setSubmittingKyc(false);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -71,7 +111,7 @@ export default function ReferralDashboard() {
     }
   };
 
-  if (statsLoading || meLoading) {
+  if (statsLoading || meLoading || kycLoading) {
     return (
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -112,7 +152,7 @@ export default function ReferralDashboard() {
             <p className="text-xs text-slate-400">Share this with hospitals or pharmacies to sign up on Arogyix</p>
           </div>
         </div>
-        {me?.referralCode ? (
+        {me?.referralCode && kyc?.kycStatus === 'APPROVED' ? (
           <div className="flex items-center justify-between gap-2 bg-slate-50 border border-purple-100 px-4 py-3 rounded-xl max-w-sm">
             <span className="text-lg font-mono font-bold text-purple-700 tracking-wider">{me.referralCode}</span>
             <button
@@ -123,8 +163,58 @@ export default function ReferralDashboard() {
               <Copy className="w-4 h-4" />
             </button>
           </div>
+        ) : me?.referralCode ? (
+          <p className="text-sm text-slate-400">Your referral code is issued but can't be shared yet &mdash; complete KYC verification below to activate it.</p>
         ) : (
           <p className="text-sm text-slate-400">Your referral code will appear here once your account is approved.</p>
+        )}
+      </div>
+
+      {/* KYC Verification */}
+      <div className="card mb-8 max-w-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-cyan-500 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-slate-800 text-lg">KYC Verification</h3>
+            <p className="text-xs text-slate-400">Upload a government photo ID (Aadhaar, PAN, or Passport) to activate your referral code</p>
+          </div>
+          <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold shrink-0', KYC_STATUS_STYLES[kyc?.kycStatus || 'NOT_SUBMITTED'])}>
+            {KYC_STATUS_LABELS[kyc?.kycStatus || 'NOT_SUBMITTED']}
+          </span>
+        </div>
+
+        {kyc?.kycStatus === 'REJECTED' && kyc?.kycRejectionReason && (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3.5 py-2.5 mb-4">
+            {kyc.kycRejectionReason}
+          </p>
+        )}
+
+        {kyc?.kycStatus === 'PENDING' ? (
+          <p className="text-sm text-slate-500">Your document is submitted and awaiting Super Admin review.</p>
+        ) : kyc?.kycStatus === 'APPROVED' ? (
+          <p className="text-sm text-slate-500 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-emerald-600" />
+            Document verified
+          </p>
+        ) : (
+          <form onSubmit={handleKycSubmit} className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,application/pdf"
+              onChange={(e) => setKycFile(e.target.files?.[0] || null)}
+              className="text-sm text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
+            />
+            <button
+              type="submit"
+              disabled={submittingKyc}
+              className="btn-primary flex items-center gap-2 disabled:opacity-50 shrink-0"
+            >
+              {submittingKyc ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              Submit
+            </button>
+          </form>
         )}
       </div>
 

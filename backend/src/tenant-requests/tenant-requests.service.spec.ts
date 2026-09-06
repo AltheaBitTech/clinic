@@ -71,6 +71,7 @@ describe('TenantRequestsService referral attribution', () => {
       prisma.referral.findUnique.mockResolvedValue({
         id: 'ref_1',
         status: 'APPROVED',
+        kycStatus: 'APPROVED',
       });
       prisma.tenantRequest.create.mockResolvedValue({ id: 'req_1' });
 
@@ -96,6 +97,19 @@ describe('TenantRequestsService referral attribution', () => {
       prisma.referral.findUnique.mockResolvedValue({
         id: 'ref_1',
         status: 'PENDING',
+        kycStatus: 'NOT_SUBMITTED',
+      });
+
+      await expect(
+        service.create({ ...baseDto, referralCode: 'REF-AB12CD' } as any),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('rejects a referral code whose KYC is not yet approved', async () => {
+      prisma.referral.findUnique.mockResolvedValue({
+        id: 'ref_1',
+        status: 'APPROVED',
+        kycStatus: 'PENDING',
       });
 
       await expect(

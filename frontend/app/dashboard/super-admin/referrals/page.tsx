@@ -4,14 +4,26 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { referralApi } from '@/lib/api';
 import {
-  Check, X, Clock, Mail, Phone, User, Gift, Loader2,
+  Check, X, Clock, Mail, Phone, User, Gift, Loader2, FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
+const KYC_BADGE_STYLES: Record<string, string> = {
+  NOT_SUBMITTED: 'bg-slate-50 text-slate-500 border border-slate-200/50',
+  PENDING: 'bg-amber-50 text-amber-700 border border-amber-200/50',
+  APPROVED: 'bg-emerald-50 text-emerald-700 border border-emerald-200/50',
+  REJECTED: 'bg-red-50 text-red-700 border border-red-200/50',
+};
+
+function fileUrl(path: string) {
+  return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${path}`;
+}
+
 export default function SuperAdminReferralsPage() {
   const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [kycActionLoadingId, setKycActionLoadingId] = useState<string | null>(null);
 
   const { data: referrals, isLoading, refetch } = useQuery({
     queryKey: ['referrals', 'all'],
@@ -42,6 +54,33 @@ export default function SuperAdminReferralsPage() {
       toast.error(err?.response?.data?.message || 'Failed to reject referral');
     } finally {
       setActionLoadingId(null);
+    }
+  };
+
+  const handleApproveKyc = async (id: string) => {
+    setKycActionLoadingId(id);
+    try {
+      await referralApi.approveKyc(id);
+      toast.success('KYC approved — referral code is now active');
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to approve KYC');
+    } finally {
+      setKycActionLoadingId(null);
+    }
+  };
+
+  const handleRejectKyc = async (id: string) => {
+    const reason = window.prompt('Reason for rejecting this KYC submission (optional):') || undefined;
+    setKycActionLoadingId(id);
+    try {
+      await referralApi.rejectKyc(id, reason);
+      toast.success('KYC rejected');
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to reject KYC');
+    } finally {
+      setKycActionLoadingId(null);
     }
   };
 
@@ -115,6 +154,7 @@ export default function SuperAdminReferralsPage() {
                 <th>Referral Code</th>
                 <th>Submitted On</th>
                 <th>Status</th>
+                <th>KYC</th>
                 {activeTab === 'PENDING' && <th className="text-right">Actions</th>}
               </tr>
             </thead>
@@ -180,6 +220,51 @@ export default function SuperAdminReferralsPage() {
                       {referral.status}
                     </span>
                   </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        'badge font-semibold uppercase tracking-wider text-[10px] px-2 py-0.5',
+                        KYC_BADGE_STYLES[referral.kycStatus || 'NOT_SUBMITTED'],
+                      )}>
+                        {(referral.kycStatus || 'NOT_SUBMITTED').replace('_', ' ')}
+                      </span>
+                      {referral.kycGovtIdDocumentUrl && (
+                        <a
+                          href={fileUrl(referral.kycGovtIdDocumentUrl)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1 text-slate-400 hover:text-cyan-600 rounded transition"
+                          title="View KYC document"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                      {referral.kycStatus === 'PENDING' && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleRejectKyc(referral.id)}
+                            disabled={kycActionLoadingId !== null}
+                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                            title="Reject KYC"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleApproveKyc(referral.id)}
+                            disabled={kycActionLoadingId !== null}
+                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition"
+                            title="Approve KYC"
+                          >
+                            {kycActionLoadingId === referral.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   {activeTab === 'PENDING' && (
                     <td className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -211,7 +296,7 @@ export default function SuperAdminReferralsPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={activeTab === 'PENDING' ? 6 : 5} className="text-center py-12 text-slate-400">
+                  <td colSpan={activeTab === 'PENDING' ? 7 : 6} className="text-center py-12 text-slate-400">
                     <div className="flex flex-col items-center gap-2">
                       <Clock className="w-8 h-8 text-slate-300" />
                       <p className="text-sm font-medium">No {activeTab.toLowerCase()} referrals found</p>
