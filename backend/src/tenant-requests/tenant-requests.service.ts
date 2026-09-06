@@ -53,6 +53,28 @@ export class TenantRequestsService {
       );
     }
 
+    if (dto.phone) {
+      // Check if phone is already a registered user
+      const existingUserByPhone = await this.prisma.user.findUnique({
+        where: { phone: dto.phone },
+      });
+      if (existingUserByPhone) {
+        throw new ConflictException(
+          'Phone number already registered as a user',
+        );
+      }
+
+      // Check if a pending request already exists for this phone
+      const existingRequestByPhone = await this.prisma.tenantRequest.findFirst({
+        where: { phone: dto.phone, status: RequestStatus.PENDING },
+      });
+      if (existingRequestByPhone) {
+        throw new ConflictException(
+          'A registration request for this phone number is already pending',
+        );
+      }
+    }
+
     let referredById: string | null = null;
     const referralCode = dto.referralCode?.trim();
     if (referralCode) {

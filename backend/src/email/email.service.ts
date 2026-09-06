@@ -753,14 +753,18 @@ Sign in to your account to review and complete your profile details and availabi
 <ul>
   <li><strong>Applicant:</strong> ${this.escapeHtml(applicantName)}</li>
 </ul>
-<p>Sign in to the super admin dashboard to approve or reject it.</p>`,
+<p>Sign in to the super admin dashboard to approve or reject it.</p>
+<p>Thanks &amp; Regards,<br/>Arogyix Team</p>`,
       text: `Hello,
 
 A new referral partner signup has been submitted and is awaiting review.
 
 Applicant: ${applicantName}
 
-Sign in to the super admin dashboard to approve or reject it.`,
+Sign in to the super admin dashboard to approve or reject it.
+
+Thanks & Regards,
+Arogyix Team`,
     });
   }
 
@@ -776,14 +780,18 @@ Sign in to the super admin dashboard to approve or reject it.`,
 <p>Your Arogyix referral partner account has been approved. You can now sign in.</p>
 <p>Your unique referral code:</p>
 <p style="font-size:24px;letter-spacing:2px;font-weight:bold">${this.escapeHtml(referralCode)}</p>
-<p>Share this code with hospitals or pharmacies — they can enter it when they register on Arogyix.</p>`,
+<p>Share this code with hospitals or pharmacies — they can enter it when they register on Arogyix.</p>
+<p>Thanks &amp; Regards,<br/>Arogyix Team</p>`,
       text: `Hello ${userName},
 
 Your Arogyix referral partner account has been approved. You can now sign in.
 
 Your unique referral code: ${referralCode}
 
-Share this code with hospitals or pharmacies — they can enter it when they register on Arogyix.`,
+Share this code with hospitals or pharmacies — they can enter it when they register on Arogyix.
+
+Thanks & Regards,
+Arogyix Team`,
     });
   }
 
@@ -796,12 +804,16 @@ Share this code with hospitals or pharmacies — they can enter it when they reg
       context: `referral rejected (applicant=${applicantName})`,
       html: `<p>Hello ${this.escapeHtml(applicantName)},</p>
 <p>Thank you for your interest in becoming an Arogyix referral partner. After review, we're unable to approve your signup at this time.</p>
-<p>If you have questions, please reply to this email or contact our support team.</p>`,
+<p>If you have questions, please reply to this email or contact our support team.</p>
+<p>Thanks &amp; Regards,<br/>Arogyix Team</p>`,
       text: `Hello ${applicantName},
 
 Thank you for your interest in becoming an Arogyix referral partner. After review, we're unable to approve your signup at this time.
 
-If you have questions, please reply to this email or contact our support team.`,
+If you have questions, please reply to this email or contact our support team.
+
+Thanks & Regards,
+Arogyix Team`,
     });
   }
 
@@ -821,7 +833,8 @@ If you have questions, please reply to this email or contact our support team.`,
   <li><strong>Name:</strong> ${this.escapeHtml(tenantName)}</li>
   <li><strong>Type:</strong> ${this.escapeHtml(typeLabel)}</li>
 </ul>
-<p>Sign in to your referral dashboard to see your full referral activity.</p>`,
+<p>Sign in to your referral dashboard to see your full referral activity.</p>
+<p>Thanks &amp; Regards,<br/>Arogyix Team</p>`,
       text: `Hello ${referrerName},
 
 A ${typeLabel} registered on Arogyix using your referral code.
@@ -829,7 +842,10 @@ A ${typeLabel} registered on Arogyix using your referral code.
 Name: ${tenantName}
 Type: ${typeLabel}
 
-Sign in to your referral dashboard to see your full referral activity.`,
+Sign in to your referral dashboard to see your full referral activity.
+
+Thanks & Regards,
+Arogyix Team`,
     });
   }
 
@@ -846,12 +862,16 @@ Sign in to your referral dashboard to see your full referral activity.`,
 <p>A referral partner has submitted KYC documents for review.</p>
 <ul>
   <li><strong>Applicant:</strong> ${this.escapeHtml(applicantName)}</li>
-</ul>`,
+</ul>
+<p>Thanks &amp; Regards,<br/>Arogyix Team</p>`,
       text: `Hello,
 
 A referral partner has submitted KYC documents for review.
 
-Applicant: ${applicantName}`,
+Applicant: ${applicantName}
+
+Thanks & Regards,
+Arogyix Team`,
     });
   }
 
@@ -865,10 +885,14 @@ Applicant: ${applicantName}`,
       subject: 'Your Arogyix Referral KYC Is Approved',
       context: `referral KYC approved`,
       html: `<p>Hello ${this.escapeHtml(userName)},</p>
-<p>Your KYC documents have been verified and approved. Your referral code is now active and can be shared for new signups.</p>`,
+<p>Your KYC documents have been verified and approved. Your referral code is now active and can be shared for new signups.</p>
+<p>Thanks &amp; Regards,<br/>Arogyix Team</p>`,
       text: `Hello ${userName},
 
-Your KYC documents have been verified and approved. Your referral code is now active and can be shared for new signups.`,
+Your KYC documents have been verified and approved. Your referral code is now active and can be shared for new signups.
+
+Thanks & Regards,
+Arogyix Team`,
     });
   }
 
@@ -884,12 +908,16 @@ Your KYC documents have been verified and approved. Your referral code is now ac
       context: `referral KYC rejected`,
       html: `<p>Hello ${this.escapeHtml(userName)},</p>
 <p>We were unable to verify your KYC documents.${reason ? ` Reason: ${this.escapeHtml(reason)}` : ''}</p>
-<p>Please sign in to your referral dashboard to resubmit your documents.</p>`,
+<p>Please sign in to your referral dashboard to resubmit your documents.</p>
+<p>Thanks &amp; Regards,<br/>Arogyix Team</p>`,
       text: `Hello ${userName},
 
 We were unable to verify your KYC documents.${reason ? ` Reason: ${reason}` : ''}
 
-Please sign in to your referral dashboard to resubmit your documents.`,
+Please sign in to your referral dashboard to resubmit your documents.
+
+Thanks & Regards,
+Arogyix Team`,
     });
   }
 

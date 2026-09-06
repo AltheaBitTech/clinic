@@ -4,9 +4,80 @@ import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dashboardApi, referralApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Building2, Store, Copy, Loader2, Save, Gift, ShieldCheck, Upload, FileText } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Building2, Store, Copy, Loader2, Save, Gift, ShieldCheck, Upload, FileText, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import { cn, formatDate } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog';
+
+type ReferredTenantType = 'HOSPITAL' | 'PHARMACY';
+
+const REFERRED_TENANT_LABELS: Record<ReferredTenantType, string> = {
+  HOSPITAL: 'Hospitals Referred',
+  PHARMACY: 'Pharmacies Referred',
+};
+
+function ReferredTenantsModal({
+  type,
+  onOpenChange,
+}: {
+  type: ReferredTenantType | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { data: tenants, isLoading } = useQuery({
+    queryKey: ['referrals', 'me', 'referred-tenants', type],
+    queryFn: () => referralApi.getMyReferredTenants(type!).then((r) => r.data),
+    enabled: !!type,
+  });
+
+  return (
+    <Dialog open={!!type} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl">
+        <DialogTitle>
+          {type === 'PHARMACY' ? <Store className="w-5 h-5 text-emerald-600" /> : <Building2 className="w-5 h-5 text-cyan-600" />}
+          {type ? REFERRED_TENANT_LABELS[type] : ''}
+        </DialogTitle>
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : !tenants || tenants.length === 0 ? (
+          <p className="text-sm text-slate-400 py-6 text-center">
+            No {type === 'PHARMACY' ? 'pharmacies' : 'hospitals'} have signed up with your referral code yet.
+          </p>
+        ) : (
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            {tenants.map((tenant: any) => (
+              <div key={tenant.id} className="border border-slate-100 rounded-xl px-4 py-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <p className="font-semibold text-slate-800">{tenant.name}</p>
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 rounded-full text-xs font-semibold shrink-0',
+                      tenant.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500',
+                    )}
+                  >
+                    {tenant.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-slate-500">
+                  <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" />{tenant.email}</span>
+                  {tenant.phone && <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{tenant.phone}</span>}
+                  {(tenant.city || tenant.state) && (
+                    <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{[tenant.city, tenant.state].filter(Boolean).join(', ')}</span>
+                  )}
+                  <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />Joined {formatDate(tenant.createdAt)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const KYC_STATUS_STYLES: Record<string, string> = {
   NOT_SUBMITTED: 'bg-slate-100 text-slate-600',
@@ -23,10 +94,18 @@ const KYC_STATUS_LABELS: Record<string, string> = {
 };
 
 function StatCard({
-  label, value, icon: Icon, color,
-}: { label: string; value: string | number; icon: React.ElementType; color: string }) {
+  label, value, icon: Icon, color, onClick,
+}: { label: string; value: string | number; icon: React.ElementType; color: string; onClick?: () => void }) {
   return (
-    <div className="card hover:shadow-md transition-all duration-200">
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!onClick}
+      className={cn(
+        'card text-left hover:shadow-md transition-all duration-200 w-full',
+        onClick && 'cursor-pointer hover:-translate-y-0.5',
+      )}
+    >
       <div className="flex items-start justify-between mb-4">
         <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center', color)}>
           <Icon className="w-5 h-5 text-white" />
@@ -34,7 +113,7 @@ function StatCard({
       </div>
       <p className="text-3xl font-bold text-slate-900 mb-1">{value}</p>
       <p className="text-sm font-medium text-slate-600">{label}</p>
-    </div>
+    </button>
   );
 }
 
@@ -45,6 +124,7 @@ export default function ReferralDashboard() {
   const [saving, setSaving] = useState(false);
   const [kycFile, setKycFile] = useState<File | null>(null);
   const [submittingKyc, setSubmittingKyc] = useState(false);
+  const [referredTenantsType, setReferredTenantsType] = useState<ReferredTenantType | null>(null);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard', 'referral'],
@@ -137,9 +217,26 @@ export default function ReferralDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <StatCard label="Hospitals Referred" value={stats?.hospitalsReferred || 0} icon={Building2} color="bg-cyan-500" />
-        <StatCard label="Pharmacies Referred" value={stats?.pharmaciesReferred || 0} icon={Store} color="bg-emerald-500" />
+        <StatCard
+          label="Hospitals Referred"
+          value={stats?.hospitalsReferred || 0}
+          icon={Building2}
+          color="bg-cyan-500"
+          onClick={() => setReferredTenantsType('HOSPITAL')}
+        />
+        <StatCard
+          label="Pharmacies Referred"
+          value={stats?.pharmaciesReferred || 0}
+          icon={Store}
+          color="bg-emerald-500"
+          onClick={() => setReferredTenantsType('PHARMACY')}
+        />
       </div>
+
+      <ReferredTenantsModal
+        type={referredTenantsType}
+        onOpenChange={(open) => !open && setReferredTenantsType(null)}
+      />
 
       {/* Referral Code */}
       <div className="card mb-8">

@@ -24,7 +24,7 @@ import { RejectReferralKycDto } from './dto/reject-referral-kyc.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { UserRole, RequestStatus, KycStatus } from '@prisma/client';
+import { UserRole, RequestStatus, KycStatus, TenantType } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { kycFileUploadOptions } from '../common/utils/upload.util';
 
@@ -86,6 +86,21 @@ export class ReferralsController {
     @Body() dto: UpdateReferralProfileDto,
   ) {
     return this.referralsService.updateMe(userId, dto);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('me/referred-tenants')
+  @Roles(UserRole.REFERRAL)
+  @ApiOperation({
+    summary:
+      'List hospitals/pharmacies that signed up with my referral code [Referral]',
+  })
+  getMyReferredTenants(
+    @CurrentUser('id') userId: string,
+    @Query('type') type?: TenantType,
+  ) {
+    return this.referralsService.getMyReferredTenants(userId, type);
   }
 
   @ApiBearerAuth()

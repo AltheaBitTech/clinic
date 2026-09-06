@@ -14,6 +14,7 @@ import { randomInt } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcryptjs';
+import { RequestStatus, UserRole } from '@prisma/client';
 import {
   RegisterDto,
   LoginDto,
@@ -264,8 +265,19 @@ export class AuthService {
     const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
-    if (!user.isActive)
+    if (!user.isActive) {
+      if (user.role === UserRole.REFERRAL) {
+        if (user.referral?.status === RequestStatus.PENDING) {
+          throw new UnauthorizedException('Your account is in review');
+        }
+        if (user.referral?.status === RequestStatus.REJECTED) {
+          throw new UnauthorizedException(
+            'Your referral application was rejected',
+          );
+        }
+      }
       throw new UnauthorizedException('Account is deactivated');
+    }
 
     await this.prisma.user.update({
       where: { id: user.id },

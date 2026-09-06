@@ -11,7 +11,7 @@ import { AuthService } from '../auth/auth.service';
 import { RegisterReferralDto } from './dto/register-referral.dto';
 import { UpdateReferralProfileDto } from './dto/update-referral-profile.dto';
 import { RejectReferralKycDto } from './dto/reject-referral-kyc.dto';
-import { RequestStatus, KycStatus, UserRole } from '@prisma/client';
+import { RequestStatus, KycStatus, UserRole, TenantType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const REFERRAL_CODE_MAX_ATTEMPTS = 5;
@@ -150,6 +150,30 @@ export class ReferralsService {
         city: dto.city,
         state: dto.state,
       },
+    });
+  }
+
+  async getMyReferredTenants(userId: string, type?: TenantType) {
+    const referral = await this.prisma.referral.findUnique({
+      where: { userId },
+    });
+    if (!referral) throw new NotFoundException('Referral profile not found');
+
+    return this.prisma.tenant.findMany({
+      where: { referredById: referral.id, ...(type ? { type } : {}) },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        email: true,
+        phone: true,
+        city: true,
+        state: true,
+        subscriptionPlan: true,
+        isActive: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
