@@ -4,36 +4,34 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { tenantRequestsApi } from '@/lib/api';
+import { authApi, referralApi } from '@/lib/api';
 import { isValidPhone } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import {
-  Store, Phone, Mail, MapPin, Building2, User, Gift,
+  Phone, Mail, MapPin, Building2, User, Lock, KeyRound,
   Check, AlertCircle, PartyPopper, Loader2,
 } from 'lucide-react';
 
 type FormData = {
-  name: string;
   email: string;
   firstName: string;
   lastName: string;
+  password: string;
   phone: string;
   address: string;
   city: string;
   state: string;
-  referralCode: string;
 };
 
 const INITIAL: FormData = {
-  name: '',
   email: '',
   firstName: '',
   lastName: '',
+  password: '',
   phone: '',
   address: '',
   city: '',
   state: '',
-  referralCode: '',
 };
 
 function PageShell({ children }: { children: React.ReactNode }) {
@@ -142,16 +140,39 @@ const inputBase =
   'w-full bg-white/[0.04] border border-white/15 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm';
 const inputWithIcon = `${inputBase} pl-10`;
 
-function PharmacyBusinessRegisterForm() {
+function ReferralRegisterForm() {
   const [form, setForm] = useState<FormData>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
-  const submitMutation = useMutation({
-    mutationFn: (data: FormData) => tenantRequestsApi.create({ ...data, type: 'PHARMACY' }),
+  const sendOtpMutation = useMutation({
+    mutationFn: () => authApi.sendRegisterEmailOtp({ email: form.email, firstName: form.firstName }),
+    onSuccess: () => {
+      setOtpStep(true);
+      toast.success('Verification code sent to your email');
+    },
     onError: (err: any) => {
-      toast.error(
-        err?.response?.data?.message || 'Failed to submit registration. Please try again.',
-      );
+      toast.error(err?.response?.data?.message || 'Could not send verification code');
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async () => {
+      const { data: verified } = await authApi.verifyRegisterEmailOtp({
+        email: form.email,
+        otp: otpCode.trim(),
+      });
+      return referralApi.register({
+        ...form,
+        emailVerificationToken: verified.emailVerificationToken,
+      });
+    },
+    onSuccess: () => setSubmitted(true),
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Registration failed. Please try again.');
     },
   });
 
@@ -162,35 +183,45 @@ function PharmacyBusinessRegisterForm() {
 
   const validate = (): boolean => {
     const errs: Partial<Record<keyof FormData, string>> = {};
-    if (!form.name.trim()) errs.name = 'Pharmacy business name is required';
-    if (!form.phone.trim()) errs.phone = 'Phone number is required';
-    else if (!isValidPhone(form.phone)) errs.phone = 'Enter a valid 10-digit phone number';
-    if (!form.address.trim()) errs.address = 'Address is required';
+    if (!form.firstName.trim()) errs.firstName = 'First name is required';
+    if (!form.lastName.trim()) errs.lastName = 'Last name is required';
     if (!form.email.trim()) {
-      errs.email = 'Email is required to create your login';
+      errs.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = 'Enter a valid email address';
     }
-    if (!form.firstName.trim()) errs.firstName = 'First name is required';
-    if (!form.lastName.trim()) errs.lastName = 'Last name is required';
+    if (!form.password.trim()) errs.password = 'Password is required';
+    else if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
+    if (form.phone && !isValidPhone(form.phone)) errs.phone = 'Enter a valid 10-digit phone number';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    submitMutation.mutate(form);
+    if (!otpStep) {
+      if (!validate()) return;
+      sendOtpMutation.mutate();
+      return;
+    }
+
+    if (!/^\d{6}$/.test(otpCode.trim())) {
+      setOtpError('Enter the 6-digit code from your email');
+      return;
+    }
+    registerMutation.mutate();
   };
 
-  if (submitMutation.isSuccess) {
+  const isPending = sendOtpMutation.isPending || registerMutation.isPending;
+
+  if (submitted) {
     return (
       <PageShell>
         <StatusCard
           icon={PartyPopper}
           iconClass="bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-          title="Request submitted!"
-          description="Our team will review your pharmacy registration shortly. You'll receive your login details by email once it's approved."
+          title="Signup submitted!"
+          description="Our team will review your referral partner signup shortly. You'll receive an email with your referral code once it's approved."
         />
       </PageShell>
     );
@@ -199,46 +230,45 @@ function PharmacyBusinessRegisterForm() {
   return (
     <PageShell>
       <div className="text-center mb-6">
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">Register your pharmacy</h1>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">Become a referral partner</h1>
         <p className="text-slate-400 mt-2 text-sm font-light max-w-md mx-auto leading-relaxed">
-          Sign up your pharmacy business as an independent account on Arogyix — no hospital affiliation required.
+          Sign up independently on Arogyix — no hospital affiliation required. Refer hospitals and pharmacies and track them on your own dashboard.
         </p>
       </div>
 
       <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
 
-        <form onSubmit={handleSubmit} className="space-y-6" id="pharmacy-business-register-form">
-          <FormSection icon={Store} title="Business Information" description="Core details about your pharmacy">
-            <FormField id="pharmacy-business-name" label="Pharmacy Business Name" required error={errors.name}>
-              <input
-                id="pharmacy-business-name"
-                value={form.name}
-                onChange={(e) => set('name', e.target.value)}
-                placeholder="e.g. MedPlus Pharmacy"
-                className={`${inputBase} ${errors.name ? 'border-red-400/50 focus:ring-red-500/30' : ''}`}
-              />
-            </FormField>
+        <form onSubmit={handleSubmit} className="space-y-6" id="referral-register-form">
+          <FormSection icon={User} title="Your Details" description="Who we'll create the login for">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField id="referral-first-name" label="First Name" required error={errors.firstName}>
+                <input
+                  id="referral-first-name"
+                  value={form.firstName}
+                  onChange={(e) => set('firstName', e.target.value)}
+                  placeholder="Ramesh"
+                  disabled={otpStep}
+                  className={`${inputBase} ${errors.firstName ? 'border-red-400/50 focus:ring-red-500/30' : ''} disabled:opacity-60`}
+                />
+              </FormField>
+              <FormField id="referral-last-name" label="Last Name" required error={errors.lastName}>
+                <input
+                  id="referral-last-name"
+                  value={form.lastName}
+                  onChange={(e) => set('lastName', e.target.value)}
+                  placeholder="Shah"
+                  disabled={otpStep}
+                  className={`${inputBase} ${errors.lastName ? 'border-red-400/50 focus:ring-red-500/30' : ''} disabled:opacity-60`}
+                />
+              </FormField>
+            </div>
           </FormSection>
 
           <FormSection icon={Phone} title="Contact Details" description="How we can reach you">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField id="pharmacy-business-phone" label="Phone Number" required error={errors.phone}>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input
-                    id="pharmacy-business-phone"
-                    value={form.phone}
-                    onChange={(e) => set('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    inputMode="numeric"
-                    maxLength={10}
-                    placeholder="9876543210"
-                    className={`${inputWithIcon} ${errors.phone ? 'border-red-400/50 focus:ring-red-500/30' : ''}`}
-                  />
-                </div>
-              </FormField>
               <FormField
-                id="pharmacy-business-email"
+                id="referral-email"
                 label="Email Address"
                 required
                 error={errors.email}
@@ -247,106 +277,150 @@ function PharmacyBusinessRegisterForm() {
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
-                    id="pharmacy-business-email"
+                    id="referral-email"
                     type="email"
                     value={form.email}
                     onChange={(e) => set('email', e.target.value)}
-                    placeholder="pharmacy@example.com"
-                    className={`${inputWithIcon} ${errors.email ? 'border-red-400/50 focus:ring-red-500/30' : ''}`}
+                    placeholder="you@example.com"
+                    readOnly={otpStep}
+                    className={`${inputWithIcon} ${errors.email ? 'border-red-400/50 focus:ring-red-500/30' : ''} read-only:opacity-60`}
+                  />
+                </div>
+              </FormField>
+              <FormField id="referral-phone" label="Phone Number" error={errors.phone}>
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    id="referral-phone"
+                    value={form.phone}
+                    onChange={(e) => set('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="9876543210"
+                    disabled={otpStep}
+                    className={`${inputWithIcon} ${errors.phone ? 'border-red-400/50 focus:ring-red-500/30' : ''} disabled:opacity-60`}
                   />
                 </div>
               </FormField>
             </div>
           </FormSection>
 
-          <FormSection icon={MapPin} title="Address & Location" description="Physical location of the pharmacy">
-            <FormField id="pharmacy-business-address" label="Street Address" required error={errors.address}>
+          <FormSection icon={MapPin} title="Address (optional)" description="Where you're based">
+            <FormField id="referral-address" label="Street Address">
               <div className="relative">
                 <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
-                  id="pharmacy-business-address"
+                  id="referral-address"
                   value={form.address}
                   onChange={(e) => set('address', e.target.value)}
                   placeholder="e.g. 12, MG Road, Koramangala"
-                  className={`${inputWithIcon} ${errors.address ? 'border-red-400/50 focus:ring-red-500/30' : ''}`}
+                  disabled={otpStep}
+                  className={`${inputWithIcon} disabled:opacity-60`}
                 />
               </div>
             </FormField>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField id="pharmacy-business-city" label="City">
+              <FormField id="referral-city" label="City">
                 <div className="relative">
                   <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
-                    id="pharmacy-business-city"
+                    id="referral-city"
                     value={form.city}
                     onChange={(e) => set('city', e.target.value)}
                     placeholder="Bengaluru"
-                    className={inputWithIcon}
+                    disabled={otpStep}
+                    className={`${inputWithIcon} disabled:opacity-60`}
                   />
                 </div>
               </FormField>
-              <FormField id="pharmacy-business-state" label="State">
+              <FormField id="referral-state" label="State">
                 <input
-                  id="pharmacy-business-state"
+                  id="referral-state"
                   value={form.state}
                   onChange={(e) => set('state', e.target.value)}
                   placeholder="Karnataka"
-                  className={inputBase}
+                  disabled={otpStep}
+                  className={`${inputBase} disabled:opacity-60`}
                 />
               </FormField>
             </div>
           </FormSection>
 
-          <FormSection icon={User} title="Owner Details" description="Who we'll create the login for">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField id="pharmacy-business-first-name" label="First Name" required error={errors.firstName}>
+          <FormSection icon={Lock} title="Password" description="Set the password for your login">
+            <FormField id="referral-password" label="Password" required error={errors.password} hint="Minimum 8 characters">
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
-                  id="pharmacy-business-first-name"
-                  value={form.firstName}
-                  onChange={(e) => set('firstName', e.target.value)}
-                  placeholder="Ramesh"
-                  className={`${inputBase} ${errors.firstName ? 'border-red-400/50 focus:ring-red-500/30' : ''}`}
+                  id="referral-password"
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => set('password', e.target.value)}
+                  placeholder="Min 8 characters"
+                  disabled={otpStep}
+                  className={`${inputWithIcon} ${errors.password ? 'border-red-400/50 focus:ring-red-500/30' : ''} disabled:opacity-60`}
                 />
-              </FormField>
-              <FormField id="pharmacy-business-last-name" label="Last Name" required error={errors.lastName}>
-                <input
-                  id="pharmacy-business-last-name"
-                  value={form.lastName}
-                  onChange={(e) => set('lastName', e.target.value)}
-                  placeholder="Shah"
-                  className={`${inputBase} ${errors.lastName ? 'border-red-400/50 focus:ring-red-500/30' : ''}`}
-                />
-              </FormField>
-            </div>
-          </FormSection>
-
-          <FormSection icon={Gift} title="Referral (optional)" description="Were you referred by an Arogyix partner?">
-            <FormField id="pharmacy-business-referral-code" label="Referral Code" hint="Leave blank if you don't have one">
-              <input
-                id="pharmacy-business-referral-code"
-                value={form.referralCode}
-                onChange={(e) => set('referralCode', e.target.value.toUpperCase())}
-                placeholder="e.g. REF-AB12CD"
-                className={inputBase}
-              />
+              </div>
             </FormField>
           </FormSection>
 
+          {otpStep && (
+            <FormSection icon={KeyRound} title="Email Verification" description="Enter the code we sent you">
+              <FormField id="referral-otp" label="Verification Code" error={otpError}>
+                <div className="relative">
+                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    id="referral-otp"
+                    value={otpCode}
+                    onChange={(e) => {
+                      setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                      setOtpError('');
+                    }}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="6-digit code"
+                    className={`${inputWithIcon} tracking-[0.3em]`}
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-3 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpStep(false);
+                      setOtpCode('');
+                      setOtpError('');
+                    }}
+                    className="text-slate-400 hover:text-slate-200 transition-colors"
+                  >
+                    Use a different email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => sendOtpMutation.mutate()}
+                    disabled={isPending}
+                    className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors disabled:opacity-50"
+                  >
+                    Resend code
+                  </button>
+                </div>
+              </FormField>
+            </FormSection>
+          )}
+
           <button
-            id="submit-pharmacy-business-registration-btn"
+            id="submit-referral-registration-btn"
             type="submit"
-            disabled={submitMutation.isPending}
+            disabled={isPending}
             className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-semibold py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-cyan-600/10 cursor-pointer active:scale-[0.98]"
           >
-            {submitMutation.isPending ? (
+            {isPending ? (
               <>
                 <Loader2 className="w-4.5 h-4.5 animate-spin" />
-                Submitting…
+                {otpStep ? 'Verifying…' : 'Sending code…'}
               </>
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                Submit Registration Request
+                {otpStep ? 'Verify and submit signup' : 'Send verification code'}
               </>
             )}
           </button>
@@ -363,6 +437,6 @@ function PharmacyBusinessRegisterForm() {
   );
 }
 
-export default function PharmacyBusinessRegisterPage() {
-  return <PharmacyBusinessRegisterForm />;
+export default function ReferralRegisterPage() {
+  return <ReferralRegisterForm />;
 }

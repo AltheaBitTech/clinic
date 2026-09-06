@@ -117,6 +117,29 @@ export type DoctorProfileCreatedEmail = {
   hospitalName?: string;
 };
 
+export type ReferralRequestSubmittedEmail = {
+  recipientEmail: string;
+  applicantName: string;
+};
+
+export type ReferralApprovedEmail = {
+  recipientEmail: string;
+  userName: string;
+  referralCode: string;
+};
+
+export type ReferralRejectedEmail = {
+  recipientEmail: string;
+  applicantName: string;
+};
+
+export type ReferralCodeUsedEmail = {
+  recipientEmail: string;
+  referrerName: string;
+  tenantName: string;
+  tenantType: string;
+};
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OTP_EMAIL_SUFFIX = '@otp.arogyix.health';
 
@@ -127,6 +150,7 @@ const ROLE_LABELS: Record<string, string> = {
   HOSPITAL_ADMIN: 'hospital administrator',
   PHARMACY: 'pharmacy',
   SUPER_ADMIN: 'platform administrator',
+  REFERRAL: 'referral partner',
 };
 
 const ROLE_NEXT_STEPS: Record<string, string> = {
@@ -696,6 +720,100 @@ ${statusLine}`,
 Your doctor profile at ${hospitalName} has been set up. Patients can now book appointments with you on Arogyix.
 
 Sign in to your account to review and complete your profile details and availability.`,
+    });
+  }
+
+  async sendReferralRequestSubmitted(
+    params: ReferralRequestSubmittedEmail,
+  ): Promise<void> {
+    const applicantName = this.toSafePlainText(params.applicantName);
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: 'New Referral Partner Signup',
+      context: `referral request submitted (applicant=${applicantName})`,
+      html: `<p>Hello,</p>
+<p>A new referral partner signup has been submitted and is awaiting review.</p>
+<ul>
+  <li><strong>Applicant:</strong> ${this.escapeHtml(applicantName)}</li>
+</ul>
+<p>Sign in to the super admin dashboard to approve or reject it.</p>`,
+      text: `Hello,
+
+A new referral partner signup has been submitted and is awaiting review.
+
+Applicant: ${applicantName}
+
+Sign in to the super admin dashboard to approve or reject it.`,
+    });
+  }
+
+  async sendReferralApproved(params: ReferralApprovedEmail): Promise<void> {
+    const userName = this.toSafePlainText(params.userName) || 'there';
+    const referralCode = this.toSafePlainText(params.referralCode);
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: 'Your Arogyix Referral Account is Approved',
+      context: `referral approved (code=${referralCode})`,
+      html: `<p>Hello ${this.escapeHtml(userName)},</p>
+<p>Your Arogyix referral partner account has been approved. You can now sign in.</p>
+<p>Your unique referral code:</p>
+<p style="font-size:24px;letter-spacing:2px;font-weight:bold">${this.escapeHtml(referralCode)}</p>
+<p>Share this code with hospitals or pharmacies — they can enter it when they register on Arogyix.</p>`,
+      text: `Hello ${userName},
+
+Your Arogyix referral partner account has been approved. You can now sign in.
+
+Your unique referral code: ${referralCode}
+
+Share this code with hospitals or pharmacies — they can enter it when they register on Arogyix.`,
+    });
+  }
+
+  async sendReferralRejected(params: ReferralRejectedEmail): Promise<void> {
+    const applicantName = this.toSafePlainText(params.applicantName) || 'there';
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: 'Your Arogyix Referral Signup',
+      context: `referral rejected (applicant=${applicantName})`,
+      html: `<p>Hello ${this.escapeHtml(applicantName)},</p>
+<p>Thank you for your interest in becoming an Arogyix referral partner. After review, we're unable to approve your signup at this time.</p>
+<p>If you have questions, please reply to this email or contact our support team.</p>`,
+      text: `Hello ${applicantName},
+
+Thank you for your interest in becoming an Arogyix referral partner. After review, we're unable to approve your signup at this time.
+
+If you have questions, please reply to this email or contact our support team.`,
+    });
+  }
+
+  async sendReferralCodeUsed(params: ReferralCodeUsedEmail): Promise<void> {
+    const referrerName = this.toSafePlainText(params.referrerName) || 'there';
+    const tenantName = this.toSafePlainText(params.tenantName);
+    const tenantType = this.toSafePlainText(params.tenantType) || 'HOSPITAL';
+    const typeLabel = tenantType.toLowerCase();
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: 'Your Referral Code Was Used',
+      context: `referral code used (tenant=${tenantName})`,
+      html: `<p>Hello ${this.escapeHtml(referrerName)},</p>
+<p>A ${this.escapeHtml(typeLabel)} registered on Arogyix using your referral code.</p>
+<ul>
+  <li><strong>Name:</strong> ${this.escapeHtml(tenantName)}</li>
+  <li><strong>Type:</strong> ${this.escapeHtml(typeLabel)}</li>
+</ul>
+<p>Sign in to your referral dashboard to see your full referral activity.</p>`,
+      text: `Hello ${referrerName},
+
+A ${typeLabel} registered on Arogyix using your referral code.
+
+Name: ${tenantName}
+Type: ${typeLabel}
+
+Sign in to your referral dashboard to see your full referral activity.`,
     });
   }
 

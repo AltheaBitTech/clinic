@@ -248,4 +248,64 @@ describe('EmailService', () => {
       ).rejects.toThrow('Resend unavailable');
     });
   });
+
+  describe('sendReferralRequestSubmitted', () => {
+    it('notifies the recipient of a new referral signup', async () => {
+      await service.sendReferralRequestSubmitted({
+        recipientEmail: 'admin@example.com',
+        applicantName: 'Ada Lovelace',
+      });
+
+      expect(send).toHaveBeenCalledTimes(1);
+      const payload = send.mock.calls[0][0] as { html: string; text: string };
+      expect(payload.html).toContain('Ada Lovelace');
+      expect(payload.text).toContain('Ada Lovelace');
+    });
+  });
+
+  describe('sendReferralApproved', () => {
+    it('includes the referral code prominently', async () => {
+      await service.sendReferralApproved({
+        recipientEmail: 'referrer@example.com',
+        userName: 'Ada Lovelace',
+        referralCode: 'REF-AB12CD',
+      });
+
+      expect(send).toHaveBeenCalledTimes(1);
+      const payload = send.mock.calls[0][0] as { html: string; text: string };
+      expect(payload.html).toContain('REF-AB12CD');
+      expect(payload.text).toContain('REF-AB12CD');
+    });
+  });
+
+  describe('sendReferralRejected', () => {
+    it('notifies the applicant of the rejection', async () => {
+      await service.sendReferralRejected({
+        recipientEmail: 'referrer@example.com',
+        applicantName: 'Ada Lovelace',
+      });
+
+      expect(send).toHaveBeenCalledTimes(1);
+      const payload = send.mock.calls[0][0] as { html: string; text: string };
+      expect(payload.html).toContain('Ada Lovelace');
+      expect(payload.text).toContain('unable to approve');
+    });
+  });
+
+  describe('sendReferralCodeUsed', () => {
+    it('tells the referrer which tenant used their code', async () => {
+      await service.sendReferralCodeUsed({
+        recipientEmail: 'referrer@example.com',
+        referrerName: 'Ada Lovelace',
+        tenantName: 'City Pharmacy',
+        tenantType: 'PHARMACY',
+      });
+
+      expect(send).toHaveBeenCalledTimes(1);
+      const payload = send.mock.calls[0][0] as { html: string; text: string };
+      expect(payload.html).toContain('City Pharmacy');
+      expect(payload.html).toContain('pharmacy');
+      expect(payload.text).toContain('City Pharmacy');
+    });
+  });
 });

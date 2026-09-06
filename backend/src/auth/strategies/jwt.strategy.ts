@@ -30,6 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         doctor: { include: { department: true } },
         patient: true,
         pharmacy: true,
+        referral: true,
       },
     });
 

@@ -21,6 +21,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TimelineModule } from './timeline/timeline.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { TenantRequestsModule } from './tenant-requests/tenant-requests.module';
+import { ReferralsModule } from './referrals/referrals.module';
 import { MedicalCatalogModule } from './medical-catalog/medical-catalog.module';
 import { PharmaciesModule } from './pharmacies/pharmacies.module';
 import { PharmacySharedModule } from './pharmacy-shared/pharmacy-shared.module';
@@ -59,6 +60,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     TimelineModule,
     RemindersModule,
     TenantRequestsModule,
+    ReferralsModule,
     MedicalCatalogModule,
     PharmaciesModule,
     PharmacySharedModule,

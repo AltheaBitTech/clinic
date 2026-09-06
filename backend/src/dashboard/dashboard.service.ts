@@ -6,13 +6,19 @@ export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
   async getSuperAdminDashboard() {
-    const [totalTenants, totalUsers, totalPatients, totalAppointments] =
-      await Promise.all([
-        this.prisma.tenant.count(),
-        this.prisma.user.count(),
-        this.prisma.patient.count(),
-        this.prisma.appointment.count(),
-      ]);
+    const [
+      totalTenants,
+      totalUsers,
+      totalPatients,
+      totalAppointments,
+      pendingReferralCount,
+    ] = await Promise.all([
+      this.prisma.tenant.count(),
+      this.prisma.user.count(),
+      this.prisma.patient.count(),
+      this.prisma.appointment.count(),
+      this.prisma.referral.count({ where: { status: 'PENDING' } }),
+    ]);
 
     const recentTenants = await this.prisma.tenant.findMany({
       orderBy: { createdAt: 'desc' },
@@ -31,7 +37,29 @@ export class DashboardService {
       totalUsers,
       totalPatients,
       totalAppointments,
+      pendingReferralCount,
       recentTenants,
+    };
+  }
+
+  async getReferralDashboard(referralId?: string) {
+    if (!referralId) {
+      return { hospitalsReferred: 0, pharmaciesReferred: 0, totalReferred: 0 };
+    }
+
+    const [hospitalsReferred, pharmaciesReferred] = await Promise.all([
+      this.prisma.tenant.count({
+        where: { referredById: referralId, type: 'HOSPITAL' },
+      }),
+      this.prisma.tenant.count({
+        where: { referredById: referralId, type: 'PHARMACY' },
+      }),
+    ]);
+
+    return {
+      hospitalsReferred,
+      pharmaciesReferred,
+      totalReferred: hospitalsReferred + pharmaciesReferred,
     };
   }
 

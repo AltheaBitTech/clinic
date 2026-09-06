@@ -49,6 +49,7 @@ export class AuthService {
     doctor: { include: { department: true } },
     patient: true,
     pharmacy: true,
+    referral: true,
     tenant: { select: { id: true, name: true, slug: true, logoUrl: true } },
   };
 
@@ -449,7 +450,7 @@ export class AuthService {
     return email.trim().toLowerCase();
   }
 
-  private async assertRegisterEmailVerified(
+  async assertRegisterEmailVerified(
     email: string,
     token?: string,
   ): Promise<string> {

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle, Activity } from 'lucide-react';
+import { Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle, Activity, Pill, Handshake } from 'lucide-react';
 import ClinicRequestForm from '@/components/ClinicRequestForm';
 import PricingSection from '@/components/PricingSection';
 
@@ -84,6 +84,34 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Entry Paths */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 relative">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-3 tracking-tight">Not a hospital or clinic?</h2>
+        <p className="text-slate-400 text-center mb-10 max-w-xl mx-auto font-light">Arogyix works for pharmacies and partners too — pick the path that fits you.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-7 text-center hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 flex flex-col items-center">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
+              <Pill className="w-5.5 h-5.5 text-emerald-400" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2 text-slate-100">Own a pharmacy</h3>
+            <p className="text-slate-400 text-sm leading-relaxed font-light mb-5 flex-1">Register your pharmacy independently and manage orders on Arogyix.</p>
+            <Link href="/register/pharmacy-business" className="text-emerald-400 hover:text-emerald-300 font-semibold text-sm transition-colors inline-flex items-center gap-1.5">
+              Register your pharmacy <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-7 text-center hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 flex flex-col items-center">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
+              <Handshake className="w-5.5 h-5.5 text-amber-400" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2 text-slate-100">Become a referral partner</h3>
+            <p className="text-slate-400 text-sm leading-relaxed font-light mb-5 flex-1">Refer hospitals and pharmacies to Arogyix and earn for every signup.</p>
+            <Link href="/register/referral" className="text-amber-400 hover:text-amber-300 font-semibold text-sm transition-colors inline-flex items-center gap-1.5">
+              Sign up here <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Features Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 relative">
         <div className="absolute -left-20 top-40 w-80 h-80 bg-emerald-600/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
@@ -146,12 +174,6 @@ export default function HomePage() {
       <section id="register-form" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 relative scroll-mt-24">
         <div className="absolute right-0 bottom-10 w-96 h-96 bg-emerald-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
         <ClinicRequestForm />
-        <p className="text-center text-sm text-slate-400 mt-6 font-light">
-          Own a pharmacy instead?{' '}
-          <Link href="/register/pharmacy-business" className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
-            Register your pharmacy independently
-          </Link>
-        </p>
       </section>
 
       {/* CTA */}

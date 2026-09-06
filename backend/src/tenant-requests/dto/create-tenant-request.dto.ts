@@ -60,4 +60,11 @@ export class CreateTenantRequestDto {
   @IsOptional()
   @IsEnum(SubscriptionPlan)
   plan?: SubscriptionPlan;
+
+  @ApiPropertyOptional({
+    description: 'Referral code shared by an approved referral partner',
+  })
+  @IsOptional()
+  @IsString()
+  referralCode?: string;
 }

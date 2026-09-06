@@ -20,6 +20,7 @@ enum UserRole {
   RECEPTIONIST
   PATIENT
   PHARMACY
+  REFERRAL
 }
 
 enum TenantType {
@@ -182,6 +183,7 @@ model Tenant {
   subscriptionPlan   SubscriptionPlan @default(FREE)
   subscriptionEndsAt DateTime?
   isActive           Boolean          @default(true)
+  referredById       String?
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
@@ -196,6 +198,7 @@ model Tenant {
   pharmacies          Pharmacy[]
   pharmacyInvites     PharmacyInvite[]
   subscriptions       Subscription[]
+  referredBy          Referral?            @relation("TenantReferredBy", fields: [referredById], references: [id])
 
   @@map("tenants")
 }
@@ -291,6 +294,7 @@ model User {
   doctor              Doctor?
   patient             Patient?
   pharmacy            Pharmacy?
+  referral            Referral?
   sentMessages        Message[]            @relation("SentMessages")
   notifications       Notification[]
   whatsappMessageLogs WhatsappMessageLog[]
@@ -706,20 +710,21 @@ model Message {
 // ─────────────────────────────────────────
 
 model TenantRequest {
-  id        String           @id @default(cuid())
-  type      TenantType       @default(HOSPITAL)
-  name      String // Hospital/Clinic Name or Pharmacy Business Name
-  email     String           @unique // Requester Admin Email
-  phone     String?
-  firstName String // Requester Admin First Name
-  lastName  String // Requester Admin Last Name
-  address   String?
-  city      String?
-  state     String?
-  plan      SubscriptionPlan @default(FREE) // Plan selected on the landing page
-  status    RequestStatus    @default(PENDING)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id           String           @id @default(cuid())
+  type         TenantType       @default(HOSPITAL)
+  name         String // Hospital/Clinic Name or Pharmacy Business Name
+  email        String           @unique // Requester Admin Email
+  phone        String?
+  firstName    String // Requester Admin First Name
+  lastName     String // Requester Admin Last Name
+  address      String?
+  city         String?
+  state        String?
+  plan         SubscriptionPlan @default(FREE) // Plan selected on the landing page
+  status       RequestStatus    @default(PENDING)
+  referredById String? // Referral.id resolved from an incoming referral code at submission time
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   @@map("tenant_requests")
 }
@@ -728,6 +733,34 @@ enum RequestStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+// ─────────────────────────────────────────
+// REFERRAL PARTNER
+// ─────────────────────────────────────────
+
+model Referral {
+  id           String        @id @default(cuid())
+  userId       String        @unique
+  status       RequestStatus @default(PENDING)
+  referralCode String?       @unique // generated only when approved
+  phone        String?
+  address      String?
+  city         String?
+  state        String?
+  approvedAt   DateTime?
+  approvedById String? // audit-only id of the approving SUPER_ADMIN, no relation
+  rejectedAt   DateTime?
+  rejectedById String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id])
+  referredTenants Tenant[] @relation("TenantReferredBy")
+  // Phase 2 will add: commissionPercent, payout/transaction ledger models attached here.
+  // Phase 3 will add: mandatory KYC fields gating approval.
+
+  @@map("referrals")
 }
 
 // ─────────────────────────────────────────

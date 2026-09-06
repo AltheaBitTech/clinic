@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth';
 import {
   Building2, Users, Calendar, Check, X,
   Clock, Copy, ExternalLink, MapPin, Mail, Phone,
-  User, ShieldAlert, CheckCircle2, UserCheck, Search, Loader2
+  User, ShieldAlert, CheckCircle2, UserCheck, Search, Loader2, Gift
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -225,6 +225,7 @@ export default function SuperAdminDashboard() {
         <StatCard label="Platform Users" value={stats?.totalUsers || 0} icon={Users} color="bg-emerald-500" href="/dashboard/super-admin/users" />
         <StatCard label="Total Patients" value={stats?.totalPatients || 0} icon={UserCheck} color="bg-purple-500" />
         <StatCard label="Total Appointments" value={stats?.totalAppointments || 0} icon={Calendar} color="bg-amber-500" />
+        <StatCard label="Pending Referrals" value={stats?.pendingReferralCount || 0} icon={Gift} color="bg-purple-500" href="/dashboard/super-admin/referrals" />
       </div>
 
       {/* Main Request Section */}

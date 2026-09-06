@@ -48,4 +48,11 @@ export class DashboardController {
   getReceptionist(@CurrentUser() user: any) {
     return this.dashboardService.getReceptionistDashboard(user.tenantId);
   }
+
+  @Get('referral')
+  @Roles(UserRole.REFERRAL)
+  @ApiOperation({ summary: 'Referral partner dashboard' })
+  getReferral(@CurrentUser() user: any) {
+    return this.dashboardService.getReferralDashboard(user.referral?.id);
+  }
 }

@@ -52,6 +52,18 @@ export class TenantRequestsService {
       );
     }
 
+    let referredById: string | null = null;
+    const referralCode = dto.referralCode?.trim();
+    if (referralCode) {
+      const referral = await this.prisma.referral.findUnique({
+        where: { referralCode },
+      });
+      if (!referral || referral.status !== RequestStatus.APPROVED) {
+        throw new BadRequestException('Invalid or inactive referral code');
+      }
+      referredById = referral.id;
+    }
+
     const request = await this.prisma.tenantRequest.create({
       data: {
         type,
@@ -64,6 +76,7 @@ export class TenantRequestsService {
         city: dto.city,
         state: dto.state,
         plan: dto.plan ?? SubscriptionPlan.FREE,
+        referredById,
       },
     });
 
@@ -142,6 +155,7 @@ export class TenantRequestsService {
                 city: request.city,
                 state: request.state,
                 subscriptionPlan: request.plan,
+                referredById: request.referredById,
               },
             });
 
@@ -184,6 +198,7 @@ export class TenantRequestsService {
                 city: request.city,
                 state: request.state,
                 subscriptionPlan: request.plan,
+                referredById: request.referredById,
               },
             });
 
@@ -222,6 +237,30 @@ export class TenantRequestsService {
       this.logger.error(
         `Registration welcome email failed (tenantId=${tenant.id}, error=${message})`,
       );
+    }
+
+    if (request.referredById) {
+      try {
+        const referral = await this.prisma.referral.findUnique({
+          where: { id: request.referredById },
+          include: { user: true },
+        });
+        if (referral) {
+          await this.emailService.sendReferralCodeUsed({
+            recipientEmail: referral.user.email,
+            referrerName:
+              `${referral.user.firstName} ${referral.user.lastName}`.trim(),
+            tenantName: tenant.name,
+            tenantType: tenant.type,
+          });
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'unknown error';
+        this.logger.error(
+          `Referral code used email failed (tenantId=${tenant.id}, error=${message})`,
+        );
+      }
     }
 
     return {

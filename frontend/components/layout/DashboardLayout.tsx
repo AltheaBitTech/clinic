@@ -11,7 +11,7 @@ import {
   Activity, LayoutDashboard, Calendar, Users, FileText, Bell,
   MessageSquare, BarChart3, Receipt, Settings, LogOut, ChevronRight,
   Stethoscope, Building2, UserCheck, Package, ClipboardList, Pill, Store,
-  Boxes, Menu, X, Truck, ShoppingCart
+  Boxes, Menu, X, Truck, ShoppingCart, Share2
 } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import { notificationsApi } from '@/lib/api';
@@ -29,6 +29,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['ALL'] },
   { label: 'Hospitals', href: '/dashboard/hospitals', icon: Building2, roles: ['SUPER_ADMIN'] },
+  { label: 'Referral Signups', href: '/dashboard/super-admin/referrals', icon: Share2, roles: ['SUPER_ADMIN'] },
+  { label: 'My Referral', href: '/dashboard/referral', icon: Share2, roles: ['REFERRAL'] },
   { label: 'Appointments', href: '/dashboard/appointments', icon: Calendar, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST', 'PATIENT'] },
   { label: 'Patients', href: '/dashboard/patients', icon: Users, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { label: 'Doctors', href: '/dashboard/doctors', icon: Stethoscope, roles: ['HOSPITAL_ADMIN'] },
@@ -130,6 +132,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       RECEPTIONIST: '/dashboard/receptionist',
       PATIENT: '/dashboard/patient',
       PHARMACY: '/dashboard/pharmacy-portal',
+      REFERRAL: '/dashboard/referral',
     };
     return map[user.role] || '/dashboard/patient';
   };
@@ -213,7 +216,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
           {filteredNav.map(({ label, href, icon: Icon }) => {
             const isActive = pathname === href ||
-              (href === '/dashboard' && ['/dashboard/super-admin', '/dashboard/hospital', '/dashboard/doctor', '/dashboard/receptionist', '/dashboard/patient'].includes(pathname)) ||
+              (href === '/dashboard' && ['/dashboard/super-admin', '/dashboard/hospital', '/dashboard/doctor', '/dashboard/receptionist', '/dashboard/patient', '/dashboard/referral'].includes(pathname)) ||
               (href !== '/dashboard' && pathname.startsWith(href));
             return (
 

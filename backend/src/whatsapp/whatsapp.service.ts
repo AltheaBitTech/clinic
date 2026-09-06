@@ -18,9 +18,10 @@ export type AppointmentConfirmationWhatsapp = {
   appointmentId?: string;
 };
 
-export type AppointmentCancellationWhatsapp = AppointmentConfirmationWhatsapp & {
-  reason?: string;
-};
+export type AppointmentCancellationWhatsapp =
+  AppointmentConfirmationWhatsapp & {
+    reason?: string;
+  };
 
 export type AppointmentRescheduleWhatsapp = AppointmentConfirmationWhatsapp & {
   previousScheduledAt?: Date;
@@ -58,7 +59,7 @@ export class WhatsappService {
     await this.sendTemplate({
       recipientUserId: payload.recipientUserId,
       recipientPhone: payload.recipientPhone,
-      templateName: 'appointment_confirmed',
+      templateName: 'jaspers_market_plain_text_v1', //'appointment_confirmed',
       bodyParams: [
         payload.patientName,
         payload.doctorName,
@@ -75,14 +76,17 @@ export class WhatsappService {
     await this.sendTemplate({
       recipientUserId: payload.recipientUserId,
       recipientPhone: payload.recipientPhone,
-      templateName: 'appointment_cancelled',
+      templateName: 'jaspers_market_plain_text_v1', // 'appointment_cancelled',
       bodyParams: [
         payload.patientName,
         payload.doctorName,
         payload.hospitalName || 'the clinic',
         formatDateTime(payload.scheduledAt),
       ],
-      metadata: { appointmentId: payload.appointmentId, reason: payload.reason },
+      metadata: {
+        appointmentId: payload.appointmentId,
+        reason: payload.reason,
+      },
     });
   }
 
@@ -92,7 +96,7 @@ export class WhatsappService {
     await this.sendTemplate({
       recipientUserId: payload.recipientUserId,
       recipientPhone: payload.recipientPhone,
-      templateName: 'appointment_rescheduled',
+      templateName: 'jaspers_market_plain_text_v1', //'appointment_rescheduled',
       bodyParams: [
         payload.patientName,
         payload.doctorName,
@@ -110,7 +114,7 @@ export class WhatsappService {
     await this.sendTemplate({
       recipientUserId: payload.recipientUserId,
       recipientPhone: payload.recipientPhone,
-      templateName: 'appointment_reminder_24h',
+      templateName: 'jaspers_market_plain_text_v1', //'appointment_reminder_24h',
       bodyParams: [
         payload.patientName,
         payload.doctorName,
@@ -125,7 +129,7 @@ export class WhatsappService {
     await this.sendTemplate({
       recipientUserId: payload.recipientUserId,
       recipientPhone: payload.recipientPhone,
-      templateName: 'medicine_reminder',
+      templateName: 'jaspers_market_plain_text_v1', //'medicine_reminder',
       bodyParams: [
         payload.patientName,
         payload.medicineName,
@@ -144,7 +148,12 @@ export class WhatsappService {
     const expectedToken = this.config
       .get<string>('WHATSAPP_WEBHOOK_VERIFY_TOKEN')
       ?.trim();
-    if (mode !== 'subscribe' || !token || !expectedToken || token !== expectedToken) {
+    if (
+      mode !== 'subscribe' ||
+      !token ||
+      !expectedToken ||
+      token !== expectedToken
+    ) {
       throw new UnauthorizedException('Invalid webhook verify token');
     }
     return challenge || '';
@@ -178,7 +187,8 @@ export class WhatsappService {
       throw new UnauthorizedException('Invalid webhook signature');
     }
 
-    const changes = parsedBody?.entry?.flatMap((e: any) => e?.changes ?? []) ?? [];
+    const changes =
+      parsedBody?.entry?.flatMap((e: any) => e?.changes ?? []) ?? [];
     for (const change of changes) {
       const value = change?.value ?? {};
       for (const status of value.statuses ?? []) {
@@ -211,7 +221,9 @@ export class WhatsappService {
   }
 
   private async applyInboundMessage(message: any) {
-    const body = String(message?.text?.body || '').trim().toUpperCase();
+    const body = String(message?.text?.body || '')
+      .trim()
+      .toUpperCase();
     if (body !== 'STOP' && body !== 'UNSUBSCRIBE') return;
 
     const fromPhone: string | undefined = message?.from;
@@ -231,8 +243,7 @@ export class WhatsappService {
     const digits = phone.replace(/\D/g, '');
     if (digits.length !== 10) return null;
     const countryCode =
-      this.config.get<string>('WHATSAPP_DEFAULT_COUNTRY_CODE')?.trim() ||
-      '91';
+      this.config.get<string>('WHATSAPP_DEFAULT_COUNTRY_CODE')?.trim() || '91';
     return `${countryCode}${digits}`;
   }
 
@@ -243,8 +254,13 @@ export class WhatsappService {
     bodyParams: string[];
     metadata: Record<string, unknown>;
   }) {
-    const { recipientUserId, recipientPhone, templateName, bodyParams, metadata } =
-      params;
+    const {
+      recipientUserId,
+      recipientPhone,
+      templateName,
+      bodyParams,
+      metadata,
+    } = params;
 
     if (!recipientPhone) {
       this.logger.warn(
@@ -305,7 +321,9 @@ export class WhatsappService {
     templateName: string,
     bodyParams: string[],
   ): Promise<string> {
-    const accessToken = this.config.get<string>('WHATSAPP_ACCESS_TOKEN')?.trim();
+    const accessToken = this.config
+      .get<string>('WHATSAPP_ACCESS_TOKEN')
+      ?.trim();
     const phoneNumberId = this.config
       .get<string>('WHATSAPP_PHONE_NUMBER_ID')
       ?.trim();
@@ -351,7 +369,8 @@ export class WhatsappService {
     const data: any = await res.json().catch(() => ({}));
     if (!res.ok) {
       throw new Error(
-        data?.error?.message || `Graph API request failed (status ${res.status})`,
+        data?.error?.message ||
+          `Graph API request failed (status ${res.status})`,
       );
     }
     return data?.messages?.[0]?.id;

@@ -141,6 +141,7 @@ export const dashboardApi = {
   getDoctor: () => api.get('/dashboard/doctor'),
   getPatient: () => api.get('/dashboard/patient'),
   getReceptionist: () => api.get('/dashboard/receptionist'),
+  getReferral: () => api.get('/dashboard/referral'),
 };
 
 export const billingApi = {
@@ -156,6 +157,15 @@ export const tenantRequestsApi = {
   getAll: () => api.get('/tenant-requests'),
   approve: (id: string) => api.post(`/tenant-requests/${id}/approve`),
   reject: (id: string) => api.post(`/tenant-requests/${id}/reject`),
+};
+
+export const referralApi = {
+  register: (data: any) => api.post('/referrals/register', data),
+  getAll: (status?: string) => api.get('/referrals', { params: { status } }),
+  approve: (id: string) => api.post(`/referrals/${id}/approve`),
+  reject: (id: string) => api.post(`/referrals/${id}/reject`),
+  getMe: () => api.get('/referrals/me'),
+  updateMe: (data: any) => api.patch('/referrals/me', data),
 };
 
 export const usersApi = {
