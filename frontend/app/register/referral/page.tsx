@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { authApi, referralApi } from '@/lib/api';
-import { isValidPhone } from '@/lib/utils';
+import { isValidPhone, getNameError } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import {
   Phone, Mail, MapPin, Building2, User, Lock, KeyRound,
@@ -183,8 +183,10 @@ function ReferralRegisterForm() {
 
   const validate = (): boolean => {
     const errs: Partial<Record<keyof FormData, string>> = {};
-    if (!form.firstName.trim()) errs.firstName = 'First name is required';
-    if (!form.lastName.trim()) errs.lastName = 'Last name is required';
+    const firstNameErr = getNameError(form.firstName, 'First name');
+    if (firstNameErr) errs.firstName = firstNameErr;
+    const lastNameErr = getNameError(form.lastName, 'Last name');
+    if (lastNameErr) errs.lastName = lastNameErr;
     if (!form.email.trim()) {
       errs.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {

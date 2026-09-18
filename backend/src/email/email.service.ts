@@ -166,6 +166,7 @@ const ROLE_LABELS: Record<string, string> = {
   RECEPTIONIST: 'receptionist',
   HOSPITAL_ADMIN: 'hospital administrator',
   PHARMACY: 'pharmacy',
+  PATHOLOGY: 'pathology lab',
   SUPER_ADMIN: 'platform administrator',
   REFERRAL: 'referral partner',
 };
@@ -180,6 +181,8 @@ const ROLE_NEXT_STEPS: Record<string, string> = {
   HOSPITAL_ADMIN:
     'You can sign in to configure your hospital, departments, and staff invites.',
   PHARMACY: 'You can sign in to manage your pharmacy listing and operations.',
+  PATHOLOGY:
+    'You can sign in to manage your lab listing, test catalog, and orders.',
 };
 
 @Injectable()

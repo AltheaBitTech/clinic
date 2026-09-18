@@ -10,6 +10,23 @@ export function isValidPhone(phone: string): boolean {
   return /^\d{10}$/.test(phone.trim());
 }
 
+export const PERSON_NAME_REGEX = /^\p{L}+(?:[\s'-]\p{L}+)*$/u;
+export const PERSON_NAME_ERROR =
+  'must be 2-50 characters and contain only letters, spaces, hyphens, or apostrophes';
+
+export function isValidPersonName(name: string): boolean {
+  const trimmed = name.trim();
+  return trimmed.length >= 2 && trimmed.length <= 50 && PERSON_NAME_REGEX.test(trimmed);
+}
+
+/** Returns an error message for a required name field, or undefined if valid. */
+export function getNameError(value: string, label: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return `${label} is required`;
+  if (!isValidPersonName(trimmed)) return `${label} ${PERSON_NAME_ERROR}`;
+  return undefined;
+}
+
 export function formatDate(date: string | Date, fmt = 'dd MMM yyyy') {
   return format(new Date(date), fmt);
 }

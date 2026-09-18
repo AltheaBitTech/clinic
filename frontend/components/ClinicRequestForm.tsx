@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { tenantRequestsApi } from '@/lib/api';
-import { isValidPhone } from '@/lib/utils';
+import { isValidPhone, getNameError } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { Loader2, CheckCircle2, Building2, Mail, Phone, User, MapPin, Tag, Gift } from 'lucide-react';
 
@@ -50,8 +50,10 @@ function ClinicRequestFormInner() {
     } else if (!/\S+@\S+\.\S+/.test(form.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    if (!form.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!form.lastName.trim()) newErrors.lastName = 'Last name is required';
+    const firstNameErr = getNameError(form.firstName, 'First name');
+    if (firstNameErr) newErrors.firstName = firstNameErr;
+    const lastNameErr = getNameError(form.lastName, 'Last name');
+    if (lastNameErr) newErrors.lastName = lastNameErr;
     if (form.phone.trim() && !isValidPhone(form.phone)) {
       newErrors.phone = 'Enter a valid 10-digit phone number';
     }

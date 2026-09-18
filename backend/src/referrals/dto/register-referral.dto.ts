@@ -2,6 +2,7 @@ import { IsEmail, IsString, IsOptional, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
+import { IsPersonName } from '../../common/validators/is-person-name.validator';
 
 function normalizeEmail(value: unknown): unknown {
   return typeof value === 'string' ? value.trim().toLowerCase() : value;
@@ -18,11 +19,11 @@ export class RegisterReferralDto {
   phone?: string;
 
   @ApiProperty({ example: 'John' })
-  @IsString()
+  @IsPersonName()
   firstName: string;
 
   @ApiProperty({ example: 'Doe' })
-  @IsString()
+  @IsPersonName()
   lastName: string;
 
   @ApiProperty({ example: 'password123', minLength: 8 })

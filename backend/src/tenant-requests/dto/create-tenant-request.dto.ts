@@ -2,6 +2,7 @@ import { IsString, IsEmail, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TenantType, SubscriptionPlan } from '@prisma/client';
 import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
+import { IsPersonName } from '../../common/validators/is-person-name.validator';
 
 export class CreateTenantRequestDto {
   @ApiPropertyOptional({
@@ -22,11 +23,11 @@ export class CreateTenantRequestDto {
   email: string;
 
   @ApiProperty({ description: 'Admin First Name' })
-  @IsString()
+  @IsPersonName()
   firstName: string;
 
   @ApiProperty({ description: 'Admin Last Name' })
-  @IsString()
+  @IsPersonName()
   lastName: string;
 
   @ApiPropertyOptional({

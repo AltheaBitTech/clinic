@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { patientsApi } from '@/lib/api';
-import { isValidPhone } from '@/lib/utils';
+import { isValidPhone, getNameError } from '@/lib/utils';
 import {
   ArrowLeft, User, Mail, Phone, Calendar, Heart, Plus, X,
   MapPin, ShieldAlert, FileText, Loader2, Sparkles, ChevronDown,
@@ -156,8 +156,18 @@ export default function NewPatientPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!firstName || !lastName || !email) {
-      toast.error('First Name, Last Name, and Email are required.');
+    if (!email) {
+      toast.error('Email is required.');
+      return;
+    }
+    const firstNameErr = getNameError(firstName, 'First name');
+    if (firstNameErr) {
+      toast.error(firstNameErr);
+      return;
+    }
+    const lastNameErr = getNameError(lastName, 'Last name');
+    if (lastNameErr) {
+      toast.error(lastNameErr);
       return;
     }
     if (phone && !isValidPhone(phone)) {

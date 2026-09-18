@@ -8,6 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { IsPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
+import { IsPersonName } from '../../common/validators/is-person-name.validator';
 
 export class CreatePharmacyDto {
   @ApiProperty({ example: 'MedPlus Pharmacy', description: 'Pharmacy name' })
@@ -198,13 +199,11 @@ export class CompletePharmacyInviteDto {
   notes?: string;
 
   @ApiProperty({ example: 'Ramesh' })
-  @IsString()
-  @IsNotEmpty()
+  @IsPersonName()
   firstName: string;
 
   @ApiProperty({ example: 'Shah' })
-  @IsString()
-  @IsNotEmpty()
+  @IsPersonName()
   lastName: string;
 
   @ApiProperty({

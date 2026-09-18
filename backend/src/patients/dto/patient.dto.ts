@@ -12,11 +12,12 @@ import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Gender } from '@prisma/client';
 import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
 import { IsNotFutureDate } from '../../common/validators/is-not-future-date.validator';
+import { IsPersonName } from '../../common/validators/is-person-name.validator';
 
 export class CreatePatientDto {
   @ApiProperty() @IsEmail() email: string;
-  @ApiProperty() @IsString() firstName: string;
-  @ApiProperty() @IsString() lastName: string;
+  @ApiProperty() @IsPersonName() firstName: string;
+  @ApiProperty() @IsPersonName() lastName: string;
   @ApiPropertyOptional() @IsOptionalPhoneNumber10() phone?: string;
   @ApiPropertyOptional({
     description: 'Whether the patient has opted in to WhatsApp notifications',

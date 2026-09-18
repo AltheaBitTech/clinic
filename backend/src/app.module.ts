@@ -33,6 +33,15 @@ import { PharmacyPrescriptionsModule } from './pharmacy-prescriptions/pharmacy-p
 import { PharmacySalesModule } from './pharmacy-sales/pharmacy-sales.module';
 import { PharmacyReportsModule } from './pharmacy-reports/pharmacy-reports.module';
 import { PharmacyDashboardModule } from './pharmacy-dashboard/pharmacy-dashboard.module';
+import { PathologyLabsModule } from './pathology-labs/pathology-labs.module';
+import { HospitalLabLinksModule } from './hospital-lab-links/hospital-lab-links.module';
+import { PathologySharedModule } from './pathology-shared/pathology-shared.module';
+import { PathologyCatalogModule } from './pathology-catalog/pathology-catalog.module';
+import { PathologyMasterTestsModule } from './pathology-master-tests/pathology-master-tests.module';
+import { PathologyOrdersModule } from './pathology-orders/pathology-orders.module';
+import { PathologyResultsModule } from './pathology-results/pathology-results.module';
+import { PathologyDashboardModule } from './pathology-dashboard/pathology-dashboard.module';
+import { PathologyReportsModule } from './pathology-reports/pathology-reports.module';
 import { EmailModule } from './email/email.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 
@@ -72,6 +81,15 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     PharmacySalesModule,
     PharmacyReportsModule,
     PharmacyDashboardModule,
+    PathologyLabsModule,
+    HospitalLabLinksModule,
+    PathologySharedModule,
+    PathologyCatalogModule,
+    PathologyMasterTestsModule,
+    PathologyOrdersModule,
+    PathologyResultsModule,
+    PathologyDashboardModule,
+    PathologyReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

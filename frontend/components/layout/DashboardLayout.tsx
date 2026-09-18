@@ -11,7 +11,7 @@ import {
   Activity, LayoutDashboard, Calendar, Users, FileText, Bell,
   MessageSquare, BarChart3, Receipt, Settings, LogOut, ChevronRight,
   Stethoscope, Building2, UserCheck, Package, ClipboardList, Pill, Store,
-  Boxes, Menu, X, Truck, ShoppingCart, Share2
+  Boxes, Menu, X, Truck, ShoppingCart, Share2, FlaskConical, Microscope
 } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import { notificationsApi } from '@/lib/api';
@@ -46,6 +46,14 @@ const navItems: NavItem[] = [
   { label: 'Purchase Orders', href: '/dashboard/pharmacy-portal/purchases', icon: ShoppingCart, roles: ['PHARMACY'] },
   { label: 'Sales', href: '/dashboard/pharmacy-portal/sales', icon: Receipt, roles: ['PHARMACY'] },
   { label: 'Rx Queue', href: '/dashboard/pharmacy-portal/prescriptions', icon: ClipboardList, roles: ['PHARMACY'] },
+  { label: 'Pathology Labs', href: '/dashboard/pathology-labs', icon: FlaskConical, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { label: 'Lab Orders', href: '/dashboard/pathology-orders', icon: ClipboardList, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { label: 'My Lab', href: '/dashboard/pathology-portal', icon: FlaskConical, roles: ['PATHOLOGY'] },
+  { label: 'Test Catalog', href: '/dashboard/pathology-portal/tests', icon: Microscope, roles: ['PATHOLOGY'] },
+  { label: 'Hospital Links', href: '/dashboard/pathology-portal/links', icon: Share2, roles: ['PATHOLOGY'] },
+  { label: 'Orders', href: '/dashboard/pathology-portal/orders', icon: ClipboardList, roles: ['PATHOLOGY'] },
+  { label: 'Collectors', href: '/dashboard/pathology-portal/collectors', icon: Truck, roles: ['PATHOLOGY'] },
+  { label: 'Lab Reports', href: '/dashboard/pathology-portal/reports', icon: BarChart3, roles: ['PATHOLOGY'] },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'PATIENT'] },
   { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare, roles: ['DOCTOR', 'PATIENT'] },
   { label: 'Billing', href: '/dashboard/billing', icon: Receipt, roles: ['HOSPITAL_ADMIN', 'RECEPTIONIST'] },
@@ -95,6 +103,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setMobileNavOpen(false);
   }, [pathname]);
 
+  // Redirect away from another role's dashboard home if navigated to directly
+  // (e.g. a stale bookmark) — those pages call role-restricted backend
+  // endpoints that 403 for anyone else.
+  useEffect(() => {
+    if (!user) return;
+    const roleHomes: Record<string, string> = {
+      SUPER_ADMIN: '/dashboard/super-admin',
+      HOSPITAL_ADMIN: '/dashboard/hospital',
+      DOCTOR: '/dashboard/doctor',
+      RECEPTIONIST: '/dashboard/receptionist',
+      PATIENT: '/dashboard/patient',
+      PHARMACY: '/dashboard/pharmacy-portal',
+      PATHOLOGY: '/dashboard/pathology-portal',
+      REFERRAL: '/dashboard/referral',
+    };
+    const ownHome = roleHomes[user.role];
+    const matchedHome = Object.values(roleHomes).find(
+      (home) => pathname === home || pathname.startsWith(`${home}/`),
+    );
+    if (matchedHome && matchedHome !== ownHome) {
+      router.replace(ownHome || '/dashboard/patient');
+    }
+  }, [user, pathname, router]);
+
   // Prevent background scroll while the mobile drawer is open
   useEffect(() => {
     document.body.style.overflow = mobileNavOpen ? 'hidden' : '';
@@ -133,6 +165,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       RECEPTIONIST: '/dashboard/receptionist',
       PATIENT: '/dashboard/patient',
       PHARMACY: '/dashboard/pharmacy-portal',
+      PATHOLOGY: '/dashboard/pathology-portal',
       REFERRAL: '/dashboard/referral',
     };
     return map[user.role] || '/dashboard/patient';

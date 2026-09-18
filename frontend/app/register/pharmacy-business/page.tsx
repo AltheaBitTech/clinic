@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { tenantRequestsApi } from '@/lib/api';
-import { isValidPhone } from '@/lib/utils';
+import { isValidPhone, getNameError } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import {
   Store, Phone, Mail, MapPin, Building2, User, Gift,
@@ -171,8 +171,10 @@ function PharmacyBusinessRegisterForm() {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = 'Enter a valid email address';
     }
-    if (!form.firstName.trim()) errs.firstName = 'First name is required';
-    if (!form.lastName.trim()) errs.lastName = 'Last name is required';
+    const firstNameErr = getNameError(form.firstName, 'First name');
+    if (firstNameErr) errs.firstName = firstNameErr;
+    const lastNameErr = getNameError(form.lastName, 'Last name');
+    if (lastNameErr) errs.lastName = lastNameErr;
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };

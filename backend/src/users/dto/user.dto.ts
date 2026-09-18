@@ -1,16 +1,15 @@
 import { IsString, IsOptional, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
+import { IsOptionalPersonName } from '../../common/validators/is-person-name.validator';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ description: 'User first name', example: 'John' })
-  @IsOptional()
-  @IsString()
+  @IsOptionalPersonName()
   firstName?: string;
 
   @ApiPropertyOptional({ description: 'User last name', example: 'Doe' })
-  @IsOptional()
-  @IsString()
+  @IsOptionalPersonName()
   lastName?: string;
 
   @ApiPropertyOptional({

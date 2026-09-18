@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { doctorsApi, patientsApi, appointmentsApi } from '@/lib/api';
-import { formatCurrency, getInitials } from '@/lib/utils';
+import { formatCurrency, getInitials, getNameError } from '@/lib/utils';
 import {
   Calendar, Clock, User, Plus, Search, ArrowLeft,
   AlertCircle, CheckCircle2, Stethoscope, Loader2,
@@ -154,8 +154,18 @@ export default function NewAppointmentPage() {
   const handleRegisterPatient = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!regFirstName || !regLastName || !regEmail) {
+    if (!regEmail) {
       toast.error('Please fill in required fields');
+      return;
+    }
+    const firstNameErr = getNameError(regFirstName, 'First name');
+    if (firstNameErr) {
+      toast.error(firstNameErr);
+      return;
+    }
+    const lastNameErr = getNameError(regLastName, 'Last name');
+    if (lastNameErr) {
+      toast.error(lastNameErr);
       return;
     }
 
@@ -747,8 +757,10 @@ export default function NewAppointmentPage() {
                   <input
                     type="tel"
                     value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    placeholder="+91 XXXXX XXXXX"
+                    onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="9876543210"
                     className="input"
                   />
                 </div>

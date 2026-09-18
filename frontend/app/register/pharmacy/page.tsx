@@ -6,7 +6,7 @@ import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { pharmaciesApi } from '@/lib/api';
-import { isValidPhone } from '@/lib/utils';
+import { isValidPhone, getNameError } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import {
   Store, Phone, Mail, MapPin, Clock, Truck, FileText,
@@ -129,8 +129,10 @@ function PharmacyRegisterForm() {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = 'Enter a valid email address';
     }
-    if (!form.firstName.trim()) errs.firstName = 'First name is required';
-    if (!form.lastName.trim()) errs.lastName = 'Last name is required';
+    const firstNameErr = getNameError(form.firstName, 'First name');
+    if (firstNameErr) errs.firstName = firstNameErr;
+    const lastNameErr = getNameError(form.lastName, 'Last name');
+    if (lastNameErr) errs.lastName = lastNameErr;
     if (!form.password || form.password.length < 8) {
       errs.password = 'Password must be at least 8 characters';
     }

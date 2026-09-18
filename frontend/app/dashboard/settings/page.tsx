@@ -8,7 +8,7 @@ import {
   Settings, User, Building2, Save, Loader2, Sparkles, Mail, Phone, MapPin, Upload, Crown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { cn, formatDate, isValidPhone } from '@/lib/utils';
+import { cn, formatDate, isValidPhone, getNameError } from '@/lib/utils';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
 
 const TIER_STYLES: Record<string, string> = {
@@ -97,8 +97,14 @@ export default function SettingsPage() {
 
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName.trim() || !lastName.trim()) {
-      toast.error('First name and last name are required');
+    const firstNameErr = getNameError(firstName, 'First name');
+    if (firstNameErr) {
+      toast.error(firstNameErr);
+      return;
+    }
+    const lastNameErr = getNameError(lastName, 'Last name');
+    if (lastNameErr) {
+      toast.error(lastNameErr);
       return;
     }
     if (phone && !isValidPhone(phone)) {

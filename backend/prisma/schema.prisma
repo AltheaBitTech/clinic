@@ -20,12 +20,14 @@ enum UserRole {
   RECEPTIONIST
   PATIENT
   PHARMACY
+  PATHOLOGY
   REFERRAL
 }
 
 enum TenantType {
   HOSPITAL
   PHARMACY
+  PATHOLOGY
 }
 
 enum SubscriptionPlan {
@@ -83,6 +85,7 @@ enum ReportType {
   ULTRASOUND
   ECG
   PRESCRIPTION
+  LAB_REPORT
   OTHER
 }
 
@@ -107,6 +110,8 @@ enum TimelineEventType {
   FOLLOW_UP
   REMINDER_SENT
   NOTE_ADDED
+  LAB_ORDER_PLACED
+  LAB_REPORT_READY
 }
 
 // ─────────────────────────────────────────
@@ -163,6 +168,84 @@ enum ReturnStatus {
 }
 
 // ─────────────────────────────────────────
+// PATHOLOGY OPERATIONS ENUMS
+// ─────────────────────────────────────────
+
+enum LabLinkStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  REVOKED
+}
+
+enum LabOrderStatus {
+  ORDERED
+  SAMPLE_SCHEDULED
+  SAMPLE_COLLECTED
+  RECEIVED_AT_LAB
+  ACCEPTED
+  SAMPLE_REJECTED
+  RECOLLECTION_REQUESTED
+  IN_PROGRESS
+  RESULT_READY
+  PENDING_VERIFICATION
+  VERIFIED
+  REPORT_DELIVERED
+  CANCELLED
+}
+
+enum LabOrderItemStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum CollectionType {
+  WALK_IN
+  HOME
+}
+
+// Reasons a received sample can be rejected before it enters processing.
+enum SampleRejectionReason {
+  INSUFFICIENT_SAMPLE
+  WRONG_CONTAINER
+  HEMOLYZED
+  SAMPLE_EXPIRED
+  CONTAMINATED
+  OTHER
+}
+
+// Auto-computed at result-entry time from LabTestParameterDef's normal/
+// critical ranges when possible; CRITICAL always wins over LOW/HIGH/ABNORMAL.
+enum ResultFlag {
+  NORMAL
+  LOW
+  HIGH
+  ABNORMAL
+  CRITICAL
+}
+
+// How a parameter's value should be captured/rendered.
+enum ResultValueType {
+  NUMERIC
+  TEXT
+  DROPDOWN
+  POSITIVE_NEGATIVE
+  REACTIVE_NONREACTIVE
+  NORMAL_ABNORMAL
+}
+
+// Mirrors FHIR DiagnosticReport status semantics (preliminary/final/amended).
+enum LabReportStatus {
+  DRAFT
+  PENDING_VERIFICATION
+  VERIFIED
+  AMENDED
+  DELIVERED
+}
+
+// ─────────────────────────────────────────
 // TENANT (Hospital / Clinic)
 // ─────────────────────────────────────────
 
@@ -197,6 +280,9 @@ model Tenant {
   medicalCatalogItems MedicalCatalogItem[]
   pharmacies          Pharmacy[]
   pharmacyInvites     PharmacyInvite[]
+  pathologyLabs       PathologyLab[]
+  hospitalLabLinks    HospitalLabLink[]
+  labOrders           LabOrder[]
   subscriptions       Subscription[]
   referredBy          Referral?            @relation("TenantReferredBy", fields: [referredById], references: [id])
   referralCommissions ReferralCommission[]
@@ -296,6 +382,7 @@ model User {
   doctor                  Doctor?
   patient                 Patient?
   pharmacy                Pharmacy?
+  pathologyLab            PathologyLab?
   referral                Referral?
   sentMessages            Message[]            @relation("SentMessages")
   notifications           Notification[]
@@ -409,11 +496,12 @@ model Doctor {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  user          User           @relation(fields: [userId], references: [id])
-  department    Department?    @relation(fields: [departmentId], references: [id])
-  appointments  Appointment[]
-  prescriptions Prescription[]
-  chatRooms     ChatRoom[]
+  user              User           @relation(fields: [userId], references: [id])
+  department        Department?    @relation(fields: [departmentId], references: [id])
+  appointments      Appointment[]
+  prescriptions     Prescription[]
+  chatRooms         ChatRoom[]
+  referredLabOrders LabOrder[]
 
   @@map("doctors")
 }
@@ -451,6 +539,7 @@ model Patient {
   reminders     MedicineReminder[]
   invoices      Invoice[]
   chatRooms     ChatRoom[]
+  labOrders     LabOrder[]
 
   @@map("patients")
 }
@@ -1271,4 +1360,377 @@ model AuditLog {
   pharmacy Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────
+// PATHOLOGY
+// ─────────────────────────────────────────
+//
+// Unlike Pharmacy, a lab is ALWAYS its own independent tenant (tenantId is
+// unique below) — there is no "hospital creates a lab under its own tenant"
+// mode. Hospitals and labs connect via the many-to-many HospitalLabLink
+// request/approve workflow instead of shared tenant ownership.
+
+model PathologyLab {
+  id                      String   @id @default(cuid())
+  tenantId                String   @unique
+  userId                  String?  @unique
+  name                    String
+  ownerName               String?
+  licenseNumber           String?
+  accreditationNo         String?
+  phone                   String
+  email                   String?
+  address                 String
+  city                    String?
+  state                   String?
+  pincode                 String?
+  openingHours            String?
+  closingHours            String?
+  homeCollectionAvailable Boolean  @default(false)
+  homeCollectionFee       Decimal? @db.Decimal(10, 2)
+  notes                   String?
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User?  @relation(fields: [userId], references: [id])
+
+  tests         LabTestCatalog[]
+  hospitalLinks HospitalLabLink[]
+  patients      LabPatient[]
+  collectors    LabCollector[]
+  orders        LabOrder[]
+  reports       LabReport[]
+  auditLogs     LabAuditLog[]
+
+  @@map("pathology_labs")
+}
+
+// Many-to-many hospital<->lab partnership. A hospital raises the request
+// (requestedById); the lab approves/rejects it. Either side can revoke an
+// ACTIVE link.
+model HospitalLabLink {
+  id               String        @id @default(cuid())
+  hospitalTenantId String
+  labId            String
+  status           LabLinkStatus @default(PENDING)
+  requestedById    String // audit-only User.id, no relation
+  requestedAt      DateTime      @default(now())
+  respondedById    String? // audit-only User.id, no relation
+  respondedAt      DateTime?
+  notes            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  hospitalTenant Tenant       @relation(fields: [hospitalTenantId], references: [id])
+  lab            PathologyLab @relation(fields: [labId], references: [id])
+
+  @@unique([hospitalTenantId, labId])
+  @@map("hospital_lab_links")
+}
+
+// ─────────────────────────────────────────
+// PATHOLOGY OPERATIONS — TEST CATALOG
+// ─────────────────────────────────────────
+
+model LabTestCatalog {
+  id                      String   @id @default(cuid())
+  labId                   String
+  name                    String
+  code                    String?
+  category                String?
+  department              String?
+  sampleType              String
+  container               String?
+  method                  String?
+  price                   Decimal  @db.Decimal(10, 2)
+  turnaroundHours         Int?
+  fastingRequired         Boolean  @default(false)
+  homeCollectionSupported Boolean  @default(true)
+  isActive                Boolean  @default(true)
+  masterTestId            String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  lab        PathologyLab          @relation(fields: [labId], references: [id])
+  masterTest PathologyMasterTest?  @relation(fields: [masterTestId], references: [id], onDelete: SetNull)
+  parameters LabTestParameterDef[]
+  orderItems LabOrderItem[]
+
+  @@map("lab_test_catalog")
+}
+
+model LabTestParameterDef {
+  id                String          @id @default(cuid())
+  testId            String
+  name              String
+  unit              String?
+  resultType        ResultValueType @default(NUMERIC)
+  options           String[]        @default([])
+  refRangeLow       Decimal?        @db.Decimal(10, 2)
+  refRangeHigh      Decimal?        @db.Decimal(10, 2)
+  refRangeText      String?
+  // Deliberately separate from the normal range — a value can be outside
+  // refRange (flagged LOW/HIGH) without being clinically CRITICAL.
+  criticalRangeLow  Decimal?        @db.Decimal(10, 2)
+  criticalRangeHigh Decimal?        @db.Decimal(10, 2)
+  criticalRangeText String?
+  displayOrder      Int             @default(0)
+
+  test         LabTestCatalog   @relation(fields: [testId], references: [id])
+  resultValues LabResultValue[]
+
+  @@map("lab_test_parameter_defs")
+}
+
+model PathologyMasterTest {
+  id                      String   @id @default(cuid())
+  name                    String
+  code                    String   @unique
+  category                String?
+  department              String?
+  sampleType              String
+  container               String?
+  method                  String?
+  turnaroundHours         Int?
+  fastingRequired         Boolean  @default(false)
+  homeCollectionSupported Boolean  @default(true)
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  parameters      PathologyMasterTestParameter[]
+  labTestCatalogs LabTestCatalog[]
+
+  @@map("pathology_master_tests")
+}
+
+model PathologyMasterTestParameter {
+  id                String          @id @default(cuid())
+  masterTestId      String
+  name              String
+  unit              String?
+  resultType        ResultValueType @default(NUMERIC)
+  options           String[]        @default([])
+  refRangeLow       Decimal?        @db.Decimal(10, 2)
+  refRangeHigh      Decimal?        @db.Decimal(10, 2)
+  refRangeText      String?
+  criticalRangeLow  Decimal?        @db.Decimal(10, 2)
+  criticalRangeHigh Decimal?        @db.Decimal(10, 2)
+  criticalRangeText String?
+  displayOrder      Int             @default(0)
+
+  masterTest PathologyMasterTest @relation(fields: [masterTestId], references: [id])
+
+  @@map("pathology_master_test_parameters")
+}
+
+// ─────────────────────────────────────────
+// PATHOLOGY OPERATIONS — PATIENTS, COLLECTORS & ORDERS
+// ─────────────────────────────────────────
+
+model LabPatient {
+  id               String    @id @default(cuid())
+  labId            String
+  arogyixPatientId String?
+  name             String
+  phone            String?
+  email            String?
+  dateOfBirth      DateTime?
+  gender           Gender?
+  address          String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  lab        PathologyLab @relation(fields: [labId], references: [id])
+  orders     LabOrder[]
+  labReports LabReport[]
+
+  @@map("lab_patients")
+}
+
+// Lightweight sample-collector roster entry — not a full User account.
+// A collector only needs to be assignable/callable for MVP; upgrading to a
+// real staff login with its own status-update flow is a later phase.
+model LabCollector {
+  id        String   @id @default(cuid())
+  labId     String
+  name      String
+  phone     String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lab    PathologyLab @relation(fields: [labId], references: [id])
+  orders LabOrder[]
+
+  @@map("lab_collectors")
+}
+
+model LabOrder {
+  id                         String                 @id @default(cuid())
+  labId                      String
+  patientId                  String
+  hospitalTenantId           String? // set only when the order came through a linked hospital
+  hospitalPatientId          String? // set only when that hospital's Patient record is known
+  orderedByUserId            String // audit-only User.id (hospital or lab staff), no relation
+  referringDoctorId          String?
+  referringDoctorName        String? // fallback for a referring doctor not in the system
+  referringDoctorPhone       String?
+  // Per-order commission, captured at order time — deliberately separate
+  // from the tenant-level Referral/ReferralCommission payout system.
+  commissionPercent          Decimal?               @db.Decimal(5, 2)
+  commissionAmount           Decimal?               @db.Decimal(10, 2)
+  orderNo                    String
+  status                     LabOrderStatus         @default(ORDERED)
+  collectionType             CollectionType         @default(WALK_IN)
+  scheduledAt                DateTime?
+  collectionAddress          String?
+  collectorId                String?
+  // Sample identity — assigned when the sample is physically collected.
+  sampleId                   String?
+  barcodeValue               String?
+  sampleType                 String?
+  container                  String?
+  collectionNotes            String?
+  sampleCollectedAt          DateTime?
+  receivedAtLabAt            DateTime?
+  acceptedAt                 DateTime?
+  acceptedByUserId           String? // audit-only User.id, no relation
+  rejectedAt                 DateTime?
+  rejectedByUserId           String? // audit-only User.id, no relation
+  rejectionReason            SampleRejectionReason?
+  rejectionNotes             String?
+  recollectionRequestedAt    DateTime?
+  submittedForVerificationAt DateTime?
+  submittedByUserId          String? // audit-only User.id, no relation
+  resultReadyAt              DateTime?
+  verifiedAt                 DateTime?
+  verifiedByUserId           String? // audit-only User.id, no relation
+  reportDeliveredAt          DateTime?
+  subtotal                   Decimal                @db.Decimal(10, 2)
+  discount                   Decimal                @default(0) @db.Decimal(10, 2)
+  tax                        Decimal                @default(0) @db.Decimal(10, 2)
+  total                      Decimal                @db.Decimal(10, 2)
+  paymentStatus              PaymentStatus          @default(PENDING)
+  notes                      String?
+  cancelReason               String?
+  createdAt                  DateTime               @default(now())
+  updatedAt                  DateTime               @updatedAt
+
+  lab             PathologyLab   @relation(fields: [labId], references: [id])
+  patient         LabPatient     @relation(fields: [patientId], references: [id])
+  hospitalTenant  Tenant?        @relation(fields: [hospitalTenantId], references: [id])
+  hospitalPatient Patient?       @relation(fields: [hospitalPatientId], references: [id])
+  referringDoctor Doctor?        @relation(fields: [referringDoctorId], references: [id])
+  collector       LabCollector?  @relation(fields: [collectorId], references: [id])
+  items           LabOrderItem[]
+  report          LabReport?
+
+  @@unique([labId, orderNo])
+  @@index([hospitalTenantId])
+  @@map("lab_orders")
+}
+
+model LabOrderItem {
+  id               String             @id @default(cuid())
+  orderId          String
+  testId           String
+  testNameSnapshot String
+  price            Decimal            @db.Decimal(10, 2)
+  status           LabOrderItemStatus @default(PENDING)
+  createdAt        DateTime           @default(now())
+
+  order        LabOrder         @relation(fields: [orderId], references: [id])
+  test         LabTestCatalog   @relation(fields: [testId], references: [id])
+  resultValues LabResultValue[]
+
+  @@map("lab_order_items")
+}
+
+// ─────────────────────────────────────────
+// PATHOLOGY OPERATIONS — RESULTS & REPORTS
+// ─────────────────────────────────────────
+//
+// Deliberately a separate model tree from the generic Report model. A
+// mirror Report row is only ever created (by the service layer) when an
+// order is both hospital-linked and tied to a known hospital Patient.
+
+model LabResultValue {
+  id                    String          @id @default(cuid())
+  orderItemId           String
+  parameterId           String?
+  parameterNameSnapshot String
+  resultType            ResultValueType @default(NUMERIC)
+  value                 String
+  unit                  String?
+  refRangeText          String?
+  flag                  ResultFlag      @default(NORMAL)
+  comment               String?
+  attachmentUrl         String?
+  enteredByUserId       String // audit-only User.id, no relation
+  enteredAt             DateTime        @default(now())
+  // Critical-result notification trail (spec §9).
+  isCritical            Boolean         @default(false)
+  doctorNotified        Boolean         @default(false)
+  notifiedAt            DateTime?
+  notifiedByUserId      String? // audit-only User.id, no relation
+  acknowledgedByUserId  String? // audit-only User.id, no relation
+  acknowledgedAt        DateTime?
+  escalated             Boolean         @default(false)
+
+  orderItem LabOrderItem         @relation(fields: [orderItemId], references: [id])
+  parameter LabTestParameterDef? @relation(fields: [parameterId], references: [id])
+
+  @@map("lab_result_values")
+}
+
+model LabReport {
+  id                String          @id @default(cuid())
+  orderId           String          @unique
+  labId             String
+  patientId         String
+  fileUrl           String?
+  fileName          String?
+  generatedAt       DateTime?
+  submittedByUserId String? // audit-only User.id, no relation — technician submit
+  submittedAt       DateTime?
+  verifiedByUserId  String? // audit-only User.id, no relation — pathologist sign-off
+  verifiedAt        DateTime?
+  status            LabReportStatus @default(DRAFT)
+  deliveredAt       DateTime?
+  isAmended         Boolean         @default(false)
+  amendmentReason   String?
+  amendedByUserId   String? // audit-only User.id, no relation
+  amendedAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  order   LabOrder     @relation(fields: [orderId], references: [id])
+  lab     PathologyLab @relation(fields: [labId], references: [id])
+  patient LabPatient   @relation(fields: [patientId], references: [id])
+
+  @@map("lab_reports")
+}
+
+// ─────────────────────────────────────────
+// PATHOLOGY OPERATIONS — AUDIT
+// ─────────────────────────────────────────
+
+model LabAuditLog {
+  id         String   @id @default(cuid())
+  labId      String
+  userId     String
+  action     String
+  entity     String
+  entityId   String
+  beforeData Json?
+  afterData  Json?
+  createdAt  DateTime @default(now())
+
+  lab PathologyLab @relation(fields: [labId], references: [id])
+
+  @@map("lab_audit_logs")
 }

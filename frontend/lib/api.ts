@@ -117,7 +117,7 @@ export const prescriptionsApi = {
 };
 
 export const reportsApi = {
-  upload: (formData: FormData) => api.post('/reports', formData),
+  upload: (formData: FormData) => api.post('/reports', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   getAll: (params?: any) => api.get('/reports', { params }),
   getOne: (id: string) => api.get(`/reports/${id}`),
   delete: (id: string) => api.delete(`/reports/${id}`),
@@ -284,6 +284,89 @@ export const pharmacyReportsApi = {
   getInventory: () => api.get('/pharmacy/reports/inventory'),
   getExpiry: (withinDays?: number) =>
     api.get('/pharmacy/reports/expiry', { params: { withinDays } }),
+};
+
+export const pathologyLabsApi = {
+  getAll: (search?: string) => api.get('/pathology-labs', { params: { search } }),
+  getOne: (id: string) => api.get(`/pathology-labs/${id}`),
+  getMine: () => api.get('/pathology-labs/me'),
+  updateMine: (data: any) => api.put('/pathology-labs/me', data),
+};
+
+export const hospitalLabLinksApi = {
+  request: (data: { labId: string; notes?: string }) => api.post('/hospital-lab-links', data),
+  getForHospital: () => api.get('/hospital-lab-links'),
+  getIncoming: () => api.get('/hospital-lab-links/incoming'),
+  approve: (id: string) => api.put(`/hospital-lab-links/${id}/approve`),
+  reject: (id: string) => api.put(`/hospital-lab-links/${id}/reject`),
+  revoke: (id: string) => api.put(`/hospital-lab-links/${id}/revoke`),
+};
+
+export const pathologyCatalogApi = {
+  create: (data: any) => api.post('/pathology/tests', data),
+  getAll: (search?: string) => api.get('/pathology/tests', { params: { search } }),
+  getOne: (id: string) => api.get(`/pathology/tests/${id}`),
+  update: (id: string, data: any) => api.patch(`/pathology/tests/${id}`, data),
+};
+
+export const pathologyMasterTestsApi = {
+  getAll: (params?: { search?: string; category?: string; department?: string; limit?: number }) =>
+    api.get('/pathology/master-tests', { params }),
+  getOne: (id: string) => api.get(`/pathology/master-tests/${id}`),
+};
+
+export const pathologyOrdersApi = {
+  createForHospital: (data: any) => api.post('/pathology-orders/hospital', data),
+  createWalkIn: (data: any) => api.post('/pathology-orders', data),
+  getAll: (params?: any) => api.get('/pathology-orders', { params }),
+  getOne: (id: string) => api.get(`/pathology-orders/${id}`),
+  scheduleCollection: (id: string, data: any) =>
+    api.put(`/pathology-orders/${id}/schedule-collection`, data),
+  markCollected: (id: string, data?: { sampleType?: string; container?: string; notes?: string }) =>
+    api.put(`/pathology-orders/${id}/mark-collected`, data),
+  receive: (id: string) => api.put(`/pathology-orders/${id}/receive`),
+  acceptSample: (id: string) => api.put(`/pathology-orders/${id}/accept-sample`),
+  rejectSample: (id: string, data: { rejectionReason: string; rejectionNotes?: string }) =>
+    api.put(`/pathology-orders/${id}/reject-sample`, data),
+  requestRecollection: (id: string) => api.put(`/pathology-orders/${id}/request-recollection`),
+  startProcessing: (id: string) => api.put(`/pathology-orders/${id}/start-processing`),
+  cancel: (id: string, data?: { cancelReason?: string }) =>
+    api.put(`/pathology-orders/${id}/cancel`, data),
+};
+
+export const pathologyCollectorsApi = {
+  create: (data: any) => api.post('/pathology-orders/collectors', data),
+  getAll: () => api.get('/pathology-orders/collectors'),
+  update: (id: string, data: any) => api.put(`/pathology-orders/collectors/${id}`, data),
+};
+
+export const pathologyResultsApi = {
+  enter: (orderItemId: string, data: { results: any[] }) =>
+    api.post(`/pathology-orders/${orderItemId}/results`, data),
+  notifyCritical: (resultValueId: string) =>
+    api.put(`/pathology-orders/results/${resultValueId}/notify-critical`),
+  acknowledgeCritical: (resultValueId: string, data?: { notes?: string; escalated?: boolean }) =>
+    api.put(`/pathology-orders/results/${resultValueId}/acknowledge-critical`, data),
+  submitForVerification: (orderId: string) =>
+    api.put(`/pathology-orders/${orderId}/submit-for-verification`),
+  verify: (orderId: string) => api.put(`/pathology-orders/${orderId}/verify`),
+  deliver: (orderId: string) => api.put(`/pathology-orders/${orderId}/deliver`),
+  amend: (orderId: string, data: { reason: string }) =>
+    api.put(`/pathology-orders/${orderId}/amend`, data),
+};
+
+export const pathologyDashboardApi = {
+  getSummary: () => api.get('/pathology-dashboard/summary'),
+  getPendingByDepartment: () => api.get('/pathology-dashboard/pending-by-department'),
+};
+
+export const pathologyReportsApi = {
+  getRevenue: (params?: { from?: string; to?: string }) =>
+    api.get('/pathology-reports/revenue', { params }),
+  getTat: (params?: { from?: string; to?: string }) =>
+    api.get('/pathology-reports/tat', { params }),
+  getCommissions: (params?: { doctorId?: string; from?: string; to?: string }) =>
+    api.get('/pathology-reports/commissions', { params }),
 };
 
 

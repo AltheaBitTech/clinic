@@ -10,7 +10,7 @@ interface User {
   phone?: string;
   firstName: string;
   lastName: string;
-  role: 'SUPER_ADMIN' | 'HOSPITAL_ADMIN' | 'DOCTOR' | 'RECEPTIONIST' | 'PATIENT' | 'PHARMACY' | 'REFERRAL';
+  role: 'SUPER_ADMIN' | 'HOSPITAL_ADMIN' | 'DOCTOR' | 'RECEPTIONIST' | 'PATIENT' | 'PHARMACY' | 'PATHOLOGY' | 'REFERRAL';
   tenantId?: string;
   avatarUrl?: string;
   whatsappOptIn?: boolean;
@@ -18,6 +18,7 @@ interface User {
   doctor?: any;
   patient?: any;
   pharmacy?: any;
+  pathologyLab?: any;
   referral?: any;
   tenant?: any;
 }
@@ -96,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       RECEPTIONIST: '/dashboard/receptionist',
       PATIENT: '/dashboard/patient',
       PHARMACY: '/dashboard/pharmacy-portal',
+      PATHOLOGY: '/dashboard/pathology-portal',
       REFERRAL: '/dashboard/referral',
     };
     router.push(routes[role] || '/dashboard/patient');

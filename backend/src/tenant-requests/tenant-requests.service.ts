@@ -29,9 +29,12 @@ export class TenantRequestsService {
   async create(dto: CreateTenantRequestDto) {
     const type = dto.type ?? TenantType.HOSPITAL;
 
-    if (type === TenantType.PHARMACY && (!dto.phone || !dto.address)) {
+    if (
+      (type === TenantType.PHARMACY || type === TenantType.PATHOLOGY) &&
+      (!dto.phone || !dto.address)
+    ) {
       throw new BadRequestException(
-        'Phone and address are required for pharmacy registration requests',
+        'Phone and address are required for pharmacy/pathology registration requests',
       );
     }
 
@@ -213,38 +216,82 @@ export class TenantRequestsService {
 
             return { tenant, user };
           })
-        : await (async () => {
-            // Create the Tenant
-            const tenant = await this.prisma.tenant.create({
-              data: {
-                name: request.name,
-                slug,
-                email: request.email,
-                phone: request.phone,
-                address: request.address,
-                city: request.city,
-                state: request.state,
-                subscriptionPlan: request.plan,
-                referredById: request.referredById,
-              },
-            });
+        : request.type === TenantType.PATHOLOGY
+          ? await this.prisma.$transaction(async (tx) => {
+              const tenant = await tx.tenant.create({
+                data: {
+                  type: TenantType.PATHOLOGY,
+                  name: request.name,
+                  slug,
+                  email: request.email,
+                  phone: request.phone,
+                  address: request.address,
+                  city: request.city,
+                  state: request.state,
+                  subscriptionPlan: request.plan,
+                  referredById: request.referredById,
+                },
+              });
 
-            // Create the HOSPITAL_ADMIN User
-            const user = await this.prisma.user.create({
-              data: {
-                tenantId: tenant.id,
-                email: request.email,
-                phone: request.phone || null,
-                firstName: request.firstName,
-                lastName: request.lastName,
-                passwordHash,
-                role: UserRole.HOSPITAL_ADMIN,
-                isVerified: true,
-              },
-            });
+              const user = await tx.user.create({
+                data: {
+                  tenantId: tenant.id,
+                  email: request.email,
+                  phone: request.phone || null,
+                  firstName: request.firstName,
+                  lastName: request.lastName,
+                  passwordHash,
+                  role: UserRole.PATHOLOGY,
+                  isVerified: true,
+                },
+              });
 
-            return { tenant, user };
-          })();
+              await tx.pathologyLab.create({
+                data: {
+                  tenantId: tenant.id,
+                  userId: user.id,
+                  name: request.name,
+                  phone: request.phone as string,
+                  address: request.address as string,
+                  city: request.city,
+                  state: request.state,
+                },
+              });
+
+              return { tenant, user };
+            })
+          : await (async () => {
+              // Create the Tenant
+              const tenant = await this.prisma.tenant.create({
+                data: {
+                  name: request.name,
+                  slug,
+                  email: request.email,
+                  phone: request.phone,
+                  address: request.address,
+                  city: request.city,
+                  state: request.state,
+                  subscriptionPlan: request.plan,
+                  referredById: request.referredById,
+                },
+              });
+
+              // Create the HOSPITAL_ADMIN User
+              const user = await this.prisma.user.create({
+                data: {
+                  tenantId: tenant.id,
+                  email: request.email,
+                  phone: request.phone || null,
+                  firstName: request.firstName,
+                  lastName: request.lastName,
+                  passwordHash,
+                  role: UserRole.HOSPITAL_ADMIN,
+                  isVerified: true,
+                },
+              });
+
+              return { tenant, user };
+            })();
 
     // Update Request status to APPROVED
     await this.prisma.tenantRequest.update({

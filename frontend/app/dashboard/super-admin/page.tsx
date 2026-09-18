@@ -313,9 +313,11 @@ export default function SuperAdminDashboard() {
                       'badge font-semibold uppercase tracking-wider text-[10px] px-2 py-0.5',
                       req.type === 'PHARMACY'
                         ? 'bg-cyan-50 text-cyan-700 border border-cyan-200/50'
+                        : req.type === 'PATHOLOGY'
+                        ? 'bg-violet-50 text-violet-700 border border-violet-200/50'
                         : 'bg-slate-100 text-slate-600 border border-slate-200/50'
                     )}>
-                      {req.type === 'PHARMACY' ? 'Pharmacy' : 'Hospital'}
+                      {req.type === 'PHARMACY' ? 'Pharmacy' : req.type === 'PATHOLOGY' ? 'Pathology Lab' : 'Hospital'}
                     </span>
                   </td>
                   <td>

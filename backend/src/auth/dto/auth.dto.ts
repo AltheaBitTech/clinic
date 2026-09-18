@@ -1,13 +1,11 @@
-import {
-  IsEmail,
-  IsString,
-  IsOptional,
-  MinLength,
-  Matches,
-} from 'class-validator';
+import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
+import {
+  IsPersonName,
+  IsOptionalPersonName,
+} from '../../common/validators/is-person-name.validator';
 
 function normalizeEmail(value: unknown): unknown {
   return typeof value === 'string' ? value.trim().toLowerCase() : value;
@@ -24,11 +22,11 @@ export class RegisterDto {
   phone?: string;
 
   @ApiProperty({ example: 'John' })
-  @IsString()
+  @IsPersonName()
   firstName: string;
 
   @ApiProperty({ example: 'Doe' })
-  @IsString()
+  @IsPersonName()
   lastName: string;
 
   @ApiProperty({ example: 'password123', minLength: 8 })
@@ -93,11 +91,11 @@ export class AcceptInviteDto {
   password: string;
 
   @ApiProperty()
-  @IsString()
+  @IsPersonName()
   firstName: string;
 
   @ApiProperty()
-  @IsString()
+  @IsPersonName()
   lastName: string;
 }
 
@@ -108,8 +106,7 @@ export class SendRegisterEmailOtpDto {
   email: string;
 
   @ApiPropertyOptional({ example: 'John' })
-  @IsOptional()
-  @IsString()
+  @IsOptionalPersonName()
   firstName?: string;
 }
 

@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { tenantsApi, authApi } from '@/lib/api';
+import { PERSON_NAME_REGEX, PERSON_NAME_ERROR } from '@/lib/utils';
 import { Loader2, User, Mail, Phone, Lock, ShieldCheck, Building2, Search, Check, ChevronDown, KeyRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -21,9 +22,16 @@ interface Hospital {
   logoUrl: string | null;
 }
 
+const nameSchema = z
+  .string()
+  .trim()
+  .min(2, `Name ${PERSON_NAME_ERROR}`)
+  .max(50, `Name ${PERSON_NAME_ERROR}`)
+  .regex(PERSON_NAME_REGEX, `Name ${PERSON_NAME_ERROR}`);
+
 const selfSignupSchema = z.object({
-  firstName: z.string().min(1, 'First name required'),
-  lastName: z.string().min(1, 'Last name required'),
+  firstName: nameSchema,
+  lastName: nameSchema,
   email: z.string().email('Invalid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   phone: z
@@ -34,8 +42,8 @@ const selfSignupSchema = z.object({
 });
 
 const inviteSchema = z.object({
-  firstName: z.string().min(1, 'First name required'),
-  lastName: z.string().min(1, 'Last name required'),
+  firstName: nameSchema,
+  lastName: nameSchema,
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
@@ -330,6 +338,7 @@ function RegisterForm() {
                   </span>
                   <input
                     {...register('phone' as any)}
+                    onChange={(e) => setValue('phone' as any, e.target.value.replace(/\D/g, '').slice(0, 10), { shouldValidate: true })}
                     inputMode="numeric"
                     maxLength={10}
                     placeholder="9876543210"
@@ -449,6 +458,14 @@ function RegisterForm() {
             <p className="mt-2 text-center text-sm text-slate-400 font-light">
               Registering a pharmacy business?{' '}
               <Link href="/register/pharmacy-business" className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
+                Sign up here
+              </Link>
+            </p>
+          )}
+          {!inviteToken && (
+            <p className="mt-2 text-center text-sm text-slate-400 font-light">
+              Registering a pathology lab?{' '}
+              <Link href="/register/pathology-business" className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
                 Sign up here
               </Link>
             </p>

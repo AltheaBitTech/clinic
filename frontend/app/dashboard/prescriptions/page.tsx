@@ -170,6 +170,15 @@ export default function PrescriptionsPage() {
           </button>
         </div>
       )}
+
+      {!isPatient && (
+        <Link
+          href="/dashboard/prescriptions/new"
+          className="btn-primary fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-5 py-3 text-sm shadow-lg sm:bottom-8 sm:right-8"
+        >
+          <Plus className="w-4 h-4" /> Write Prescription
+        </Link>
+      )}
     </div>
   );
 }
