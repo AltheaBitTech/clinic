@@ -7,6 +7,7 @@ import {
   Param,
   Query,
   Res,
+  ForbiddenException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
@@ -54,9 +55,17 @@ export class BillingController {
   }
 
   @Put('invoices/:id/pay')
-  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.RECEPTIONIST)
+  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.RECEPTIONIST, UserRole.PATIENT)
   @ApiOperation({ summary: 'Mark invoice as paid' })
-  markPaid(@Param('id') id: string) {
+  async markPaid(@CurrentUser() user: any, @Param('id') id: string) {
+    if (user.role === UserRole.PATIENT) {
+      const invoice = await this.svc.findOne(id);
+      if (invoice.patient.userId !== user.id) {
+        throw new ForbiddenException(
+          'You are not authorized to pay this invoice',
+        );
+      }
+    }
     return this.svc.markAsPaid(id);
   }
 }
