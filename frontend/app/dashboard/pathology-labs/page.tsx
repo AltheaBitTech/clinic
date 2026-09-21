@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pathologyLabsApi, hospitalLabLinksApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
   FlaskConical, Search, Phone, MapPin, Truck, ChevronRight, Link2, XCircle,
+  Sparkles, Copy,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -19,6 +21,8 @@ const LINK_STATUS_STYLES: Record<string, string> = {
 
 export default function PathologyLabsPage() {
   const [search, setSearch] = useState('');
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteLink, setInviteLink] = useState('');
   const { user } = useAuth();
   const isAdmin = user?.role === 'HOSPITAL_ADMIN';
   const queryClient = useQueryClient();
@@ -62,17 +66,58 @@ export default function PathologyLabsPage() {
     onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to revoke link'),
   });
 
+  const inviteMutation = useMutation({
+    mutationFn: () => pathologyLabsApi.createInvite(),
+    onSuccess: (res: any) => {
+      const token = res.data.token;
+      setInviteLink(`${window.location.origin}/register/pathology-lab?token=${token}`);
+      queryClient.invalidateQueries({ queryKey: ['hospital-lab-links'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to generate invite link');
+    },
+  });
+
+  const openInviteModal = () => {
+    setIsInviteModalOpen(true);
+    setInviteLink('');
+    inviteMutation.mutate();
+  };
+
+  const closeInviteModal = () => {
+    setIsInviteModalOpen(false);
+    setInviteLink('');
+    inviteMutation.reset();
+  };
+
+  const copyInviteLink = () => {
+    navigator.clipboard.writeText(inviteLink);
+    toast.success('Registration link copied!');
+  };
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       {/* Header */}
-      <div className="page-header">
-        <h1 className="page-title flex items-center gap-2">
-          <FlaskConical className="w-6 h-6 text-cyan-600 shrink-0" />
-          Pathology Labs
-        </h1>
-        <p className="page-subtitle">
-          Browse partner labs and manage your hospital&apos;s lab partnerships
-        </p>
+      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="page-title flex items-center gap-2">
+            <FlaskConical className="w-6 h-6 text-cyan-600 shrink-0" />
+            Pathology Labs
+          </h1>
+          <p className="page-subtitle">
+            Browse partner labs and manage your hospital&apos;s lab partnerships
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            id="invite-pathology-lab-btn"
+            onClick={openInviteModal}
+            className="btn-secondary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+          >
+            <Link2 className="w-4 h-4" />
+            Invite Pathology Lab
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -118,6 +163,75 @@ export default function PathologyLabsPage() {
             />
           ))}
         </div>
+      )}
+
+      {/* Invite Pathology Lab Modal */}
+      {isInviteModalOpen && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
+              <Sparkles className="w-5 h-5 text-cyan-600" />
+              Invite a Pathology Lab
+            </h3>
+
+            {inviteMutation.isPending ? (
+              <div className="flex flex-col items-center justify-center py-8 gap-3">
+                <span className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-slate-500">Generating one-time link…</p>
+              </div>
+            ) : inviteLink ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-cyan-50 border border-cyan-100 text-cyan-900 rounded-xl text-xs space-y-2">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <Link2 className="w-4 h-4" /> Self-Registration Link Generated
+                  </p>
+                  <p className="text-cyan-700">
+                    Share this link with the lab. They&apos;ll register as an independent
+                    lab on Arogyix and set a password — once they complete it, they&apos;ll
+                    be linked to your hospital automatically. The link expires in 7 days
+                    or after first use.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={inviteLink}
+                    className="input text-xs bg-slate-50 cursor-default"
+                  />
+                  <button
+                    onClick={copyInviteLink}
+                    type="button"
+                    className="btn-primary p-2.5 flex items-center justify-center bg-cyan-600"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+                <button
+                  onClick={closeInviteModal}
+                  className="btn-secondary w-full py-2.5 mt-2 justify-center font-bold"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-slate-500">
+                  Something went wrong generating the invite link.
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button onClick={closeInviteModal} className="btn-secondary">
+                    Cancel
+                  </button>
+                  <button onClick={() => inviteMutation.mutate()} className="btn-primary">
+                    Retry
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

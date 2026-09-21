@@ -91,9 +91,13 @@ export default function ReceptionistDashboard() {
     collectPaymentMutation.mutate(invoiceId);
   };
 
-  const handleGenerateInvoice = (appointmentId: string, patientId: string) => {
-    // Default consultation fee of 500 INR
-    generateQuickInvoiceMutation.mutate({ appointmentId, patientId, amount: 500 });
+  const handleGenerateInvoice = (appointmentId: string, patientId: string, consultationFee: number | string | null | undefined) => {
+    const amount = Number(consultationFee);
+    if (!amount || Number.isNaN(amount)) {
+      toast.error("This doctor's consultation fee is not set. Please update it before generating a bill.");
+      return;
+    }
+    generateQuickInvoiceMutation.mutate({ appointmentId, patientId, amount });
   };
 
   const todaySchedule = stats?.todaySchedule || [];
@@ -350,7 +354,7 @@ export default function ReceptionistDashboard() {
                           </div>
                         ) : (
                           <button
-                            onClick={() => handleGenerateInvoice(appt.id, appt.patient.id)}
+                            onClick={() => handleGenerateInvoice(appt.id, appt.patient.id, appt.doctor?.consultationFee)}
                             disabled={generateQuickInvoiceMutation.isPending}
                             className="text-cyan-600 font-semibold hover:underline text-[11px] flex items-center gap-1"
                           >

@@ -116,8 +116,11 @@ export class TenantsService {
     });
 
     const frontendUrl =
-      this.config.get<string>('FRONTEND_URL')?.trim() ||
-      'http://localhost:3000';
+      this.config
+        .get<string>('FRONTEND_URL')
+        ?.split(',')[0]
+        ?.trim()
+        ?.replace(/\/+$/, '') || 'http://localhost:3000';
 
     try {
       await this.emailService.sendStaffInvite({

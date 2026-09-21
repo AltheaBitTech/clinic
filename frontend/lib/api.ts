@@ -289,6 +289,10 @@ export const pharmacyReportsApi = {
 export const pathologyLabsApi = {
   getAll: (search?: string) => api.get('/pathology-labs', { params: { search } }),
   getOne: (id: string) => api.get(`/pathology-labs/${id}`),
+  createInvite: () => api.post('/pathology-labs/invite'),
+  getInvite: (token: string) => api.get(`/pathology-labs/invite/${token}`),
+  completeInvite: (token: string, data: any) =>
+    api.post(`/pathology-labs/invite/${token}/complete`, data),
   getMine: () => api.get('/pathology-labs/me'),
   updateMine: (data: any) => api.put('/pathology-labs/me', data),
 };

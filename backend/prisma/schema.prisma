@@ -270,22 +270,23 @@ model Tenant {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
-  users               User[]
-  departments         Department[]
-  patients            Patient[]
-  appointments        Appointment[]
-  reports             Report[]
-  invoices            Invoice[]
-  invites             HospitalInvite[]
-  medicalCatalogItems MedicalCatalogItem[]
-  pharmacies          Pharmacy[]
-  pharmacyInvites     PharmacyInvite[]
-  pathologyLabs       PathologyLab[]
-  hospitalLabLinks    HospitalLabLink[]
-  labOrders           LabOrder[]
-  subscriptions       Subscription[]
-  referredBy          Referral?            @relation("TenantReferredBy", fields: [referredById], references: [id])
-  referralCommissions ReferralCommission[]
+  users                   User[]
+  departments             Department[]
+  patients                Patient[]
+  appointments            Appointment[]
+  reports                 Report[]
+  invoices                Invoice[]
+  invites                 HospitalInvite[]
+  medicalCatalogItems     MedicalCatalogItem[]
+  pharmacies              Pharmacy[]
+  pharmacyInvites         PharmacyInvite[]
+  pathologyLabs           PathologyLab[]
+  pathologyLabInvitesSent PathologyLabInvite[]
+  hospitalLabLinks        HospitalLabLink[]
+  labOrders               LabOrder[]
+  subscriptions           Subscription[]
+  referredBy              Referral?            @relation("TenantReferredBy", fields: [referredById], references: [id])
+  referralCommissions     ReferralCommission[]
 
   @@map("tenants")
 }
@@ -1406,6 +1407,25 @@ model PathologyLab {
   auditLogs     LabAuditLog[]
 
   @@map("pathology_labs")
+}
+
+// One-time self-registration link a hospital sends to onboard an independent
+// pathology lab. Completing it creates the lab's own Tenant/User/PathologyLab
+// (mirrors PharmacyInvite's shape) and an ACTIVE HospitalLabLink back to the
+// inviting hospital — unlike PharmacyInvite, the lab is NOT owned by the
+// inviting tenant, since PathologyLab.tenantId is 1:1 with its own tenant.
+model PathologyLabInvite {
+  id                String    @id @default(cuid())
+  invitedByTenantId String
+  invitedByUserId   String // audit-only User.id, no relation
+  token             String    @unique @default(cuid())
+  expiresAt         DateTime
+  usedAt            DateTime?
+  createdAt         DateTime  @default(now())
+
+  invitedByTenant Tenant @relation(fields: [invitedByTenantId], references: [id])
+
+  @@map("pathology_lab_invites")
 }
 
 // Many-to-many hospital<->lab partnership. A hospital raises the request
