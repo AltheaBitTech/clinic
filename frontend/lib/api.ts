@@ -139,6 +139,12 @@ export const analyticsApi = {
   getRevenueOverview: () => api.get('/analytics/revenue'),
 };
 
+export const hospitalReportsApi = {
+  run: (type: string, params?: any) => api.get(`/hospital-reports/${type}`, { params }),
+  export: (type: string, params?: any) =>
+    api.get(`/hospital-reports/${type}/export`, { params, responseType: 'blob' }),
+};
+
 export const dashboardApi = {
   getSuperAdmin: () => api.get('/dashboard/super-admin'),
   getHospital: () => api.get('/dashboard/hospital'),
@@ -289,7 +295,7 @@ export const pharmacyReportsApi = {
 export const pathologyLabsApi = {
   getAll: (search?: string) => api.get('/pathology-labs', { params: { search } }),
   getOne: (id: string) => api.get(`/pathology-labs/${id}`),
-  createInvite: () => api.post('/pathology-labs/invite'),
+  createInvite: (data?: { email?: string }) => api.post('/pathology-labs/invite', data),
   getInvite: (token: string) => api.get(`/pathology-labs/invite/${token}`),
   completeInvite: (token: string, data: any) =>
     api.post(`/pathology-labs/invite/${token}/complete`, data),

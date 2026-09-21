@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { pathologyLabsApi } from '@/lib/api';
@@ -105,6 +105,12 @@ function PathologyLabRegisterForm() {
     enabled: !!token,
     retry: false,
   });
+
+  const invitedEmail: string | undefined = inviteQuery.data?.email || undefined;
+
+  useEffect(() => {
+    if (invitedEmail) setForm((prev) => ({ ...prev, email: invitedEmail }));
+  }, [invitedEmail]);
 
   const submitMutation = useMutation({
     mutationFn: (data: FormData) => pathologyLabsApi.completeInvite(token as string, data),
@@ -300,11 +306,16 @@ function PathologyLabRegisterForm() {
                   type="email"
                   value={form.email}
                   onChange={(e) => set('email', e.target.value)}
+                  readOnly={!!invitedEmail}
                   placeholder="lab@example.com"
-                  className={`input pl-10 ${errors.email ? 'border-red-300' : ''}`}
+                  className={`input pl-10 ${errors.email ? 'border-red-300' : ''} ${invitedEmail ? 'bg-slate-50 cursor-not-allowed' : ''}`}
                 />
               </div>
-              <p className="text-[11px] text-slate-400">This is also your login email.</p>
+              <p className="text-[11px] text-slate-400">
+                {invitedEmail
+                  ? 'This is the email your invite was sent to — it will also be your login email.'
+                  : 'This is also your login email.'}
+              </p>
             </FormField>
           </div>
         </FormSection>

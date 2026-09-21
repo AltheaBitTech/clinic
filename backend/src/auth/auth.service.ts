@@ -220,6 +220,16 @@ export class AuthService {
           userId: created.id,
           tenantId: dto.tenantId,
           patientCode: `P${Date.now().toString().slice(-8)}`,
+          dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+          gender: dto.gender,
+          bloodGroup: dto.bloodGroup,
+          address: dto.address,
+          city: dto.city,
+          emergencyName: dto.emergencyName,
+          emergencyPhone: dto.emergencyPhone,
+          emergencyRelation: dto.emergencyRelation,
+          allergies: dto.allergies || [],
+          chronicConditions: dto.chronicConditions || [],
         },
       });
 

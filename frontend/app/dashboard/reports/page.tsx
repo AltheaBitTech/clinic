@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { reportsApi, patientsApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -25,20 +25,13 @@ export default function ReportsPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadType, setUploadType] = useState('');
 
-  // Which patient the next upload will be linked to. Staff pick one; patients use their own profile.
+  // Which patient the next upload will be linked to. Only staff pick one —
+  // patients always upload against their own record, which the backend
+  // resolves server-side from the JWT, so there's nothing to select or wait
+  // on here for them.
   const [uploadPatient, setUploadPatient] = useState<any>(null);
   const [patientSearch, setPatientSearch] = useState('');
   const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
-
-  const { data: myPatientProfile } = useQuery({
-    queryKey: ['my-patient-profile'],
-    queryFn: () => patientsApi.getMe().then((r) => r.data),
-    enabled: isPatient,
-  });
-
-  useEffect(() => {
-    if (isPatient && myPatientProfile) setUploadPatient(myPatientProfile);
-  }, [isPatient, myPatientProfile]);
 
   const { data: patientsData, isLoading: isLoadingPatients } = useQuery({
     queryKey: ['patients-search-reports', patientSearch],
@@ -58,7 +51,7 @@ export default function ReportsPage() {
   );
 
   const handleUploadClick = () => {
-    if (!uploadPatient) {
+    if (!isPatient && !uploadPatient) {
       toast.error('Select a patient before uploading a report');
       return;
     }
@@ -72,13 +65,13 @@ export default function ReportsPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !uploadPatient || !uploadType) return;
+    if (!file || (!isPatient && !uploadPatient) || !uploadType) return;
 
     const fd = new FormData();
     fd.append('file', file);
     fd.append('title', file.name);
     fd.append('type', uploadType);
-    fd.append('patientId', uploadPatient.id);
+    if (uploadPatient) fd.append('patientId', uploadPatient.id);
 
     setUploading(true);
     try {

@@ -1,20 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { medicalCatalogApi } from '@/lib/api';
-import { 
-  Pill, Plus, Search, Trash2, ChevronDown, 
+import {
+  Pill, Plus, Search, Trash2, ChevronDown, ChevronLeft, ChevronRight,
   Loader2, Sparkles, AlertCircle, FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatDate } from '@/lib/utils';
+
+const ITEMS_PER_PAGE = 10;
 
 export default function MedicinesCatalogPage() {
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<'MEDICINE' | 'OINTMENT'>('MEDICINE');
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Form states
   const [name, setName] = useState('');
@@ -58,7 +61,7 @@ export default function MedicinesCatalogPage() {
     setName('');
     setDosage('');
     setFrequency(activeTab === 'MEDICINE' ? 'Once daily' : 'As needed (PRN)');
-    setTiming('AFTER_FOOD');
+    setTiming(activeTab === 'MEDICINE' ? 'AFTER_FOOD' : 'AFTER_BATH');
     setIsModalOpen(true);
   };
 
@@ -96,6 +99,20 @@ export default function MedicinesCatalogPage() {
     const q = searchQuery.toLowerCase();
     return n.includes(q) || d.includes(q);
   }) || [];
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / ITEMS_PER_PAGE));
+  const paginatedItems = useMemo(
+    () => filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
+    [filteredItems, currentPage]
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-5xl mx-auto">
@@ -165,31 +182,36 @@ export default function MedicinesCatalogPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Item Name</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Default Dosage</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Default Frequency</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Default Timing</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date Configured</th>
+                <tr className="border-b border-slate-200">
+                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-slate-100">Item Name</th>
+                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-slate-100">Default Dosage</th>
+                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-slate-100">Default Frequency</th>
+                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-slate-100">Default Timing</th>
+                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-slate-100">Date Configured</th>
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.map((item: any) => (
-                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-none">
-                    <td className="py-3 px-4 text-xs font-semibold text-slate-900">{item.name}</td>
-                    <td className="py-3 px-4 text-xs text-slate-600">{item.dosage || 'None'}</td>
-                    <td className="py-3 px-4 text-xs text-slate-500">{item.frequency || 'None'}</td>
-                    <td className="py-3 px-4 text-xs">
+                {paginatedItems.map((item: any, idx: number) => (
+                  <tr
+                    key={item.id}
+                    className={`hover:bg-cyan-50/40 transition-colors border-b border-slate-100 last:border-none ${
+                      idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'
+                    }`}
+                  >
+                    <td className="py-3 px-4 text-xs font-semibold text-slate-900 border-r border-slate-100">{item.name}</td>
+                    <td className="py-3 px-4 text-xs text-slate-600 border-r border-slate-100">{item.dosage || 'None'}</td>
+                    <td className="py-3 px-4 text-xs text-slate-500 border-r border-slate-100">{item.frequency || 'None'}</td>
+                    <td className="py-3 px-4 text-xs border-r border-slate-100">
                       {item.timing ? (
                         <span className="badge bg-cyan-50 text-cyan-700 text-[10px] font-bold">
-                          {item.timing.replace('_', ' ')}
+                          {item.timing.replace(/_/g, ' ')}
                         </span>
                       ) : (
                         <span className="text-slate-400">None</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-xs text-slate-400">{formatDate(item.createdAt)}</td>
+                    <td className="py-3 px-4 text-xs text-slate-400 border-r border-slate-100">{formatDate(item.createdAt)}</td>
                     <td className="py-3 px-4 text-xs text-right">
                       <button
                         onClick={() => handleDelete(item.id)}
@@ -207,6 +229,35 @@ export default function MedicinesCatalogPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {!isLoading && filteredItems.length > 0 && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
+          <p className="text-sm text-slate-500">
+            <span className="font-semibold text-slate-700">{filteredItems.length}</span>{' '}
+            {activeTab === 'MEDICINE' ? 'medicines' : 'ointments'} total
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="btn-secondary text-sm px-3.5 py-2 disabled:opacity-40 flex items-center gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" /> Previous
+            </button>
+            <span className="text-sm text-slate-600 px-3 font-medium">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="btn-secondary text-sm px-3.5 py-2 disabled:opacity-40 flex items-center gap-1"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* CREATE MODAL */}
       {isModalOpen && (
@@ -278,8 +329,18 @@ export default function MedicinesCatalogPage() {
                       onChange={(e) => setTiming(e.target.value)}
                       className="input appearance-none pr-10 text-xs"
                     >
-                      <option value="AFTER_FOOD">After Food</option>
-                      <option value="BEFORE_FOOD">Before Food</option>
+                      {activeTab === 'MEDICINE' ? (
+                        <>
+                          <option value="AFTER_FOOD">After Food</option>
+                          <option value="BEFORE_FOOD">Before Food</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="AFTER_BATH">After Bath</option>
+                          <option value="BEFORE_SLEEPING">Before Sleeping</option>
+                          <option value="AFTER_WASHING_CLEANING_SKIN">After Washing/Cleaning the Skin</option>
+                        </>
+                      )}
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>

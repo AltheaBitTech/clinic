@@ -3,6 +3,7 @@ import {
   Logger,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
@@ -131,12 +132,29 @@ export class PatientsService {
     const where: any = { tenantId };
 
     if (search) {
+      const trimmed = search.trim();
+      const words = trimmed.split(/\s+/).filter(Boolean);
+
       where.OR = [
-        { patientCode: { contains: search, mode: 'insensitive' } },
-        { user: { firstName: { contains: search, mode: 'insensitive' } } },
-        { user: { lastName: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } },
-        { user: { phone: { contains: search, mode: 'insensitive' } } },
+        { patientCode: { contains: trimmed, mode: 'insensitive' } },
+        { user: { email: { contains: trimmed, mode: 'insensitive' } } },
+        { user: { phone: { contains: trimmed, mode: 'insensitive' } } },
+        { user: { firstName: { contains: trimmed, mode: 'insensitive' } } },
+        { user: { lastName: { contains: trimmed, mode: 'insensitive' } } },
+        // Full-name search (e.g. "John Doe"): every word must match either
+        // the first or last name, regardless of order.
+        ...(words.length > 1
+          ? [
+              {
+                AND: words.map((word) => ({
+                  OR: [
+                    { user: { firstName: { contains: word, mode: 'insensitive' } } },
+                    { user: { lastName: { contains: word, mode: 'insensitive' } } },
+                  ],
+                })),
+              },
+            ]
+          : []),
       ];
     }
 
@@ -206,24 +224,57 @@ export class PatientsService {
     return patient;
   }
 
-  async update(id: string, tenantId: string, dto: UpdatePatientDto) {
-    await this.findOne(id, tenantId);
-    return this.prisma.patient.update({
-      where: { id },
-      data: {
-        dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
-        gender: dto.gender,
-        bloodGroup: dto.bloodGroup,
-        address: dto.address,
-        city: dto.city,
-        emergencyName: dto.emergencyName,
-        emergencyPhone: dto.emergencyPhone,
-        emergencyRelation: dto.emergencyRelation,
-        allergies: dto.allergies,
-        chronicConditions: dto.chronicConditions,
-        notes: dto.notes,
-      },
-      include: { user: true, familyMembers: true },
+  async update(
+    id: string,
+    tenantId: string,
+    dto: UpdatePatientDto,
+    requestingUser?: { id: string; role: string },
+  ) {
+    const existing = await this.findOne(id, tenantId);
+    if (
+      requestingUser?.role === 'PATIENT' &&
+      existing.userId !== requestingUser.id
+    ) {
+      throw new ForbiddenException(
+        'You can only update your own patient record',
+      );
+    }
+
+    if (dto.phone) {
+      const phoneOwner = await this.prisma.user.findUnique({
+        where: { phone: dto.phone },
+      });
+      if (phoneOwner && phoneOwner.id !== existing.userId) {
+        throw new ConflictException(
+          'Phone number is already in use by another account',
+        );
+      }
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      if (dto.phone !== undefined) {
+        await tx.user.update({
+          where: { id: existing.userId },
+          data: { phone: dto.phone || null },
+        });
+      }
+      return tx.patient.update({
+        where: { id },
+        data: {
+          dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+          gender: dto.gender,
+          bloodGroup: dto.bloodGroup,
+          address: dto.address,
+          city: dto.city,
+          emergencyName: dto.emergencyName,
+          emergencyPhone: dto.emergencyPhone,
+          emergencyRelation: dto.emergencyRelation,
+          allergies: dto.allergies,
+          chronicConditions: dto.chronicConditions,
+          notes: dto.notes,
+        },
+        include: { user: true, familyMembers: true },
+      });
     });
   }
 

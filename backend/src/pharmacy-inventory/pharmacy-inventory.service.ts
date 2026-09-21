@@ -135,7 +135,7 @@ export class PharmacyInventoryService {
     });
     if (existing) {
       throw new BadRequestException(
-        'A batch with this batch number already exists for this medicine — use Manual Stock Adjustment on it instead',
+        `Batch ${dto.batchNo} already exists for this medicine. Please select "Adjust Existing Batch".`,
       );
     }
 

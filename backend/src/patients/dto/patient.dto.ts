@@ -12,7 +12,7 @@ import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Gender } from '@prisma/client';
 import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
 import { IsNotFutureDate } from '../../common/validators/is-not-future-date.validator';
-import { IsPersonName } from '../../common/validators/is-person-name.validator';
+import { IsPersonName, IsOptionalPersonName } from '../../common/validators/is-person-name.validator';
 
 export class CreatePatientDto {
   @ApiProperty() @IsEmail() email: string;
@@ -33,9 +33,9 @@ export class CreatePatientDto {
   @ApiPropertyOptional() @IsOptional() @IsString() bloodGroup?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() address?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() city?: string;
-  @ApiPropertyOptional() @IsOptional() @IsString() emergencyName?: string;
+  @ApiPropertyOptional() @IsOptionalPersonName() emergencyName?: string;
   @ApiPropertyOptional() @IsOptionalPhoneNumber10() emergencyPhone?: string;
-  @ApiPropertyOptional() @IsOptional() @IsString() emergencyRelation?: string;
+  @ApiPropertyOptional() @IsOptionalPersonName() emergencyRelation?: string;
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()

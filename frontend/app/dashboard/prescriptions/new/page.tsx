@@ -58,7 +58,7 @@ function NewPrescriptionContent() {
       dosage: '',
       frequency: 'As needed (PRN)',
       duration: '5 days',
-      timing: 'AFTER_FOOD',
+      timing: 'AFTER_BATH',
       instructions: '',
       reminderTimes: [],
       newTime: '',
@@ -170,7 +170,7 @@ function NewPrescriptionContent() {
         dosage: '',
         frequency: 'As needed (PRN)',
         duration: '5 days',
-        timing: 'AFTER_FOOD',
+        timing: 'AFTER_BATH',
         instructions: '',
         reminderTimes: [],
         newTime: '',
@@ -338,16 +338,44 @@ function NewPrescriptionContent() {
       return;
     }
 
+    const notPurelyNumeric = /[a-zA-Z]/;
+    const alphaOnly = /^[A-Za-z][A-Za-z\s'-]*$/;
+
+    if (diagnosis.trim() && !notPurelyNumeric.test(diagnosis)) {
+      toast.error('Diagnosis / Assessment cannot be a numeric value');
+      return;
+    }
+    if (notes.trim() && !notPurelyNumeric.test(notes)) {
+      toast.error('General Notes / Patient Instructions cannot be a numeric value');
+      return;
+    }
+
     // Validate medicines fields
     for (let i = 0; i < medicines.length; i++) {
       const med = medicines[i];
       if (med.name.trim()) {
+        if (!notPurelyNumeric.test(med.name)) {
+          toast.error(`Medicine Name for Medicine #${i + 1} cannot be a numeric value`);
+          return;
+        }
         if (!med.dosage.trim()) {
           toast.error(`Please enter dosage for Medicine #${i + 1}`);
           return;
         }
+        if (!notPurelyNumeric.test(med.dosage)) {
+          toast.error(`Dosage for Medicine #${i + 1} cannot be a numeric value`);
+          return;
+        }
         if (!med.duration.trim()) {
           toast.error(`Please enter duration for Medicine #${i + 1}`);
+          return;
+        }
+        if (!notPurelyNumeric.test(med.duration)) {
+          toast.error(`Duration for Medicine #${i + 1} cannot be a numeric value`);
+          return;
+        }
+        if (med.instructions?.trim() && !notPurelyNumeric.test(med.instructions)) {
+          toast.error(`Specific Instructions for Medicine #${i + 1} cannot be a numeric value`);
           return;
         }
       }
@@ -357,12 +385,28 @@ function NewPrescriptionContent() {
     for (let i = 0; i < ointments.length; i++) {
       const oint = ointments[i];
       if (oint.name.trim()) {
+        if (!alphaOnly.test(oint.name.trim())) {
+          toast.error(`Ointment Name for Ointment #${i + 1} must contain only alphabetic characters`);
+          return;
+        }
         if (!oint.dosage.trim()) {
           toast.error(`Please enter dosage for Ointment #${i + 1}`);
           return;
         }
+        if (!notPurelyNumeric.test(oint.dosage)) {
+          toast.error(`Application Dosage for Ointment #${i + 1} cannot be a numeric value`);
+          return;
+        }
         if (!oint.duration.trim()) {
           toast.error(`Please enter duration for Ointment #${i + 1}`);
+          return;
+        }
+        if (!notPurelyNumeric.test(oint.duration)) {
+          toast.error(`Duration for Ointment #${i + 1} cannot be a numeric value`);
+          return;
+        }
+        if (oint.instructions?.trim() && !notPurelyNumeric.test(oint.instructions)) {
+          toast.error(`Specific Instructions for Ointment #${i + 1} cannot be a numeric value`);
           return;
         }
       }
@@ -1021,8 +1065,9 @@ function NewPrescriptionContent() {
                         required
                         value={oint.name}
                         onChange={(e) => {
-                          updateOintment(index, 'name', e.target.value);
-                          fetchSuggestions(e.target.value, 'OINTMENT', index);
+                          const alphaValue = e.target.value.replace(/[^A-Za-z\s'-]/g, '');
+                          updateOintment(index, 'name', alphaValue);
+                          fetchSuggestions(alphaValue, 'OINTMENT', index);
                         }}
                         placeholder="Search or type name..."
                         className="input text-sm"
@@ -1107,8 +1152,9 @@ function NewPrescriptionContent() {
                           onChange={(e) => updateOintment(index, 'timing', e.target.value)}
                           className="input text-sm appearance-none pr-10"
                         >
-                          <option value="AFTER_FOOD">After Food (PC)</option>
-                          <option value="BEFORE_FOOD">Before Food (AC)</option>
+                          <option value="AFTER_BATH">After Bath</option>
+                          <option value="BEFORE_SLEEPING">Before Sleeping</option>
+                          <option value="AFTER_WASHING_CLEANING_SKIN">After Washing/Cleaning the Skin</option>
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                       </div>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { patientsApi } from '@/lib/api';
-import { isValidPhone, getNameError } from '@/lib/utils';
+import { isValidPhone, getNameError, isValidPersonName, stripDigits } from '@/lib/utils';
 import {
   ArrowLeft, User, Mail, Phone, Calendar, Heart, Plus, X,
   MapPin, ShieldAlert, FileText, Loader2, Sparkles, ChevronDown,
@@ -176,6 +176,14 @@ export default function NewPatientPage() {
     }
     if (emergencyPhone && !isValidPhone(emergencyPhone)) {
       toast.error('Enter a valid 10-digit emergency contact phone number.');
+      return;
+    }
+    if (emergencyName && !isValidPersonName(emergencyName)) {
+      toast.error('Enter a valid emergency contact name.');
+      return;
+    }
+    if (emergencyRelation && !isValidPersonName(emergencyRelation)) {
+      toast.error('Enter a valid emergency contact relation.');
       return;
     }
 
@@ -439,7 +447,7 @@ export default function NewPatientPage() {
               <input
                 type="text"
                 value={emergencyName}
-                onChange={(e) => setEmergencyName(e.target.value)}
+                onChange={(e) => setEmergencyName(stripDigits(e.target.value))}
                 placeholder="Full Name"
                 className="input"
               />
@@ -452,7 +460,7 @@ export default function NewPatientPage() {
               <input
                 type="text"
                 value={emergencyRelation}
-                onChange={(e) => setEmergencyRelation(e.target.value)}
+                onChange={(e) => setEmergencyRelation(stripDigits(e.target.value))}
                 placeholder="e.g. Spouse, Parent, Sibling"
                 className="input"
               />

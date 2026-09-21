@@ -10,6 +10,24 @@ export function isValidPhone(phone: string): boolean {
   return /^\d{10}$/.test(phone.trim());
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function isValidEmail(email: string): boolean {
+  return EMAIL_REGEX.test(email.trim());
+}
+
+const GSTIN_REGEX = /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+export function isValidGstin(gstin: string): boolean {
+  return GSTIN_REGEX.test(gstin.trim().toUpperCase());
+}
+
+const LICENSE_NO_REGEX = /^[A-Za-z0-9/-]{4,30}$/;
+
+export function isValidLicenseNo(licenseNo: string): boolean {
+  return LICENSE_NO_REGEX.test(licenseNo.trim());
+}
+
 export const PERSON_NAME_REGEX = /^\p{L}+(?:[\s'-]\p{L}+)*$/u;
 export const PERSON_NAME_ERROR =
   'must be 2-50 characters and contain only letters, spaces, hyphens, or apostrophes';
@@ -25,6 +43,11 @@ export function getNameError(value: string, label: string): string | undefined {
   if (!trimmed) return `${label} is required`;
   if (!isValidPersonName(trimmed)) return `${label} ${PERSON_NAME_ERROR}`;
   return undefined;
+}
+
+/** Strips numeric digits from free-text fields (e.g. reason/notes) so only text can be entered. */
+export function stripDigits(value: string): string {
+  return value.replace(/[0-9]/g, '');
 }
 
 export function formatDate(date: string | Date, fmt = 'dd MMM yyyy') {
@@ -56,6 +79,18 @@ export function getRoleBadgeColor(role: string) {
     PATIENT: 'bg-gray-100 text-gray-800',
   };
   return colors[role] || 'bg-gray-100 text-gray-800';
+}
+
+/**
+ * Appointments left SCHEDULED/CONFIRMED past their scheduled time were never
+ * checked in or resolved by staff — nothing in the backend auto-transitions
+ * them, so treat them as NO_SHOW for display purposes only.
+ */
+export function getEffectiveAppointmentStatus(status: string, scheduledAt: string | Date) {
+  if ((status === 'SCHEDULED' || status === 'CONFIRMED') && new Date(scheduledAt).getTime() < Date.now()) {
+    return 'NO_SHOW';
+  }
+  return status;
 }
 
 export function getStatusColor(status: string) {

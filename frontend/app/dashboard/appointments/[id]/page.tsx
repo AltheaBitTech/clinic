@@ -10,9 +10,9 @@ import {
   ArrowLeft, Calendar, Clock, User, Phone, Mail, FileText, Plus, Check,
   X, AlertCircle, Loader2, Sparkles, HeartPulse, Activity, CreditCard,
   ChevronRight, CalendarPlus, FileCheck, Ban, CheckSquare, RefreshCw,
-  Heart, ShieldAlert, Award, FileSpreadsheet, Stethoscope
+  Heart, ShieldAlert, Award, FileSpreadsheet, Stethoscope, UserX
 } from 'lucide-react';
-import { cn, formatDateTime, getStatusColor, formatCurrency } from '@/lib/utils';
+import { cn, formatDateTime, getStatusColor, formatCurrency, getEffectiveAppointmentStatus } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export default function AppointmentDetailPage() {
@@ -136,6 +136,9 @@ export default function AppointmentDetailPage() {
     );
   }
 
+  const effectiveStatus = getEffectiveAppointmentStatus(appt.status, appt.scheduledAt);
+  const hasPrescription = !!appt.prescriptions && appt.prescriptions.length > 0;
+
   // Pre-populate amount if doctor has consultationFee
   const handleOpenInvoiceForm = () => {
     const fee = Number(appt.doctor?.consultationFee || 500);
@@ -162,7 +165,14 @@ export default function AppointmentDetailPage() {
       setShowCancelDialog(true);
       return;
     }
-    updateStatusMutation.mutate({ status });
+    updateStatusMutation.mutate(
+      { status },
+      {
+        onSuccess: () => {
+          if (status === 'COMPLETED') setShowFollowUpForm(true);
+        },
+      },
+    );
   };
 
   const handleCancelSubmit = (e: React.FormEvent) => {
@@ -224,8 +234,8 @@ export default function AppointmentDetailPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className={cn('badge text-sm px-3.5 py-1.5 font-semibold rounded-full shadow-sm', getStatusColor(appt.status))}>
-            {appt.status}
+          <span className={cn('badge text-sm px-3.5 py-1.5 font-semibold rounded-full shadow-sm', getStatusColor(effectiveStatus))}>
+            {effectiveStatus === 'NO_SHOW' ? 'No Show' : appt.status}
           </span>
           <span className="text-xs text-slate-400 font-medium bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
             {appt.type}
@@ -441,7 +451,7 @@ export default function AppointmentDetailPage() {
                               <div className="flex items-center gap-2">
                                 <span className="bg-cyan-50 text-cyan-600 px-2 py-0.5 rounded font-semibold">{med.frequency}</span>
                                 <span className="bg-slate-50 text-slate-500 px-2 py-0.5 rounded border border-slate-100">{med.duration}</span>
-                                <span className="text-slate-400 font-medium italic capitalize">{med.timing.toLowerCase().replace('_', ' ')}</span>
+                                <span className="text-slate-400 font-medium italic capitalize">{med.timing.toLowerCase().replace(/_/g, ' ')}</span>
                               </div>
                             </div>
                           ))}
@@ -483,7 +493,13 @@ export default function AppointmentDetailPage() {
               {/* Scheduled / Confirmed State -> In Progress */}
               {(appt.status === 'SCHEDULED' || appt.status === 'CONFIRMED') && isStaff && (
                 <div className="space-y-2">
-                  {appt.status === 'SCHEDULED' && (
+                  {effectiveStatus === 'NO_SHOW' && (
+                    <p className="text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      Scheduled time has passed without check-in.
+                    </p>
+                  )}
+                  {appt.status === 'SCHEDULED' && effectiveStatus !== 'NO_SHOW' && (
                     <button
                       onClick={() => handleStatusChange('CONFIRMED')}
                       className="w-full bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-cyan-100"
@@ -497,20 +513,34 @@ export default function AppointmentDetailPage() {
                   >
                     <Activity className="w-4 h-4 animate-pulse" /> Check In & Start Visit
                   </button>
+                  {effectiveStatus === 'NO_SHOW' && (
+                    <button
+                      onClick={() => handleStatusChange('NO_SHOW')}
+                      className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-semibold py-2 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <UserX className="w-3.5 h-3.5" /> Mark as No Show
+                    </button>
+                  )}
                 </div>
               )}
 
               {/* In Progress State -> Completed */}
               {appt.status === 'IN_PROGRESS' && isStaff && (
-                <button
-                  onClick={() => {
-                    handleStatusChange('COMPLETED');
-                    setShowFollowUpForm(true);
-                  }}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2 hover:shadow-green-100"
-                >
-                  <FileCheck className="w-4 h-4" /> Complete Appointment
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handleStatusChange('COMPLETED')}
+                    disabled={!hasPrescription || updateStatusMutation.isPending}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2 hover:shadow-green-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                  >
+                    <FileCheck className="w-4 h-4" /> Complete Appointment
+                  </button>
+                  {!hasPrescription && isDoctor && (
+                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      Write a prescription before marking this appointment complete.
+                    </p>
+                  )}
+                </div>
               )}
 
               {/* Cancellation Option (Only available before completion or cancellation) */}

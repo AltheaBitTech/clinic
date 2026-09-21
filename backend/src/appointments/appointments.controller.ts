@@ -38,6 +38,7 @@ export class AppointmentsController {
   @ApiQuery({ name: 'patientId', required: false })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'date', required: false })
+  @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'page', required: false })
   findAll(
     @CurrentUser() user: any,
@@ -45,9 +46,10 @@ export class AppointmentsController {
     @Query('patientId') patientId?: string,
     @Query('status') status?: string,
     @Query('date') date?: string,
+    @Query('search') search?: string,
     @Query('page') page?: number,
   ) {
-    const filters: any = { doctorId, patientId, status, date };
+    const filters: any = { doctorId, patientId, status, date, search };
     return this.appointmentsService.findAll(user, filters, page);
   }
 

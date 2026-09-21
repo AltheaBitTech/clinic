@@ -103,6 +103,17 @@ export class UpdatePathologyLabDto extends PartialType(CreatePathologyLabDto) {
   isActive?: boolean;
 }
 
+export class InvitePathologyLabDto {
+  @ApiPropertyOptional({
+    example: 'sunrise@example.com',
+    description:
+      'Email address to send the self-registration invite link to. If omitted, only the link is generated for manual sharing.',
+  })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+}
+
 export class CompletePathologyLabInviteDto {
   @ApiProperty({ example: 'Sunrise Diagnostics', description: 'Lab name' })
   @IsString()

@@ -472,45 +472,49 @@ function PosModal({ onClose }: { onClose: () => void }) {
                 No items added yet.
               </div>
             ) : (
-              <div className="overflow-x-auto border border-slate-100 rounded-xl">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50">
-                      <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Medicine</th>
-                      <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Batch</th>
-                      <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Qty</th>
-                      <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Price</th>
-                      <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">GST %</th>
-                      <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</th>
-                      <th className="py-2 px-3"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cart.map((c, idx) => (
-                      <tr key={c.batchId} className="border-b border-slate-50 last:border-none">
-                        <td className="py-2 px-3 text-xs font-semibold text-slate-800">{c.medicineName}</td>
-                        <td className="py-2 px-3 text-xs text-slate-500">{c.batchNo}</td>
-                        <td className="py-2 px-3">
+              <>
+                {/* Mobile: stacked cards, no horizontal scroll */}
+                <div className="sm:hidden divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+                  {cart.map((c, idx) => (
+                    <div key={c.batchId} className="p-3 space-y-2.5 bg-white">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-800 truncate">{c.medicineName}</p>
+                          <p className="text-[11px] text-slate-400">Batch {c.batchNo}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeCartItem(idx)}
+                          className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Qty</label>
                           <input
                             type="number"
                             min={1}
                             max={c.availableQty}
                             value={c.quantity}
                             onChange={(e) => updateCartItem(idx, 'quantity', e.target.value)}
-                            className="input text-xs py-1.5 px-2 w-16"
+                            className="input text-xs py-1.5 px-2 w-full"
                           />
-                        </td>
-                        <td className="py-2 px-3">
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Price</label>
                           <input
                             type="number"
                             min={0}
                             step="0.01"
                             value={c.unitPrice}
                             onChange={(e) => updateCartItem(idx, 'unitPrice', e.target.value)}
-                            className="input text-xs py-1.5 px-2 w-20"
+                            className="input text-xs py-1.5 px-2 w-full"
                           />
-                        </td>
-                        <td className="py-2 px-3">
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">GST %</label>
                           <input
                             type="number"
                             min={0}
@@ -518,24 +522,84 @@ function PosModal({ onClose }: { onClose: () => void }) {
                             step="0.01"
                             value={c.gstPercent}
                             onChange={(e) => updateCartItem(idx, 'gstPercent', e.target.value)}
-                            className="input text-xs py-1.5 px-2 w-16"
+                            className="input text-xs py-1.5 px-2 w-full"
                           />
-                        </td>
-                        <td className="py-2 px-3 text-xs font-semibold text-slate-700">{formatCurrency(lineAmount(c) + lineTax(c))}</td>
-                        <td className="py-2 px-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => removeCartItem(idx)}
-                            className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-1.5 border-t border-slate-50">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</span>
+                        <span className="text-xs font-bold text-slate-800">{formatCurrency(lineAmount(c) + lineTax(c))}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop/tablet: table */}
+                <div className="hidden sm:block overflow-x-auto border border-slate-100 rounded-xl">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50">
+                        <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Medicine</th>
+                        <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Batch</th>
+                        <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Qty</th>
+                        <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Price</th>
+                        <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">GST %</th>
+                        <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</th>
+                        <th className="py-2 px-3"></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {cart.map((c, idx) => (
+                        <tr key={c.batchId} className="border-b border-slate-50 last:border-none">
+                          <td className="py-2 px-3 text-xs font-semibold text-slate-800">{c.medicineName}</td>
+                          <td className="py-2 px-3 text-xs text-slate-500">{c.batchNo}</td>
+                          <td className="py-2 px-3">
+                            <input
+                              type="number"
+                              min={1}
+                              max={c.availableQty}
+                              value={c.quantity}
+                              onChange={(e) => updateCartItem(idx, 'quantity', e.target.value)}
+                              className="input text-xs py-1.5 px-2 w-16"
+                            />
+                          </td>
+                          <td className="py-2 px-3">
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={c.unitPrice}
+                              onChange={(e) => updateCartItem(idx, 'unitPrice', e.target.value)}
+                              className="input text-xs py-1.5 px-2 w-20"
+                            />
+                          </td>
+                          <td className="py-2 px-3">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step="0.01"
+                              value={c.gstPercent}
+                              onChange={(e) => updateCartItem(idx, 'gstPercent', e.target.value)}
+                              className="input text-xs py-1.5 px-2 w-16"
+                            />
+                          </td>
+                          <td className="py-2 px-3 text-xs font-semibold text-slate-700">{formatCurrency(lineAmount(c) + lineTax(c))}</td>
+                          <td className="py-2 px-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => removeCartItem(idx)}
+                              className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
 
@@ -598,7 +662,7 @@ function PosModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Summary */}
-          <div className="grid grid-cols-2 gap-6 border-t border-slate-100 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 border-t border-slate-100 pt-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-slate-500 shrink-0">Overall Discount</span>
@@ -608,13 +672,13 @@ function PosModal({ onClose }: { onClose: () => void }) {
                   step="0.01"
                   value={discount}
                   onChange={(e) => setDiscount(e.target.value)}
-                  className="input text-xs py-1.5 w-28 text-right"
+                  className="input text-xs py-1.5 w-24 sm:w-28 text-right shrink-0"
                 />
               </div>
               <SummaryRow label="Subtotal" value={formatCurrency(subtotal)} />
               <SummaryRow label="GST / Tax" value={formatCurrency(totalTax)} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 border-t border-slate-100 pt-2 sm:border-t-0 sm:pt-0">
               <div className="flex items-center justify-between pt-1">
                 <span className="text-sm font-bold text-slate-800 uppercase tracking-wide">Total</span>
                 <span className="text-lg font-extrabold text-cyan-700">{formatCurrency(total)}</span>
@@ -629,11 +693,11 @@ function PosModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="shrink-0 flex justify-end gap-3 px-4 sm:px-6 py-4 border-t border-slate-100 max-w-5xl w-full mx-auto">
-          <button type="button" onClick={onClose} className="btn-secondary">
+        <div className="shrink-0 flex gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 max-w-5xl w-full mx-auto bg-white sm:justify-end">
+          <button type="button" onClick={onClose} className="btn-secondary flex-1 sm:flex-none">
             Cancel
           </button>
-          <button type="submit" disabled={isSubmitting} className="btn-primary flex items-center gap-2">
+          <button type="submit" disabled={isSubmitting} className="btn-primary flex items-center justify-center gap-2 flex-1 sm:flex-none">
             <CreditCard className="w-4 h-4" />
             {isSubmitting ? 'Processing...' : 'Complete Sale'}
           </button>

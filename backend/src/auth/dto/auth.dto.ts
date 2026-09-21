@@ -1,7 +1,18 @@
-import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  Matches,
+  IsOptional,
+  IsEnum,
+  IsDateString,
+  IsArray,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Gender } from '@prisma/client';
 import { IsOptionalPhoneNumber10 } from '../../common/validators/is-phone-number.validator';
+import { IsNotFutureDate } from '../../common/validators/is-not-future-date.validator';
 import {
   IsPersonName,
   IsOptionalPersonName,
@@ -46,6 +57,34 @@ export class RegisterDto {
   })
   @IsString()
   emailVerificationToken: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  @IsNotFutureDate()
+  dateOfBirth?: string;
+
+  @ApiPropertyOptional({ enum: Gender })
+  @IsOptional()
+  @IsEnum(Gender)
+  gender?: Gender;
+
+  @ApiPropertyOptional() @IsOptional() @IsString() bloodGroup?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() address?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() city?: string;
+  @ApiPropertyOptional() @IsOptionalPersonName() emergencyName?: string;
+  @ApiPropertyOptional() @IsOptionalPhoneNumber10() emergencyPhone?: string;
+  @ApiPropertyOptional() @IsOptionalPersonName() emergencyRelation?: string;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  allergies?: string[];
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  chronicConditions?: string[];
 }
 
 export class LoginDto {

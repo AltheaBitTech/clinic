@@ -106,6 +106,12 @@ export type StaffInviteEmail = {
   inviteUrl: string;
 };
 
+export type PathologyLabInviteEmail = {
+  recipientEmail: string;
+  hospitalName: string;
+  inviteUrl: string;
+};
+
 export type AccountStatusEmail = {
   recipientEmail: string;
   userName: string;
@@ -716,6 +722,27 @@ If you have questions, please reply to this email or contact our support team.`,
 You've been invited to join ${hospitalName} on Arogyix as a ${roleLabel}.
 
 Accept your invite: ${params.inviteUrl}
+
+This link expires in 7 days. If you weren't expecting this invite, you can ignore this email.`,
+    });
+  }
+
+  async sendPathologyLabInvite(params: PathologyLabInviteEmail): Promise<void> {
+    const hospitalName = this.toSafePlainText(params.hospitalName);
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: `${hospitalName} invited you to join Arogyix as a partner lab`,
+      context: `pathology lab invite (hospital=${hospitalName})`,
+      html: `<p>Hello,</p>
+<p><strong>${this.escapeHtml(hospitalName)}</strong> has invited your pathology lab to register as an independent partner lab on Arogyix.</p>
+<p><a href="${this.escapeHtml(params.inviteUrl)}">Click here to complete your lab's registration</a> and set up your account. This link expires in 7 days.</p>
+<p>If you weren't expecting this invite, you can ignore this email.</p>`,
+      text: `Hello,
+
+${hospitalName} has invited your pathology lab to register as an independent partner lab on Arogyix.
+
+Complete your registration: ${params.inviteUrl}
 
 This link expires in 7 days. If you weren't expecting this invite, you can ignore this email.`,
     });

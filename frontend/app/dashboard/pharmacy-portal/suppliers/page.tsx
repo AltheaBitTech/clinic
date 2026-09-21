@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pharmacySuppliersApi } from '@/lib/api';
-import { isValidPhone } from '@/lib/utils';
+import { isValidPhone, isValidEmail, isValidGstin, isValidLicenseNo } from '@/lib/utils';
 import { Truck, Plus, Search, Loader2, Sparkles, Pencil, Power } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -32,6 +32,7 @@ export default function PharmacySuppliersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SupplierForm>(emptyForm);
+  const [errors, setErrors] = useState<Partial<Record<keyof SupplierForm, string>>>({});
 
   const { data: suppliers, isLoading } = useQuery({
     queryKey: ['pharmacy-suppliers', searchQuery, showInactive],
@@ -77,6 +78,7 @@ export default function PharmacySuppliersPage() {
   const openCreateModal = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setErrors({});
     setIsModalOpen(true);
   };
 
@@ -90,6 +92,7 @@ export default function PharmacySuppliersPage() {
       gstin: supplier.gstin || '',
       licenseNo: supplier.licenseNo || '',
     });
+    setErrors({});
     setIsModalOpen(true);
   };
 
@@ -97,25 +100,44 @@ export default function PharmacySuppliersPage() {
     setIsModalOpen(false);
     setEditingId(null);
     setForm(emptyForm);
+    setErrors({});
+  };
+
+  const validate = (): Partial<Record<keyof SupplierForm, string>> => {
+    const next: Partial<Record<keyof SupplierForm, string>> = {};
+    if (!form.name.trim()) {
+      next.name = 'Supplier name is required';
+    }
+    if (form.phone.trim() && !isValidPhone(form.phone)) {
+      next.phone = 'Enter a valid 10-digit phone number';
+    }
+    if (form.email.trim() && !isValidEmail(form.email)) {
+      next.email = 'Enter a valid email address';
+    }
+    if (form.gstin.trim() && !isValidGstin(form.gstin)) {
+      next.gstin = 'Enter a valid 15-character GSTIN (e.g. 27AAECW1234A1Z5)';
+    }
+    if (form.licenseNo.trim() && !isValidLicenseNo(form.licenseNo)) {
+      next.licenseNo = 'License No. must be 4-30 letters, numbers, "-" or "/"';
+    }
+    return next;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim()) {
-      toast.error('Supplier name is required');
-      return;
-    }
-    if (form.phone.trim() && !isValidPhone(form.phone)) {
-      toast.error('Enter a valid 10-digit phone number');
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
+      toast.error(Object.values(validationErrors)[0]!);
       return;
     }
     const payload = {
       name: form.name.trim(),
       phone: form.phone || undefined,
-      email: form.email || undefined,
-      address: form.address || undefined,
-      gstin: form.gstin || undefined,
-      licenseNo: form.licenseNo || undefined,
+      email: form.email.trim() || undefined,
+      address: form.address.trim() || undefined,
+      gstin: form.gstin.trim().toUpperCase() || undefined,
+      licenseNo: form.licenseNo.trim() || undefined,
     };
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: payload });
@@ -253,8 +275,9 @@ export default function PharmacySuppliersPage() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="e.g. Wellness Distributors Pvt Ltd"
-                  className="input text-sm"
+                  className={`input text-sm ${errors.name ? 'border-red-400 focus:border-red-400' : ''}`}
                 />
+                {errors.name && <p className="mt-1 text-[11px] text-red-500">{errors.name}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -266,8 +289,10 @@ export default function PharmacySuppliersPage() {
                     onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                     inputMode="numeric"
                     maxLength={10}
-                    className="input text-sm"
+                    placeholder="10-digit mobile number"
+                    className={`input text-sm ${errors.phone ? 'border-red-400 focus:border-red-400' : ''}`}
                   />
+                  {errors.phone && <p className="mt-1 text-[11px] text-red-500">{errors.phone}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
@@ -275,8 +300,10 @@ export default function PharmacySuppliersPage() {
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="input text-sm"
+                    placeholder="orders@supplier.com"
+                    className={`input text-sm ${errors.email ? 'border-red-400 focus:border-red-400' : ''}`}
                   />
+                  {errors.email && <p className="mt-1 text-[11px] text-red-500">{errors.email}</p>}
                 </div>
               </div>
 
@@ -296,18 +323,24 @@ export default function PharmacySuppliersPage() {
                   <input
                     type="text"
                     value={form.gstin}
-                    onChange={(e) => setForm({ ...form, gstin: e.target.value })}
-                    className="input text-sm"
+                    onChange={(e) => setForm({ ...form, gstin: e.target.value.toUpperCase().slice(0, 15) })}
+                    maxLength={15}
+                    placeholder="27AAECW1234A1Z5"
+                    className={`input text-sm uppercase ${errors.gstin ? 'border-red-400 focus:border-red-400' : ''}`}
                   />
+                  {errors.gstin && <p className="mt-1 text-[11px] text-red-500">{errors.gstin}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">License No.</label>
                   <input
                     type="text"
                     value={form.licenseNo}
-                    onChange={(e) => setForm({ ...form, licenseNo: e.target.value })}
-                    className="input text-sm"
+                    onChange={(e) => setForm({ ...form, licenseNo: e.target.value.slice(0, 30) })}
+                    maxLength={30}
+                    placeholder="DL-2024-56789"
+                    className={`input text-sm ${errors.licenseNo ? 'border-red-400 focus:border-red-400' : ''}`}
                   />
+                  {errors.licenseNo && <p className="mt-1 text-[11px] text-red-500">{errors.licenseNo}</p>}
                 </div>
               </div>
 

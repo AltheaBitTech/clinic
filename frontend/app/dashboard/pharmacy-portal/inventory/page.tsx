@@ -228,10 +228,11 @@ function DataTable({
 
 function AdjustStockModal({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
+  const [prefillBatchId, setPrefillBatchId] = useState('');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-md sm:max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
           <Sparkles className="w-5 h-5 text-cyan-600" />
           Manual Stock Adjustment
@@ -240,7 +241,10 @@ function AdjustStockModal({ onClose }: { onClose: () => void }) {
         <div className="flex gap-2 mb-4 bg-slate-100 rounded-lg p-1">
           <button
             type="button"
-            onClick={() => setMode('existing')}
+            onClick={() => {
+              setMode('existing');
+              setPrefillBatchId('');
+            }}
             className={`flex-1 text-xs font-semibold py-1.5 rounded-md transition-colors cursor-pointer ${
               mode === 'existing' ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500'
             }`}
@@ -249,7 +253,10 @@ function AdjustStockModal({ onClose }: { onClose: () => void }) {
           </button>
           <button
             type="button"
-            onClick={() => setMode('new')}
+            onClick={() => {
+              setMode('new');
+              setPrefillBatchId('');
+            }}
             className={`flex-1 text-xs font-semibold py-1.5 rounded-md transition-colors cursor-pointer ${
               mode === 'new' ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500'
             }`}
@@ -258,15 +265,25 @@ function AdjustStockModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {mode === 'existing' ? <AdjustExistingBatchForm onClose={onClose} /> : <AddNewBatchForm onClose={onClose} />}
+        {mode === 'existing' ? (
+          <AdjustExistingBatchForm onClose={onClose} initialBatchId={prefillBatchId} />
+        ) : (
+          <AddNewBatchForm
+            onClose={onClose}
+            onDuplicateBatch={(batchId) => {
+              setPrefillBatchId(batchId);
+              setMode('existing');
+            }}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-function AdjustExistingBatchForm({ onClose }: { onClose: () => void }) {
+function AdjustExistingBatchForm({ onClose, initialBatchId }: { onClose: () => void; initialBatchId?: string }) {
   const qc = useQueryClient();
-  const [batchId, setBatchId] = useState('');
+  const [batchId, setBatchId] = useState(initialBatchId || '');
   const [quantityChange, setQuantityChange] = useState('');
   const [reason, setReason] = useState('');
 
@@ -340,11 +357,11 @@ function AdjustExistingBatchForm({ onClose }: { onClose: () => void }) {
           required
         />
       </div>
-      <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-6">
-        <button type="button" onClick={onClose} className="btn-secondary">
+      <div className="flex gap-3 pt-3 border-t border-slate-100 mt-6 sm:justify-end">
+        <button type="button" onClick={onClose} className="btn-secondary flex-1 sm:flex-none">
           Cancel
         </button>
-        <button type="submit" disabled={adjustMutation.isPending} className="btn-primary">
+        <button type="submit" disabled={adjustMutation.isPending} className="btn-primary flex-1 sm:flex-none">
           {adjustMutation.isPending ? 'Saving...' : 'Apply Adjustment'}
         </button>
       </div>
@@ -352,7 +369,13 @@ function AdjustExistingBatchForm({ onClose }: { onClose: () => void }) {
   );
 }
 
-function AddNewBatchForm({ onClose }: { onClose: () => void }) {
+function AddNewBatchForm({
+  onClose,
+  onDuplicateBatch,
+}: {
+  onClose: () => void;
+  onDuplicateBatch: (batchId: string) => void;
+}) {
   const qc = useQueryClient();
   const [medicineId, setMedicineId] = useState('');
   const [batchNo, setBatchNo] = useState('');
@@ -377,6 +400,29 @@ function AddNewBatchForm({ onClose }: { onClose: () => void }) {
     queryKey: ['pharmacy-suppliers-all'],
     queryFn: () => pharmacySuppliersApi.getAll().then((r) => r.data),
   });
+
+  const { data: batches } = useQuery({
+    queryKey: ['pharmacy-inventory-batches'],
+    queryFn: () => pharmacyInventoryApi.getBatches().then((r) => r.data),
+  });
+
+  const selectedMedicine = (medicines || []).find((m: any) => m.id === medicineId);
+  const trimmedBatchNo = batchNo.trim();
+  const duplicateBatch =
+    medicineId && trimmedBatchNo
+      ? (batches || []).find(
+          (b: any) => b.medicineId === medicineId && b.batchNo.toLowerCase() === trimmedBatchNo.toLowerCase(),
+        )
+      : null;
+
+  const handleMedicineChange = (id: string) => {
+    setMedicineId(id);
+    const m = (medicines || []).find((mm: any) => mm.id === id);
+    if (m) {
+      setMrp(m.mrp != null ? String(m.mrp) : '');
+      setSalePrice(m.salePrice != null ? String(m.salePrice) : '');
+    }
+  };
 
   const createSupplierMutation = useMutation({
     mutationFn: (payload: any) => pharmacySuppliersApi.create(payload),
@@ -418,6 +464,10 @@ function AddNewBatchForm({ onClose }: { onClose: () => void }) {
       toast.error('Medicine, batch no., expiry, prices, quantity and reason are all required');
       return;
     }
+    if (duplicateBatch) {
+      toast.error(`Batch ${trimmedBatchNo} already exists for this medicine. Please select "Adjust Existing Batch".`);
+      return;
+    }
     createBatchMutation.mutate({
       medicineId,
       batchNo: batchNo.trim(),
@@ -436,7 +486,7 @@ function AddNewBatchForm({ onClose }: { onClose: () => void }) {
     <form onSubmit={handleSubmit} className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
       <div>
         <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Medicine</label>
-        <select value={medicineId} onChange={(e) => setMedicineId(e.target.value)} className="input text-sm" required>
+        <select value={medicineId} onChange={(e) => handleMedicineChange(e.target.value)} className="input text-sm" required>
           <option value="">Select a medicine...</option>
           {(medicines || []).map((m: any) => (
             <option key={m.id} value={m.id}>
@@ -444,23 +494,60 @@ function AddNewBatchForm({ onClose }: { onClose: () => void }) {
             </option>
           ))}
         </select>
+        {selectedMedicine && (
+          <p className="text-[11px] text-slate-400 mt-1.5">
+            MRP, Sale Price and GST are pre-filled from the medicine catalog — adjust MRP/Sale Price for this batch if needed.
+          </p>
+        )}
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="sm:col-span-2">
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Batch No.</label>
-          <input type="text" value={batchNo} onChange={(e) => setBatchNo(e.target.value)} placeholder="BATCH-2026-01" className="input text-sm" required />
+          <input
+            type="text"
+            value={batchNo}
+            onChange={(e) => setBatchNo(e.target.value)}
+            placeholder="BATCH-2026-01"
+            className={`input text-sm ${duplicateBatch ? 'border-red-300 focus:border-red-400' : ''}`}
+            required
+          />
+          {duplicateBatch && (
+            <div className="mt-2 flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100">
+              <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-xs text-red-700 font-medium">
+                  Batch {trimmedBatchNo} already exists for this medicine. Please select &ldquo;Adjust Existing Batch&rdquo;.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onDuplicateBatch(duplicateBatch.id)}
+                  className="text-[11px] font-semibold text-red-700 hover:underline mt-1"
+                >
+                  Adjust Existing Batch instead →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Quantity</label>
           <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="100" className="input text-sm" required />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Mfg. Date</label>
-          <input type="date" value={mfgDate} onChange={(e) => setMfgDate(e.target.value)} className="input text-sm" />
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">GST</label>
+          <div className="input text-sm bg-slate-50 text-slate-600 flex items-center">
+            {selectedMedicine ? `${selectedMedicine.gst != null ? selectedMedicine.gst : 0}%` : 'Select a medicine'}
+          </div>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Expiry Date</label>
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Mfg. Date (DD-MM-YYYY)</label>
+          <input type="date" value={mfgDate} onChange={(e) => setMfgDate(e.target.value)} className="input text-sm" />
+          {mfgDate && <p className="text-[11px] text-slate-400 mt-1">{formatDate(mfgDate, 'dd-MM-yyyy')}</p>}
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Expiry Date (DD-MM-YYYY)</label>
           <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="input text-sm" required />
+          {expiryDate && <p className="text-[11px] text-slate-400 mt-1">{formatDate(expiryDate, 'dd-MM-yyyy')}</p>}
         </div>
         <div>
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Purchase Price</label>
@@ -474,7 +561,7 @@ function AddNewBatchForm({ onClose }: { onClose: () => void }) {
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Sale Price</label>
           <input type="number" step="0.01" min="0" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} className="input text-sm" required />
         </div>
-        <div>
+        <div className="sm:col-span-2">
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Supplier</label>
             <button
@@ -543,11 +630,15 @@ function AddNewBatchForm({ onClose }: { onClose: () => void }) {
           required
         />
       </div>
-      <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-6">
-        <button type="button" onClick={onClose} className="btn-secondary">
+      <div className="flex gap-3 pt-3 border-t border-slate-100 mt-6 sm:justify-end">
+        <button type="button" onClick={onClose} className="btn-secondary flex-1 sm:flex-none">
           Cancel
         </button>
-        <button type="submit" disabled={createBatchMutation.isPending} className="btn-primary">
+        <button
+          type="submit"
+          disabled={createBatchMutation.isPending || !!duplicateBatch}
+          className="btn-primary flex-1 sm:flex-none"
+        >
           {createBatchMutation.isPending ? 'Saving...' : 'Create Batch'}
         </button>
       </div>

@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { LabLinkStatus, TenantType, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
@@ -23,6 +24,7 @@ export class PathologyLabsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly config: ConfigService,
   ) {}
 
   /** Directory of active labs, browsable by hospital staff to pick one to link with. */
@@ -67,11 +69,43 @@ export class PathologyLabsService {
   }
 
   /** Generate a one-time self-registration link a hospital sends to onboard a new, independent lab. */
-  async createInvite(invitedByTenantId: string, invitedByUserId: string) {
+  async createInvite(
+    invitedByTenantId: string,
+    invitedByUserId: string,
+    email?: string,
+  ) {
     const expiresAt = new Date(Date.now() + INVITE_EXPIRY_MS);
     const invite = await this.prisma.pathologyLabInvite.create({
-      data: { invitedByTenantId, invitedByUserId, expiresAt },
+      data: { invitedByTenantId, invitedByUserId, email, expiresAt },
     });
+
+    if (email) {
+      const tenant = await this.prisma.tenant.findUnique({
+        where: { id: invitedByTenantId },
+        select: { name: true },
+      });
+      const frontendUrl =
+        this.config
+          .get<string>('FRONTEND_URL')
+          ?.split(',')[0]
+          ?.trim()
+          ?.replace(/\/+$/, '') || 'http://localhost:3000';
+
+      try {
+        await this.emailService.sendPathologyLabInvite({
+          recipientEmail: email,
+          hospitalName: tenant?.name || 'a hospital',
+          inviteUrl: `${frontendUrl}/register/pathology-lab?token=${invite.token}`,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'unknown error';
+        this.logger.error(
+          `Pathology lab invite email failed (inviteId=${invite.id}, error=${message})`,
+        );
+      }
+    }
+
     return { token: invite.token, expiresAt: invite.expiresAt };
   }
 
@@ -90,7 +124,7 @@ export class PathologyLabsService {
 
   async getInvite(token: string) {
     const invite = await this.getValidInvite(token);
-    return { tenantName: invite.invitedByTenant.name };
+    return { tenantName: invite.invitedByTenant.name, email: invite.email };
   }
 
   /**

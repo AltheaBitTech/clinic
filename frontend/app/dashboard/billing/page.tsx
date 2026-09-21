@@ -166,6 +166,7 @@ export default function BillingPage() {
   const totalRevenue = invoicesData?.totalRevenue || 0;
   const totalInvoices = invoicesData?.total || 0;
   const pendingCount = invoicesData?.data?.filter((inv: any) => inv.status === 'PENDING').length || 0;
+  const totalPages = Math.max(1, Math.ceil((invoicesData?.total || 0) / (invoicesData?.limit || 20)));
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
@@ -223,7 +224,10 @@ export default function BillingPage() {
           <div className="relative w-44">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
               className="input appearance-none pr-10 text-xs py-1.5"
             >
               <option value="">All Statuses</option>
@@ -244,308 +248,428 @@ export default function BillingPage() {
             <p className="text-slate-400">No invoices match your selection.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Invoice No</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Patient Name</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Doctor</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Issue Date</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Charge</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoicesData.data.map((inv: any) => (
-                  <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-none">
-                    <td className="py-3 px-4 text-xs font-semibold text-slate-900">{inv.invoiceNo}</td>
-                    <td className="py-3 px-4 text-xs font-medium text-slate-700">
-                      {inv.patient.user.firstName} {inv.patient.user.lastName}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-slate-500">
-                      {inv.appointment?.doctor ? `Dr. ${inv.appointment.doctor.user.firstName} ${inv.appointment.doctor.user.lastName}` : 'N/A'}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-slate-400">{formatDate(inv.createdAt)}</td>
-                    <td className="py-3 px-4 text-xs font-bold text-slate-800">{formatCurrency(inv.total)}</td>
-                    <td className="py-3 px-4 text-xs">
-                      <span className={`badge ${
-                        inv.status === 'PAID'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                          : 'bg-amber-50 text-amber-700 border border-amber-100'
-                      }`}>
-                        {inv.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {inv.status === 'PENDING' ? (
-                          <button
-                            onClick={() => markPaidMutation.mutate(inv.id)}
-                            disabled={markPaidMutation.isPending}
-                            className="text-xs font-bold text-cyan-600 hover:text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border-none rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
-                          >
-                            Mark Paid
-                          </button>
-                        ) : (
-                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Collected</span>
-                        )}
-
-                        <button
-                          onClick={() => handleDownload(inv)}
-                          disabled={downloadingId === inv.id}
-                          title="Download invoice PDF"
-                          aria-label="Download invoice PDF"
-                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-cyan-600 bg-slate-50 hover:bg-cyan-50 border-none rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          {downloadingId === inv.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Download className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-
-                        <button
-                          onClick={() => handleEmailShare(inv)}
-                          title="Send invoice via email"
-                          aria-label="Send invoice via email"
-                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-cyan-600 bg-slate-50 hover:bg-cyan-50 border-none rounded-lg transition-colors cursor-pointer"
-                        >
-                          <Mail className="w-3.5 h-3.5" />
-                        </button>
-
-                        <button
-                          onClick={() => handleWhatsappShare(inv)}
-                          title="Send invoice via WhatsApp"
-                          aria-label="Send invoice via WhatsApp"
-                          className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 border-none rounded-lg transition-colors cursor-pointer"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            {/* Desktop / tablet table */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-100">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 divide-x divide-slate-200/70">
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Invoice No</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100/60">Patient Name</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Doctor</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100/60">Issue Date</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Charge</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100/60">Status</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {invoicesData.data.map((inv: any) => (
+                    <tr key={inv.id} className="hover:bg-cyan-50/30 transition-colors divide-x divide-slate-100">
+                      <td className="py-3 px-4 text-xs font-semibold text-slate-900">{inv.invoiceNo}</td>
+                      <td className="py-3 px-4 text-xs font-medium text-slate-700 bg-slate-50/50">
+                        {inv.patient.user.firstName} {inv.patient.user.lastName}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-500">
+                        {inv.appointment?.doctor ? `Dr. ${inv.appointment.doctor.user.firstName} ${inv.appointment.doctor.user.lastName}` : 'N/A'}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-400 bg-slate-50/50">{formatDate(inv.createdAt)}</td>
+                      <td className="py-3 px-4 text-xs font-bold text-slate-800">{formatCurrency(inv.total)}</td>
+                      <td className="py-3 px-4 text-xs bg-slate-50/50">
+                        <span className={`badge ${
+                          inv.status === 'PAID'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                            : 'bg-amber-50 text-amber-700 border border-amber-100'
+                        }`}>
+                          {inv.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-xs">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {inv.status === 'PENDING' ? (
+                            <button
+                              onClick={() => markPaidMutation.mutate(inv.id)}
+                              disabled={markPaidMutation.isPending}
+                              className="text-xs font-bold text-cyan-600 hover:text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border-none rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                            >
+                              Mark Paid
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Collected</span>
+                          )}
+
+                          <button
+                            onClick={() => handleDownload(inv)}
+                            disabled={downloadingId === inv.id}
+                            title="Download invoice PDF"
+                            aria-label="Download invoice PDF"
+                            className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-cyan-600 bg-slate-50 hover:bg-cyan-50 border-none rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            {downloadingId === inv.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Download className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+
+                          <button
+                            onClick={() => handleEmailShare(inv)}
+                            title="Send invoice via email"
+                            aria-label="Send invoice via email"
+                            className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-cyan-600 bg-slate-50 hover:bg-cyan-50 border-none rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            onClick={() => handleWhatsappShare(inv)}
+                            title="Send invoice via WhatsApp"
+                            aria-label="Send invoice via WhatsApp"
+                            className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 border-none rounded-lg transition-colors cursor-pointer"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile card list */}
+            <div className="md:hidden divide-y divide-slate-100 -mx-1">
+              {invoicesData.data.map((inv: any) => (
+                <div key={inv.id} className="py-4 px-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-slate-900 truncate">{inv.invoiceNo}</p>
+                      <p className="text-xs font-medium text-slate-600 mt-0.5 truncate">
+                        {inv.patient.user.firstName} {inv.patient.user.lastName}
+                      </p>
+                    </div>
+                    <span className={`badge shrink-0 ${
+                      inv.status === 'PAID'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        : 'bg-amber-50 text-amber-700 border border-amber-100'
+                    }`}>
+                      {inv.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 mt-3 p-2.5 bg-slate-50/70 rounded-lg border border-slate-100">
+                    <div>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Doctor</p>
+                      <p className="text-xs text-slate-600 mt-0.5 truncate">
+                        {inv.appointment?.doctor ? `Dr. ${inv.appointment.doctor.user.firstName} ${inv.appointment.doctor.user.lastName}` : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Issue Date</p>
+                      <p className="text-xs text-slate-600 mt-0.5">{formatDate(inv.createdAt)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
+                      <p className="text-xs font-bold text-slate-800 mt-0.5">{formatCurrency(inv.total)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-wrap mt-3">
+                    {inv.status === 'PENDING' ? (
+                      <button
+                        onClick={() => markPaidMutation.mutate(inv.id)}
+                        disabled={markPaidMutation.isPending}
+                        className="text-xs font-bold text-cyan-600 hover:text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border-none rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                      >
+                        Mark Paid
+                      </button>
+                    ) : (
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Collected</span>
+                    )}
+
+                    <button
+                      onClick={() => handleDownload(inv)}
+                      disabled={downloadingId === inv.id}
+                      title="Download invoice PDF"
+                      aria-label="Download invoice PDF"
+                      className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-cyan-600 bg-slate-50 hover:bg-cyan-50 border-none rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {downloadingId === inv.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleEmailShare(inv)}
+                      title="Send invoice via email"
+                      aria-label="Send invoice via email"
+                      className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-cyan-600 bg-slate-50 hover:bg-cyan-50 border-none rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      onClick={() => handleWhatsappShare(inv)}
+                      title="Send invoice via WhatsApp"
+                      aria-label="Send invoice via WhatsApp"
+                      className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 border-none rounded-lg transition-colors cursor-pointer"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-100">
+                <p className="text-xs text-slate-500">
+                  Showing <span className="font-semibold text-slate-700">{invoicesData.data.length}</span> of{' '}
+                  <span className="font-semibold text-slate-700">{invoicesData.total}</span> invoices
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                    className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs font-semibold text-slate-600 px-2">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* CREATE INVOICE MODAL */}
       {isInvoiceModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-              <Sparkles className="w-5 h-5 text-cyan-600" />
-              Generate Clinic Invoice
-            </h3>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="min-h-full flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[calc(100dvh-2rem)] overflow-y-auto my-auto">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
+                <Sparkles className="w-5 h-5 text-cyan-600" />
+                Generate Clinic Invoice
+              </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
               
-              {/* Patient Search */}
-              <div className="relative">
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Search Patient <span className="text-red-500">*</span>
-                </label>
+                {/* Patient Search */}
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={patientSearch}
-                    onFocus={() => setIsPatientDropdownOpen(true)}
-                    onChange={(e) => {
-                      setPatientSearch(e.target.value);
-                      setIsPatientDropdownOpen(true);
-                    }}
-                    placeholder="Search patient by name or code..."
-                    className="input pl-10"
-                    required
-                  />
-                  {selectedPatient && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedPatient(null);
-                        setPatientSearch('');
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Search Patient <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={patientSearch}
+                      onFocus={() => setIsPatientDropdownOpen(true)}
+                      onChange={(e) => {
+                        setPatientSearch(e.target.value);
+                        setIsPatientDropdownOpen(true);
                       }}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md transition-colors"
-                    >
-                      Clear
-                    </button>
+                      placeholder="Search patient by name or code..."
+                      className="input pl-10"
+                      required
+                    />
+                    {selectedPatient && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPatient(null);
+                          setPatientSearch('');
+                        }}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {isPatientDropdownOpen && (
+                    <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-48 overflow-y-auto divide-y divide-slate-50">
+                      {isLoadingPatients ? (
+                        <div className="p-3 text-center text-xs text-slate-400">Searching...</div>
+                      ) : patientsData?.data?.length === 0 ? (
+                        <div className="p-3 text-center text-xs text-slate-400">No patient found.</div>
+                      ) : (
+                        patientsData?.data?.map((p: any) => (
+                          <div
+                            key={p.id}
+                            onClick={() => {
+                              setSelectedPatient(p);
+                              setPatientSearch(`${p.user.firstName} ${p.user.lastName}`);
+                              setIsPatientDropdownOpen(false);
+                            }}
+                            className="p-3 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
+                          >
+                            <span>{p.user.firstName} {p.user.lastName}</span>
+                            <span className="text-[10px] bg-slate-100 text-slate-500 font-mono px-1.5 py-0.5 rounded">{p.patientCode}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                  {isPatientDropdownOpen && (
+                    <div className="fixed inset-0 z-0" onClick={() => setIsPatientDropdownOpen(false)} />
                   )}
                 </div>
 
-                {isPatientDropdownOpen && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-48 overflow-y-auto divide-y divide-slate-50">
-                    {isLoadingPatients ? (
-                      <div className="p-3 text-center text-xs text-slate-400">Searching...</div>
-                    ) : patientsData?.data?.length === 0 ? (
-                      <div className="p-3 text-center text-xs text-slate-400">No patient found.</div>
-                    ) : (
-                      patientsData?.data?.map((p: any) => (
-                        <div
-                          key={p.id}
-                          onClick={() => {
-                            setSelectedPatient(p);
-                            setPatientSearch(`${p.user.firstName} ${p.user.lastName}`);
-                            setIsPatientDropdownOpen(false);
-                          }}
-                          className="p-3 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
-                        >
-                          <span>{p.user.firstName} {p.user.lastName}</span>
-                          <span className="text-[10px] bg-slate-100 text-slate-500 font-mono px-1.5 py-0.5 rounded">{p.patientCode}</span>
-                        </div>
-                      ))
+                {/* Doctor Search (to prefill fee) */}
+                <div className="relative">
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Select Consulting Doctor (Optional)
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={doctorSearch}
+                      onFocus={() => setIsDoctorDropdownOpen(true)}
+                      onChange={(e) => {
+                        setDoctorSearch(e.target.value);
+                        setIsDoctorDropdownOpen(true);
+                      }}
+                      placeholder="Search doctor to pull consulting fees..."
+                      className="input pl-10"
+                    />
+                    {selectedDoctor && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedDoctor(null);
+                          setDoctorSearch('');
+                        }}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md transition-colors"
+                      >
+                        Clear
+                      </button>
                     )}
                   </div>
-                )}
-                {isPatientDropdownOpen && (
-                  <div className="fixed inset-0 z-0" onClick={() => setIsPatientDropdownOpen(false)} />
-                )}
-              </div>
 
-              {/* Doctor Search (to prefill fee) */}
-              <div className="relative">
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Select Consulting Doctor (Optional)
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={doctorSearch}
-                    onFocus={() => setIsDoctorDropdownOpen(true)}
-                    onChange={(e) => {
-                      setDoctorSearch(e.target.value);
-                      setIsDoctorDropdownOpen(true);
-                    }}
-                    placeholder="Search doctor to pull consulting fees..."
-                    className="input pl-10"
-                  />
-                  {selectedDoctor && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedDoctor(null);
-                        setDoctorSearch('');
-                      }}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md transition-colors"
-                    >
-                      Clear
-                    </button>
+                  {isDoctorDropdownOpen && (
+                    <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-40 overflow-y-auto divide-y divide-slate-50">
+                      {isLoadingDoctors ? (
+                        <div className="p-3 text-center text-xs text-slate-400">Loading...</div>
+                      ) : filteredDoctors.length === 0 ? (
+                        <div className="p-3 text-center text-xs text-slate-400">No doctors.</div>
+                      ) : (
+                        filteredDoctors.map((d: any) => (
+                          <div
+                            key={d.id}
+                            onClick={() => handleDoctorSelect(d)}
+                            className="p-3 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
+                          >
+                            <span>Dr. {d.user.firstName} {d.user.lastName}</span>
+                            <span className="text-[10px] text-cyan-600 bg-cyan-50 font-bold px-1.5 py-0.5 rounded">{formatCurrency(d.consultationFee)}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                  {isDoctorDropdownOpen && (
+                    <div className="fixed inset-0 z-0" onClick={() => setIsDoctorDropdownOpen(false)} />
                   )}
                 </div>
 
-                {isDoctorDropdownOpen && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-40 overflow-y-auto divide-y divide-slate-50">
-                    {isLoadingDoctors ? (
-                      <div className="p-3 text-center text-xs text-slate-400">Loading...</div>
-                    ) : filteredDoctors.length === 0 ? (
-                      <div className="p-3 text-center text-xs text-slate-400">No doctors.</div>
-                    ) : (
-                      filteredDoctors.map((d: any) => (
-                        <div
-                          key={d.id}
-                          onClick={() => handleDoctorSelect(d)}
-                          className="p-3 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
-                        >
-                          <span>Dr. {d.user.firstName} {d.user.lastName}</span>
-                          <span className="text-[10px] text-cyan-600 bg-cyan-50 font-bold px-1.5 py-0.5 rounded">{formatCurrency(d.consultationFee)}</span>
-                        </div>
-                      ))
-                    )}
+                {/* Consultation amount, discount, tax */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                      Amount (INR) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={amount}
+                      onChange={(e) => handleAmountChange(Number(e.target.value))}
+                      min={0}
+                      className="input text-xs"
+                    />
                   </div>
-                )}
-                {isDoctorDropdownOpen && (
-                  <div className="fixed inset-0 z-0" onClick={() => setIsDoctorDropdownOpen(false)} />
-                )}
-              </div>
 
-              {/* Consultation amount, discount, tax */}
-              <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                      Discount
+                    </label>
+                    <input
+                      type="number"
+                      value={discount}
+                      onChange={(e) => handleDiscountChange(Number(e.target.value))}
+                      min={0}
+                      max={amount}
+                      className="input text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                      Tax (18% GST)
+                    </label>
+                    <input
+                      type="number"
+                      value={tax}
+                      onChange={(e) => setTax(Number(e.target.value))}
+                      min={0}
+                      className="input text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Total Payable Recap */}
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Net Total Invoice Cost</span>
+                    <span className="text-xs text-slate-500">Amount - Discount + Tax</span>
+                  </div>
+                  <span className="text-xl font-black text-cyan-600">
+                    {formatCurrency(Number(amount) - Number(discount) + Number(tax))}
+                  </span>
+                </div>
+
+                {/* Notes */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Amount (INR) <span className="text-red-500">*</span>
+                    Billing Notes / Remarks
                   </label>
-                  <input
-                    type="number"
-                    required
-                    value={amount}
-                    onChange={(e) => handleAmountChange(Number(e.target.value))}
-                    min={0}
-                    className="input text-xs"
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="e.g. Regular health checkup consultation billing"
+                    className="input text-xs min-h-[60px]"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Discount
-                  </label>
-                  <input
-                    type="number"
-                    value={discount}
-                    onChange={(e) => handleDiscountChange(Number(e.target.value))}
-                    min={0}
-                    max={amount}
-                    className="input text-xs"
-                  />
+                {/* Footer */}
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-6">
+                  <button type="button" onClick={closeModal} className="btn-secondary">
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createInvoiceMutation.isPending || !selectedPatient}
+                    className="btn-primary"
+                  >
+                    {createInvoiceMutation.isPending ? 'Generating...' : 'Generate Invoice'}
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Tax (18% GST)
-                  </label>
-                  <input
-                    type="number"
-                    value={tax}
-                    onChange={(e) => setTax(Number(e.target.value))}
-                    min={0}
-                    className="input text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Total Payable Recap */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Net Total Invoice Cost</span>
-                  <span className="text-xs text-slate-500">Amount - Discount + Tax</span>
-                </div>
-                <span className="text-xl font-black text-cyan-600">
-                  {formatCurrency(Number(amount) - Number(discount) + Number(tax))}
-                </span>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Billing Notes / Remarks
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. Regular health checkup consultation billing"
-                  className="input text-xs min-h-[60px]"
-                />
-              </div>
-
-              {/* Footer */}
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-6">
-                <button type="button" onClick={closeModal} className="btn-secondary">
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={createInvoiceMutation.isPending || !selectedPatient}
-                  className="btn-primary"
-                >
-                  {createInvoiceMutation.isPending ? 'Generating...' : 'Generate Invoice'}
-                </button>
-              </div>
-
-            </form>
+              </form>
+            </div>
           </div>
         </div>
       )}

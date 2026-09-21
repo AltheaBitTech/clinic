@@ -11,6 +11,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import {
   CompletePathologyLabInviteDto,
+  InvitePathologyLabDto,
   UpdatePathologyLabDto,
 } from './dto/pathology-lab.dto';
 import { PathologyLabsService } from './pathology-labs.service';
@@ -27,8 +28,15 @@ export class PathologyLabsController {
     summary:
       'Generate a one-time self-registration link for an independent pathology lab',
   })
-  createInvite(@CurrentUser() user: any) {
-    return this.pathologyLabsService.createInvite(user.tenantId, user.id);
+  createInvite(
+    @CurrentUser() user: any,
+    @Body() dto: InvitePathologyLabDto,
+  ) {
+    return this.pathologyLabsService.createInvite(
+      user.tenantId,
+      user.id,
+      dto.email,
+    );
   }
 
   @Get('invite/:token')

@@ -8,7 +8,7 @@ import { pathologyLabsApi, hospitalLabLinksApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
   FlaskConical, Search, Phone, MapPin, Truck, ChevronRight, Link2, XCircle,
-  Sparkles, Copy,
+  Sparkles, Copy, Mail, Send,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -22,7 +22,9 @@ const LINK_STATUS_STYLES: Record<string, string> = {
 export default function PathologyLabsPage() {
   const [search, setSearch] = useState('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
   const [inviteLink, setInviteLink] = useState('');
+  const [invitedEmail, setInvitedEmail] = useState('');
   const { user } = useAuth();
   const isAdmin = user?.role === 'HOSPITAL_ADMIN';
   const queryClient = useQueryClient();
@@ -67,10 +69,12 @@ export default function PathologyLabsPage() {
   });
 
   const inviteMutation = useMutation({
-    mutationFn: () => pathologyLabsApi.createInvite(),
-    onSuccess: (res: any) => {
+    mutationFn: (email?: string) => pathologyLabsApi.createInvite(email ? { email } : undefined),
+    onSuccess: (res: any, email) => {
       const token = res.data.token;
       setInviteLink(`${window.location.origin}/register/pathology-lab?token=${token}`);
+      setInvitedEmail(email || '');
+      if (email) toast.success(`Invite emailed to ${email}`);
       queryClient.invalidateQueries({ queryKey: ['hospital-lab-links'] });
     },
     onError: (err: any) => {
@@ -80,14 +84,23 @@ export default function PathologyLabsPage() {
 
   const openInviteModal = () => {
     setIsInviteModalOpen(true);
+    setInviteEmail('');
     setInviteLink('');
-    inviteMutation.mutate();
+    setInvitedEmail('');
+    inviteMutation.reset();
   };
 
   const closeInviteModal = () => {
     setIsInviteModalOpen(false);
+    setInviteEmail('');
     setInviteLink('');
+    setInvitedEmail('');
     inviteMutation.reset();
+  };
+
+  const submitInvite = (e: React.FormEvent) => {
+    e.preventDefault();
+    inviteMutation.mutate(inviteEmail.trim() || undefined);
   };
 
   const copyInviteLink = () => {
@@ -177,19 +190,22 @@ export default function PathologyLabsPage() {
             {inviteMutation.isPending ? (
               <div className="flex flex-col items-center justify-center py-8 gap-3">
                 <span className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-slate-500">Generating one-time link…</p>
+                <p className="text-sm text-slate-500">
+                  {inviteEmail.trim() ? 'Sending invite…' : 'Generating one-time link…'}
+                </p>
               </div>
             ) : inviteLink ? (
               <div className="space-y-4">
                 <div className="p-4 bg-cyan-50 border border-cyan-100 text-cyan-900 rounded-xl text-xs space-y-2">
                   <p className="font-bold flex items-center gap-1.5">
-                    <Link2 className="w-4 h-4" /> Self-Registration Link Generated
+                    <Link2 className="w-4 h-4" />
+                    {invitedEmail ? `Invite sent to ${invitedEmail}` : 'Self-Registration Link Generated'}
                   </p>
                   <p className="text-cyan-700">
-                    Share this link with the lab. They&apos;ll register as an independent
-                    lab on Arogyix and set a password — once they complete it, they&apos;ll
-                    be linked to your hospital automatically. The link expires in 7 days
-                    or after first use.
+                    {invitedEmail
+                      ? "We've emailed the registration link to the lab. You can also share the link below directly."
+                      : "Share this link with the lab. They'll register as an independent lab on Arogyix and set a password — once they complete it, they'll be linked to your hospital automatically."}
+                    {' '}The link expires in 7 days or after first use.
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -215,19 +231,42 @@ export default function PathologyLabsPage() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <form onSubmit={submitInvite} className="space-y-4">
                 <p className="text-sm text-slate-500">
-                  Something went wrong generating the invite link.
+                  Optionally add the lab&apos;s email address to send them the registration
+                  link directly. Leave it blank to just generate a link you can share yourself.
                 </p>
+                <div className="space-y-1.5">
+                  <label htmlFor="invite-lab-email" className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                    Lab Email (optional)
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      id="invite-lab-email"
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder="lab@example.com"
+                      className="input pl-10"
+                    />
+                  </div>
+                </div>
+                {inviteMutation.isError && (
+                  <p className="text-sm text-red-500">
+                    Something went wrong generating the invite link. Please try again.
+                  </p>
+                )}
                 <div className="flex justify-end gap-3">
-                  <button onClick={closeInviteModal} className="btn-secondary">
+                  <button type="button" onClick={closeInviteModal} className="btn-secondary">
                     Cancel
                   </button>
-                  <button onClick={() => inviteMutation.mutate()} className="btn-primary">
-                    Retry
+                  <button type="submit" className="btn-primary flex items-center gap-2">
+                    {inviteEmail.trim() ? <Send className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+                    {inviteEmail.trim() ? 'Send Invite' : 'Generate Link'}
                   </button>
                 </div>
-              </div>
+              </form>
             )}
           </div>
         </div>,

@@ -132,6 +132,30 @@ export default function DoctorsPage() {
       return;
     }
 
+    const notPurelyNumeric = /[a-zA-Z]/;
+    if (!notPurelyNumeric.test(specialization)) {
+      toast.error('Specialization cannot be a numeric value');
+      return;
+    }
+    if (qualification && !notPurelyNumeric.test(qualification)) {
+      toast.error('Qualifications cannot be a numeric value');
+      return;
+    }
+    if (bio && !notPurelyNumeric.test(bio)) {
+      toast.error('Bio / Details cannot be a numeric value');
+      return;
+    }
+
+    const timeFormat = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (!timeFormat.test(consultationStart)) {
+      toast.error('Consultation Start must be a valid 24h time (HH:mm)');
+      return;
+    }
+    if (!timeFormat.test(consultationEnd)) {
+      toast.error('Consultation End must be a valid 24h time (HH:mm)');
+      return;
+    }
+
     const payload = {
       userId: selectedUserId,
       specialization,
@@ -302,14 +326,17 @@ export default function DoctorsPage() {
 
       {/* CONFIGURE DOCTOR MODAL */}
       {isConfigModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col overflow-hidden animate-scale-up relative">
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 px-6 pt-6 pb-3 border-b border-slate-100 shrink-0 sticky top-0 bg-white z-10">
-              <Sparkles className="w-5 h-5 text-cyan-600" />
-              {editingDoctor ? `Edit Profile: Dr. ${editingDoctor.user.firstName}` : 'Configure Doctor Profile'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white sm:rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-100 h-full sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden animate-scale-up relative">
+            <h3 className="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2 px-4 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-slate-100 shrink-0 bg-white z-10">
+              <Sparkles className="w-5 h-5 text-cyan-600 shrink-0" />
+              <span className="truncate">
+                {editingDoctor ? `Edit Profile: Dr. ${editingDoctor.user.firstName}` : 'Configure Doctor Profile'}
+              </span>
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4 px-6 pb-6 pt-4 overflow-y-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+              <div className="space-y-4 px-4 sm:px-6 py-4 overflow-y-auto flex-1 min-h-0">
 
               {/* Account Selection (Only for Create) */}
               {!editingDoctor && (
@@ -459,10 +486,9 @@ export default function DoctorsPage() {
                     Consultation Start (24h)
                   </label>
                   <input
-                    type="text"
+                    type="time"
                     value={consultationStart}
                     onChange={(e) => setConsultationStart(e.target.value)}
-                    placeholder="09:00"
                     className="input"
                   />
                 </div>
@@ -472,10 +498,9 @@ export default function DoctorsPage() {
                     Consultation End (24h)
                   </label>
                   <input
-                    type="text"
+                    type="time"
                     value={consultationEnd}
                     onChange={(e) => setConsultationEnd(e.target.value)}
-                    placeholder="17:00"
                     className="input"
                   />
                 </div>
@@ -520,20 +545,21 @@ export default function DoctorsPage() {
                 </div>
               </div>
 
+              </div>
+
               {/* Footer */}
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-4">
-                <button type="button" onClick={closeModal} className="btn-secondary">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 shrink-0 bg-white">
+                <button type="button" onClick={closeModal} className="btn-secondary w-full sm:w-auto">
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending || (!editingDoctor && !selectedUserId)}
-                  className="btn-primary"
+                  className="btn-primary w-full sm:w-auto"
                 >
                   {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save Profile'}
                 </button>
               </div>
-
             </form>
           </div>
         </div>

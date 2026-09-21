@@ -9,8 +9,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { tenantsApi, authApi } from '@/lib/api';
-import { PERSON_NAME_REGEX, PERSON_NAME_ERROR } from '@/lib/utils';
-import { Loader2, User, Mail, Phone, Lock, ShieldCheck, Building2, Search, Check, ChevronDown, KeyRound } from 'lucide-react';
+import { PERSON_NAME_REGEX, PERSON_NAME_ERROR, stripDigits } from '@/lib/utils';
+import { Loader2, User, Mail, Phone, Lock, ShieldCheck, Building2, Search, Check, ChevronDown, KeyRound, Heart, MapPin, ShieldAlert, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Hospital {
@@ -29,6 +29,17 @@ const nameSchema = z
   .max(50, `Name ${PERSON_NAME_ERROR}`)
   .regex(PERSON_NAME_REGEX, `Name ${PERSON_NAME_ERROR}`);
 
+const optionalNameSchema = (label: string) =>
+  z
+    .string()
+    .optional()
+    .refine(
+      (val) =>
+        !val ||
+        (val.trim().length >= 2 && val.trim().length <= 50 && PERSON_NAME_REGEX.test(val.trim())),
+      { message: `${label} ${PERSON_NAME_ERROR}` },
+    );
+
 const selfSignupSchema = z.object({
   firstName: nameSchema,
   lastName: nameSchema,
@@ -39,6 +50,17 @@ const selfSignupSchema = z.object({
     .optional()
     .refine((val) => !val || /^\d{10}$/.test(val), { message: 'Enter a valid 10-digit phone number' }),
   tenantId: z.string().min(1, 'Please select your hospital'),
+  dateOfBirth: z.string().optional(),
+  gender: z.string().optional(),
+  bloodGroup: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  emergencyName: optionalNameSchema('Contact name'),
+  emergencyPhone: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d{10}$/.test(val), { message: 'Enter a valid 10-digit phone number' }),
+  emergencyRelation: optionalNameSchema('Relation'),
 });
 
 const inviteSchema = z.object({
@@ -161,6 +183,31 @@ function RegisterForm() {
   const [otpStep, setOtpStep] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpError, setOtpError] = useState('');
+  const [allergyInput, setAllergyInput] = useState('');
+  const [allergies, setAllergies] = useState<string[]>([]);
+  const [chronicInput, setChronicInput] = useState('');
+  const [chronicConditions, setChronicConditions] = useState<string[]>([]);
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const handleAddAllergy = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (allergyInput.trim() && !allergies.includes(allergyInput.trim())) {
+        setAllergies([...allergies, allergyInput.trim()]);
+      }
+      setAllergyInput('');
+    }
+  };
+
+  const handleAddChronic = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (chronicInput.trim() && !chronicConditions.includes(chronicInput.trim())) {
+        setChronicConditions([...chronicConditions, chronicInput.trim()]);
+      }
+      setChronicInput('');
+    }
+  };
 
   const { register, handleSubmit, setValue, getValues, formState: { errors } } = useForm<SelfSignupData | InviteData>({
     resolver: zodResolver(inviteToken ? inviteSchema : selfSignupSchema),
@@ -218,6 +265,8 @@ function RegisterForm() {
       await authRegister({
         ...signup,
         emailVerificationToken: verified.emailVerificationToken,
+        allergies: allergies.length > 0 ? allergies : undefined,
+        chronicConditions: chronicConditions.length > 0 ? chronicConditions : undefined,
       });
       toast.success('Account created!');
     } catch (err: any) {
@@ -358,6 +407,166 @@ function RegisterForm() {
                   error={'tenantId' in errors ? (errors as any).tenantId?.message : undefined}
                 />
               </>
+            )}
+
+            {!inviteToken && !otpStep && (
+              <div className="pt-2 border-t border-white/10 space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400/80 flex items-center gap-1.5">
+                  <Heart className="w-3.5 h-3.5" /> Health profile (optional, can be added later)
+                </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Date of birth</label>
+                    <input
+                      {...register('dateOfBirth' as any)}
+                      type="date"
+                      max={todayStr}
+                      className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-3.5 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm [color-scheme:dark]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Gender</label>
+                    <select
+                      {...register('gender' as any)}
+                      defaultValue=""
+                      className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm [&>option]:bg-slate-900"
+                    >
+                      <option value="">Prefer not to say</option>
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Blood group</label>
+                  <select
+                    {...register('bloodGroup' as any)}
+                    defaultValue=""
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm [&>option]:bg-slate-900"
+                  >
+                    <option value="">Unspecified</option>
+                    <option value="O_POS">O+</option>
+                    <option value="O_NEG">O-</option>
+                    <option value="A_POS">A+</option>
+                    <option value="A_NEG">A-</option>
+                    <option value="B_POS">B+</option>
+                    <option value="B_NEG">B-</option>
+                    <option value="AB_POS">AB+</option>
+                    <option value="AB_NEG">AB-</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Address</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                      <MapPin className="w-4 h-4" />
+                    </span>
+                    <input
+                      {...register('address' as any)}
+                      placeholder="Street, building, apartment..."
+                      className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">City</label>
+                  <input
+                    {...register('city' as any)}
+                    placeholder="Mumbai"
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-3.5 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
+                  />
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5" /> Emergency contact
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <input
+                        {...register('emergencyName' as any)}
+                        onChange={(e) => setValue('emergencyName' as any, stripDigits(e.target.value), { shouldValidate: true })}
+                        placeholder="Contact name"
+                        className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-3.5 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
+                      />
+                      {'emergencyName' in errors && errors.emergencyName && (
+                        <p className="text-red-400 text-xs mt-1.5 font-medium">{(errors as any).emergencyName?.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        {...register('emergencyRelation' as any)}
+                        onChange={(e) => setValue('emergencyRelation' as any, stripDigits(e.target.value), { shouldValidate: true })}
+                        placeholder="Relation (e.g. Spouse)"
+                        className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-3.5 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
+                      />
+                      {'emergencyRelation' in errors && errors.emergencyRelation && (
+                        <p className="text-red-400 text-xs mt-1.5 font-medium">{(errors as any).emergencyRelation?.message}</p>
+                      )}
+                    </div>
+                  </div>
+                  <input
+                    {...register('emergencyPhone' as any)}
+                    onChange={(e) => setValue('emergencyPhone' as any, e.target.value.replace(/\D/g, '').slice(0, 10), { shouldValidate: true })}
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="Emergency contact phone"
+                    className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-3.5 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
+                  />
+                  {'emergencyPhone' in errors && errors.emergencyPhone && (
+                    <p className="text-red-400 text-xs mt-1.5 font-medium">{(errors as any).emergencyPhone?.message}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Allergies</label>
+                    <input
+                      value={allergyInput}
+                      onChange={(e) => setAllergyInput(e.target.value)}
+                      onKeyDown={handleAddAllergy}
+                      placeholder="Type and press Enter to add..."
+                      className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-3.5 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm mb-2"
+                    />
+                    <div className="flex flex-wrap gap-1.5">
+                      {allergies.map((allergy, index) => (
+                        <span key={index} className="flex items-center gap-1 bg-red-500/10 text-red-300 border border-red-500/20 rounded-full px-2.5 py-1 text-xs">
+                          {allergy}
+                          <button type="button" onClick={() => setAllergies(allergies.filter((_, i) => i !== index))} className="hover:text-red-100">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Chronic conditions</label>
+                    <input
+                      value={chronicInput}
+                      onChange={(e) => setChronicInput(e.target.value)}
+                      onKeyDown={handleAddChronic}
+                      placeholder="Type and press Enter to add..."
+                      className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-3.5 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm mb-2"
+                    />
+                    <div className="flex flex-wrap gap-1.5">
+                      {chronicConditions.map((condition, index) => (
+                        <span key={index} className="flex items-center gap-1 bg-amber-500/10 text-amber-300 border border-amber-500/20 rounded-full px-2.5 py-1 text-xs">
+                          {condition}
+                          <button type="button" onClick={() => setChronicConditions(chronicConditions.filter((_, i) => i !== index))} className="hover:text-amber-100">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             <div>

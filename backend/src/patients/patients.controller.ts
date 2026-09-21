@@ -95,7 +95,10 @@ export class PatientsController {
     @Param('id') id: string,
     @Body() dto: UpdatePatientDto,
   ) {
-    return this.patientsService.update(id, user.tenantId, dto);
+    return this.patientsService.update(id, user.tenantId, dto, {
+      id: user.id,
+      role: user.role,
+    });
   }
 
   @Post(':id/family-members')

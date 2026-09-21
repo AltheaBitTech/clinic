@@ -1418,6 +1418,7 @@ model PathologyLabInvite {
   id                String    @id @default(cuid())
   invitedByTenantId String
   invitedByUserId   String // audit-only User.id, no relation
+  email             String?
   token             String    @unique @default(cuid())
   expiresAt         DateTime
   usedAt            DateTime?

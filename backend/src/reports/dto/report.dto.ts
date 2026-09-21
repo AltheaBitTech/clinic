@@ -10,9 +10,13 @@ export class UploadReportDto {
   })
   file: any;
 
-  @ApiProperty({ description: 'The patient ID to associate with the report' })
+  @ApiPropertyOptional({
+    description:
+      "The patient ID to associate with the report. Required for staff uploads; ignored for patient-role uploads, which are always associated with the caller's own patient record.",
+  })
+  @IsOptional()
   @IsString()
-  patientId: string;
+  patientId?: string;
 
   @ApiPropertyOptional({
     enum: ReportType,

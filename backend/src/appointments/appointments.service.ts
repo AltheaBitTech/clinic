@@ -12,6 +12,34 @@ import {
   UpdateAppointmentDto,
 } from './dto/appointment.dto';
 
+const CLINIC_TIMEZONE = 'Asia/Kolkata';
+const HISTORICAL_STATUSES = ['COMPLETED', 'CANCELLED'];
+
+// The server process may run in UTC (or any other TZ) while the clinic
+// operates in IST, so day boundaries must be computed against the clinic's
+// timezone rather than via Date's local-timezone setHours/getHours — a naive
+// comparison here shifts the "today" window by IST's +5:30 offset and can
+// silently drop or misplace early-morning appointments.
+function getDayBoundsInClinicTimezone(dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  // en-CA formatToParts of a UTC instant tells us that instant's Y-M-D in
+  // IST; we binary-search-free this by computing the known IST offset
+  // directly since it's fixed (no DST) at UTC+5:30.
+  const utcMidnightForIstDate =
+    Date.UTC(year, month - 1, day) - 5.5 * 60 * 60 * 1000;
+  return {
+    gte: new Date(utcMidnightForIstDate),
+    lt: new Date(utcMidnightForIstDate + 24 * 60 * 60 * 1000),
+  };
+}
+
+function getStartOfTodayInClinicTimezone() {
+  const todayStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: CLINIC_TIMEZONE,
+  }).format(new Date());
+  return getDayBoundsInClinicTimezone(todayStr).gte;
+}
+
 @Injectable()
 export class AppointmentsService {
   private readonly logger = new Logger(AppointmentsService.name);
@@ -210,12 +238,76 @@ export class AppointmentsService {
     }
 
     if (filters.status) where.status = filters.status;
+
+    const search = filters.search ? String(filters.search).trim() : '';
+    if (search) {
+      const words = search.split(/\s+/).filter(Boolean);
+      where.OR = [
+        { reason: { contains: search, mode: 'insensitive' } },
+        {
+          patient: {
+            user: { firstName: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        {
+          patient: {
+            user: { lastName: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        {
+          patient: {
+            user: { phone: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        // Full-name search (e.g. "John Doe"): every word must match either
+        // the first or last name, regardless of order.
+        ...(words.length > 1
+          ? [
+              {
+                AND: words.map((word) => ({
+                  OR: [
+                    {
+                      patient: {
+                        user: {
+                          firstName: { contains: word, mode: 'insensitive' },
+                        },
+                      },
+                    },
+                    {
+                      patient: {
+                        user: {
+                          lastName: { contains: word, mode: 'insensitive' },
+                        },
+                      },
+                    },
+                  ],
+                })),
+              },
+            ]
+          : []),
+      ];
+    }
+
+    let orderBy: { scheduledAt: 'asc' | 'desc' } = { scheduledAt: 'asc' };
     if (filters.date) {
-      const date = new Date(filters.date);
-      where.scheduledAt = {
-        gte: new Date(date.setHours(0, 0, 0, 0)),
-        lt: new Date(date.setHours(23, 59, 59, 999)),
-      };
+      where.scheduledAt = getDayBoundsInClinicTimezone(filters.date);
+    } else if (
+      search ||
+      (filters.status && HISTORICAL_STATUSES.includes(filters.status))
+    ) {
+      // Completed/cancelled appointments (and search results, which should
+      // span a patient's full history) are inherently in the past — show
+      // the most recently resolved ones first rather than the oldest ones
+      // the tenant ever recorded.
+      orderBy = { scheduledAt: 'desc' };
+    } else {
+      // With no explicit date/history/search filter, default to
+      // today-and-onward so a hospital's full appointment history (across
+      // every doctor) doesn't bury a just-booked appointment many pages
+      // behind page 1 — a doctor's own, much smaller list doesn't hit this,
+      // which is why the same unfiltered view "worked" for doctors but not
+      // for admin/receptionist.
+      where.scheduledAt = { gte: getStartOfTodayInClinicTimezone() };
     }
 
     const [data, total] = await Promise.all([
@@ -223,7 +315,7 @@ export class AppointmentsService {
         where,
         skip,
         take: limit,
-        orderBy: { scheduledAt: 'asc' },
+        orderBy,
         include: {
           patient: {
             include: {
@@ -272,6 +364,31 @@ export class AppointmentsService {
     const isReschedule =
       !!dto.scheduledAt &&
       new Date(dto.scheduledAt).getTime() !== previousScheduledAt.getTime();
+
+    if (dto.status === 'COMPLETED') {
+      // An appointment can only be completed on the day it's actually
+      // scheduled for — not ahead of time, and not as stale cleanup days
+      // later — otherwise the record no longer reflects when care happened.
+      const scheduledDateStr = new Intl.DateTimeFormat('en-CA', {
+        timeZone: CLINIC_TIMEZONE,
+      }).format(appointment.scheduledAt);
+      const { gte, lt } = getDayBoundsInClinicTimezone(scheduledDateStr);
+      const now = new Date();
+      if (now < gte || now >= lt) {
+        throw new BadRequestException(
+          'Appointments can only be marked completed on their scheduled date.',
+        );
+      }
+
+      const prescriptionCount = await this.prisma.prescription.count({
+        where: { appointmentId: id },
+      });
+      if (prescriptionCount === 0) {
+        throw new BadRequestException(
+          'Please write a prescription for this appointment before marking it completed.',
+        );
+      }
+    }
 
     const data: any = { ...dto };
     if (dto.scheduledAt) {

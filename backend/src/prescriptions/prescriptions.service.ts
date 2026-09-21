@@ -79,7 +79,7 @@ export class PrescriptionsService {
             dosage: m.dosage,
             frequency: m.frequency,
             duration: m.duration,
-            timing: m.timing || 'AFTER_FOOD',
+            timing: m.timing || (m.type === 'OINTMENT' ? 'AFTER_BATH' : 'AFTER_FOOD'),
             instructions: m.instructions,
             reminderTimes: m.reminderTimes || [],
           })),

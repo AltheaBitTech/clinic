@@ -9,6 +9,7 @@ import {
   UploadedFile,
   UseInterceptors,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -45,15 +46,34 @@ export class ReportsController {
   @UseInterceptors(FileInterceptor('file', { storage }))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a patient report' })
-  upload(
+  async upload(
     @CurrentUser() user: any,
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: UploadReportDto,
   ) {
+    let patientId = dto.patientId;
+
+    if (user.role === UserRole.PATIENT) {
+      // Patients always upload against their own record — resolve it from
+      // the JWT user server-side rather than trusting (or requiring) a
+      // client-supplied patientId.
+      const ownPatientId = await this.reportsService.getPatientIdForUser(
+        user.id,
+      );
+      if (!ownPatientId) {
+        throw new BadRequestException(
+          'Your patient profile has not been configured yet.',
+        );
+      }
+      patientId = ownPatientId;
+    } else if (!patientId) {
+      throw new BadRequestException('patientId is required');
+    }
+
     return this.reportsService.create(
       user.tenantId,
       user.id,
-      dto.patientId,
+      patientId,
       file,
       dto,
     );

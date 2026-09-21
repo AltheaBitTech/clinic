@@ -6,10 +6,10 @@ import { appointmentsApi } from '@/lib/api';
 import {
   Calendar, Plus, Clock, ChevronRight, ChevronLeft, AlertTriangle, RefreshCw,
   CheckCircle2, CalendarClock, Loader2, CheckCheck, XCircle, Stethoscope,
-  SlidersHorizontal, X,
+  SlidersHorizontal, X, UserX, Search,
 } from 'lucide-react';
 import Link from 'next/link';
-import { cn, formatDateTime, getStatusColor, getInitials } from '@/lib/utils';
+import { cn, formatDateTime, getStatusColor, getInitials, getEffectiveAppointmentStatus } from '@/lib/utils';
 
 const STATUS_OPTIONS = ['All', 'CONFIRMED', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
 
@@ -19,6 +19,7 @@ const STATUS_META: Record<string, { icon: React.ElementType; accent: string; ico
   IN_PROGRESS: { icon: Loader2, accent: 'bg-amber-500', iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
   COMPLETED: { icon: CheckCheck, accent: 'bg-emerald-500', iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
   CANCELLED: { icon: XCircle, accent: 'bg-red-500', iconBg: 'bg-red-50', iconColor: 'text-red-600' },
+  NO_SHOW: { icon: UserX, accent: 'bg-slate-400', iconBg: 'bg-slate-50', iconColor: 'text-slate-500' },
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -27,11 +28,13 @@ const STATUS_LABELS: Record<string, string> = {
   IN_PROGRESS: 'In Progress',
   COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
+  NO_SHOW: 'No Show',
 };
 
 export default function AppointmentsPage() {
   const [status, setStatus] = useState('');
   const [date, setDate] = useState('');
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -43,9 +46,15 @@ export default function AppointmentsPage() {
     };
   }, [mobileFiltersOpen]);
 
+  // Reset to page 1 whenever the search/status/date filters change so a
+  // narrower result set doesn't strand the user on a now-empty later page.
+  useEffect(() => {
+    setPage(1);
+  }, [status, date, search]);
+
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['appointments', status, date, page],
-    queryFn: () => appointmentsApi.getAll({ status: status || undefined, date: date || undefined, page }).then((r) => r.data),
+    queryKey: ['appointments', status, date, search, page],
+    queryFn: () => appointmentsApi.getAll({ status: status || undefined, date: date || undefined, search: search || undefined, page }).then((r) => r.data),
   });
 
   const STATUS_PRIORITY: Record<string, number> = {
@@ -53,20 +62,24 @@ export default function AppointmentsPage() {
     SCHEDULED: 1,
     IN_PROGRESS: 2,
     COMPLETED: 3,
-    CANCELLED: 4,
+    NO_SHOW: 4,
+    CANCELLED: 5,
   };
 
   const sortedAppointments = data?.data
     ? [...data.data].sort((a: any, b: any) => {
-        const aPriority = STATUS_PRIORITY[a.status] ?? 5;
-        const bPriority = STATUS_PRIORITY[b.status] ?? 5;
+        const aStatus = getEffectiveAppointmentStatus(a.status, a.scheduledAt);
+        const bStatus = getEffectiveAppointmentStatus(b.status, b.scheduledAt);
+        const aPriority = STATUS_PRIORITY[aStatus] ?? 6;
+        const bPriority = STATUS_PRIORITY[bStatus] ?? 6;
         if (aPriority !== bPriority) return aPriority - bPriority;
         return new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
       })
     : [];
 
   const counts = sortedAppointments.reduce((acc: Record<string, number>, a: any) => {
-    acc[a.status] = (acc[a.status] || 0) + 1;
+    const s = getEffectiveAppointmentStatus(a.status, a.scheduledAt);
+    acc[s] = (acc[s] || 0) + 1;
     return acc;
   }, {});
 
@@ -89,6 +102,17 @@ export default function AppointmentsPage() {
         <Link href="/dashboard/appointments/new" className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
           <Plus className="w-4 h-4" /> New Appointment
         </Link>
+      </div>
+
+      {/* Search */}
+      <div className="relative mb-6 max-w-md">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by patient name, phone, or reason..."
+          className="input pl-10"
+        />
       </div>
 
       {/* Filters - Desktop / Tablet */}
@@ -197,10 +221,11 @@ export default function AppointmentsPage() {
           </div>
         ) : (
           sortedAppointments.map((appt: any, idx: number) => {
-            const meta = STATUS_META[appt.status] || STATUS_META.SCHEDULED;
+            const effectiveStatus = getEffectiveAppointmentStatus(appt.status, appt.scheduledAt);
+            const meta = STATUS_META[effectiveStatus] || STATUS_META.SCHEDULED;
             const StatusIcon = meta.icon;
-            const showGroupHeader = !status && appt.status !== lastStatus;
-            lastStatus = appt.status;
+            const showGroupHeader = !status && effectiveStatus !== lastStatus;
+            lastStatus = effectiveStatus;
 
             return (
               <div key={appt.id}>
@@ -208,9 +233,9 @@ export default function AppointmentsPage() {
                   <div className={cn('flex items-center gap-2 px-1 mb-2', idx !== 0 && 'mt-6')}>
                     <span className={cn('w-1.5 h-1.5 rounded-full', meta.accent)} />
                     <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      {STATUS_LABELS[appt.status] || appt.status}
+                      {STATUS_LABELS[effectiveStatus] || effectiveStatus}
                     </p>
-                    <span className="text-xs text-slate-300 font-medium">({counts[appt.status]})</span>
+                    <span className="text-xs text-slate-300 font-medium">({counts[effectiveStatus]})</span>
                   </div>
                 )}
                 <Link
@@ -238,9 +263,9 @@ export default function AppointmentsPage() {
                       <p className="font-semibold text-slate-800 truncate max-w-full">
                         {appt.patient.user.firstName} {appt.patient.user.lastName}
                       </p>
-                      <span className={cn('badge text-xs shrink-0 gap-1', getStatusColor(appt.status))}>
-                        <StatusIcon className={cn('w-3 h-3', appt.status === 'IN_PROGRESS' && 'animate-spin')} />
-                        {STATUS_LABELS[appt.status] || appt.status}
+                      <span className={cn('badge text-xs shrink-0 gap-1', getStatusColor(effectiveStatus))}>
+                        <StatusIcon className={cn('w-3 h-3', effectiveStatus === 'IN_PROGRESS' && 'animate-spin')} />
+                        {STATUS_LABELS[effectiveStatus] || effectiveStatus}
                       </span>
                     </div>
                     <p className="text-sm text-slate-500 truncate flex items-center gap-1">

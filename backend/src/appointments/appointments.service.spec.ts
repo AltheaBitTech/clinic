@@ -67,7 +67,9 @@ describe('AppointmentsService.create', () => {
       } as never);
 
     whatsappService = {
-      sendAppointmentConfirmationWhatsapp: jest.fn().mockResolvedValue(undefined),
+      sendAppointmentConfirmationWhatsapp: jest
+        .fn()
+        .mockResolvedValue(undefined),
     };
 
     service = new AppointmentsService(
@@ -169,5 +171,95 @@ describe('AppointmentsService.create', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
 
     expect(prisma.appointment.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('AppointmentsService.update — completing an appointment', () => {
+  const baseAppointment = {
+    id: 'appt_1',
+    tenantId: 'tenant_1',
+    patientId: 'patient_1',
+    doctorId: 'doctor_1',
+    patient: { user: { firstName: 'Ada', lastName: 'Lovelace' } },
+    doctor: { user: { firstName: 'Jane', lastName: 'Doe' } },
+  };
+
+  let prisma: {
+    appointment: { findUnique: jest.Mock; update: jest.Mock };
+    prescription: { count: jest.Mock };
+  };
+  let service: AppointmentsService;
+
+  const makeAppointment = (scheduledAt: Date) => ({
+    ...baseAppointment,
+    scheduledAt,
+  });
+
+  beforeEach(() => {
+    prisma = {
+      appointment: {
+        findUnique: jest.fn(),
+        update: jest
+          .fn()
+          .mockResolvedValue({ ...baseAppointment, status: 'COMPLETED' }),
+      },
+      prescription: { count: jest.fn().mockResolvedValue(1) },
+    };
+    service = new AppointmentsService(
+      prisma as unknown as PrismaService,
+      {} as EmailService,
+      {} as WhatsappService,
+    );
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('rejects completing an appointment scheduled for a future date', async () => {
+    const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    prisma.appointment.findUnique.mockResolvedValue(makeAppointment(future));
+
+    await expect(
+      service.update('appt_1', { status: 'COMPLETED' } as any),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.appointment.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects completing an appointment scheduled for a past date', async () => {
+    const past = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    prisma.appointment.findUnique.mockResolvedValue(makeAppointment(past));
+
+    await expect(
+      service.update('appt_1', { status: 'COMPLETED' } as any),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.appointment.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects completing today's appointment when no prescription was written", async () => {
+    prisma.appointment.findUnique.mockResolvedValue(
+      makeAppointment(new Date()),
+    );
+    prisma.prescription.count.mockResolvedValue(0);
+
+    await expect(
+      service.update('appt_1', { status: 'COMPLETED' } as any),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.appointment.update).not.toHaveBeenCalled();
+  });
+
+  it("allows completing today's appointment once a prescription exists", async () => {
+    prisma.appointment.findUnique.mockResolvedValue(
+      makeAppointment(new Date()),
+    );
+    prisma.prescription.count.mockResolvedValue(1);
+
+    const result = await service.update('appt_1', {
+      status: 'COMPLETED',
+    } as any);
+
+    expect(result.status).toBe('COMPLETED');
+    expect(prisma.appointment.update).toHaveBeenCalledTimes(1);
   });
 });

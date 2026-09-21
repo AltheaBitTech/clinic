@@ -7,10 +7,11 @@ import {
   TrendingUp, IndianRupee, PieChart as PieIcon, Sparkles,
   AlertTriangle, RefreshCw
 } from 'lucide-react';
-import { 
+import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend,
-  AreaChart, Area, PieChart, Pie, Cell 
+  AreaChart, Area, PieChart, Pie, Cell
 } from 'recharts';
+import HospitalReportsPanel from '@/components/reports/HospitalReportsPanel';
 
 export default function AnalyticsPage() {
   // Queries
@@ -190,6 +191,9 @@ export default function AnalyticsPage() {
             </div>
 
           </div>
+
+          {/* Reports */}
+          <HospitalReportsPanel />
         </div>
       )}
     </div>

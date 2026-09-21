@@ -88,7 +88,7 @@ export default function PatientDashboard() {
               {stats.activeMedicines.map((rem: any) => (
                 <div key={rem.id} className="p-3 bg-amber-50 rounded-xl">
                   <p className="font-semibold text-slate-800 text-sm">{rem.medicine.name}</p>
-                  <p className="text-xs text-slate-500">{rem.medicine.dosage} · {rem.medicine.timing?.replace('_', ' ')}</p>
+                  <p className="text-xs text-slate-500">{rem.medicine.dosage} · {rem.medicine.timing?.replace(/_/g, ' ')}</p>
                   <p className="text-xs text-amber-600 mt-1">
                     {new Date(rem.scheduledAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                   </p>

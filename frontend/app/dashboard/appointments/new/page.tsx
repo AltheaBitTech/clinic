@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { doctorsApi, patientsApi, appointmentsApi } from '@/lib/api';
-import { formatCurrency, getInitials, getNameError } from '@/lib/utils';
+import { formatCurrency, getInitials, getNameError, stripDigits } from '@/lib/utils';
 import {
   Calendar, Clock, User, Plus, Search, ArrowLeft,
   AlertCircle, CheckCircle2, Stethoscope, Loader2,
@@ -567,7 +567,7 @@ export default function NewAppointmentPage() {
                 <input
                   type="text"
                   value={reason}
-                  onChange={(e) => setReason(e.target.value)}
+                  onChange={(e) => setReason(stripDigits(e.target.value))}
                   placeholder="e.g. Mild fever, follow-up on test report..."
                   className="input"
                 />
@@ -580,7 +580,7 @@ export default function NewAppointmentPage() {
               </label>
               <textarea
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(e) => setNotes(stripDigits(e.target.value))}
                 placeholder="List down any symptoms, medications, or details the doctor should know..."
                 className="input min-h-[100px] resize-y"
               />
