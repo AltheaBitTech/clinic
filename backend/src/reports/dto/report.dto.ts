@@ -3,11 +3,18 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReportType } from '@prisma/client';
 
 export class UploadReportDto {
+  // Multer's FileInterceptor strips the actual upload out of the body before
+  // this DTO is validated, so this field only exists to document the
+  // multipart schema for Swagger. It still needs a class-validator decorator
+  // (even a no-op one) — otherwise the global ValidationPipe's
+  // forbidNonWhitelisted check rejects the request with "property file
+  // should not exist" whenever this key is present on the parsed body.
   @ApiProperty({
     type: 'string',
     format: 'binary',
     description: 'The report file to upload',
   })
+  @IsOptional()
   file: any;
 
   @ApiPropertyOptional({

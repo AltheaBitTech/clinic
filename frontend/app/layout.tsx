@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth';
 import { Toaster } from 'react-hot-toast';
 import QueryProvider from '@/components/providers/QueryProvider';
+import ServiceWorkerRegister from '@/components/providers/ServiceWorkerRegister';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.variable} font-sans antialiased`}>
         <QueryProvider>
           <AuthProvider>
+            <ServiceWorkerRegister />
             {children}
             <Toaster
               position="top-right"
