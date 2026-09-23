@@ -783,16 +783,21 @@ function PosModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col animate-fade-in">
-      <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-100">
-        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-cyan-600" />
-          New Sale (POS)
-        </h3>
+    <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col animate-fade-in">
+      <div className="shrink-0 flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-slate-100 bg-white shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center shrink-0">
+            <Sparkles className="w-4.5 h-4.5 text-cyan-600" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base sm:text-lg font-bold text-slate-800 leading-tight truncate">New Sale (POS)</h3>
+            <p className="text-xs text-slate-500 hidden sm:block">Search a medicine batch, build the cart and take payment.</p>
+          </div>
+        </div>
         <button
           type="button"
           onClick={onClose}
-          className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-lg border-none bg-transparent transition-colors cursor-pointer"
+          className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-lg border-none bg-transparent transition-colors cursor-pointer shrink-0"
         >
           <X className="w-5 h-5" />
         </button>
@@ -801,14 +806,14 @@ function PosModal({ onClose }: { onClose: () => void }) {
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-5 max-w-5xl w-full mx-auto">
           {/* Customer */}
-          <div>
+          <div className="card !p-4 sm:!p-5">
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Customer (optional)</label>
             {isNewCustomer ? (
-              <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <input type="text" placeholder="Name *" value={newCustName} onChange={(e) => setNewCustName(e.target.value)} className="input text-sm" />
                 <input type="text" placeholder="Phone" value={newCustPhone} onChange={(e) => setNewCustPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} inputMode="numeric" maxLength={10} className="input text-sm" />
                 <input type="email" placeholder="Email" value={newCustEmail} onChange={(e) => setNewCustEmail(e.target.value)} className="input text-sm" />
-                <div className="col-span-3 flex justify-end gap-2">
+                <div className="sm:col-span-3 flex justify-end gap-2">
                   <button type="button" onClick={() => setIsNewCustomer(false)} className="btn-secondary text-xs px-3 py-1.5">
                     Cancel
                   </button>
@@ -903,6 +908,7 @@ function PosModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Item picker */}
+          <div className="card !p-4 sm:!p-5 space-y-5">
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Add Items</label>
             <div className="relative">
@@ -1087,8 +1093,10 @@ function PosModal({ onClose }: { onClose: () => void }) {
               </>
             )}
           </div>
+          </div>
 
-          {/* Payments */}
+          {/* Payments & Summary */}
+          <div className="card !p-4 sm:!p-5 space-y-5">
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Payments</label>
@@ -1098,12 +1106,12 @@ function PosModal({ onClose }: { onClose: () => void }) {
             </div>
             <div className="space-y-2">
               {payments.map((p, idx) => (
-                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                  <div className="relative col-span-3">
+                <div key={idx} className="grid grid-cols-2 sm:grid-cols-12 gap-2 sm:items-center p-2.5 sm:p-0 bg-slate-50 sm:bg-transparent rounded-xl sm:rounded-none border border-slate-100 sm:border-none">
+                  <div className="relative">
                     <select
                       value={p.method}
                       onChange={(e) => updatePaymentRow(idx, 'method', e.target.value)}
-                      className="input text-xs py-1.5 appearance-none"
+                      className="input text-xs py-1.5 appearance-none sm:col-span-3"
                     >
                       {paymentMethods.map((m) => (
                         <option key={m} value={m}>{m}</option>
@@ -1117,30 +1125,32 @@ function PosModal({ onClose }: { onClose: () => void }) {
                     placeholder="Amount"
                     value={p.amount}
                     onChange={(e) => updatePaymentRow(idx, 'amount', e.target.value)}
-                    className="input text-xs py-1.5 col-span-3"
+                    className="input text-xs py-1.5 sm:col-span-3"
                   />
                   <input
                     type="text"
                     placeholder="Reference No. (optional)"
                     value={p.referenceNo}
                     onChange={(e) => updatePaymentRow(idx, 'referenceNo', e.target.value)}
-                    className="input text-xs py-1.5 col-span-4"
+                    className="input text-xs py-1.5 col-span-2 sm:col-span-4"
                   />
-                  <button
-                    type="button"
-                    onClick={() => fillFullBalance(idx)}
-                    className="col-span-1 text-[10px] font-semibold text-cyan-600 hover:underline whitespace-nowrap"
-                  >
-                    Full
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removePaymentRow(idx)}
-                    disabled={payments.length === 1}
-                    className="col-span-1 text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer disabled:opacity-30 justify-self-end"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="col-span-2 sm:col-span-2 flex items-center justify-between sm:justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => fillFullBalance(idx)}
+                      className="text-[10px] font-semibold text-cyan-600 hover:underline whitespace-nowrap"
+                    >
+                      Fill Full Balance
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removePaymentRow(idx)}
+                      disabled={payments.length === 1}
+                      className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer disabled:opacity-30 shrink-0"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1175,6 +1185,7 @@ function PosModal({ onClose }: { onClose: () => void }) {
                 emphasis={balanceDue > 0}
               />
             </div>
+          </div>
           </div>
         </div>
 
