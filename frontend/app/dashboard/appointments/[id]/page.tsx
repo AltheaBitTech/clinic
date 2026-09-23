@@ -41,14 +41,8 @@ export default function AppointmentDetailPage() {
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [invoiceAmount, setInvoiceAmount] = useState(500);
   const [invoiceDiscount, setInvoiceDiscount] = useState(0);
-  const [invoiceTax, setInvoiceTax] = useState(90); // 18% of 500
+  const [invoiceTax, setInvoiceTax] = useState(0);
   const [invoiceNotes, setInvoiceNotes] = useState('');
-
-  // Auto-calculate tax on amount/discount change
-  useEffect(() => {
-    const net = Math.max(0, invoiceAmount - invoiceDiscount);
-    setInvoiceTax(Math.round(net * 0.18 * 100) / 100);
-  }, [invoiceAmount, invoiceDiscount]);
 
   // Queries
   const { data: appt, isLoading, error, refetch } = useQuery({
@@ -144,7 +138,7 @@ export default function AppointmentDetailPage() {
     const fee = Number(appt.doctor?.consultationFee || 500);
     setInvoiceAmount(fee);
     setInvoiceDiscount(0);
-    setInvoiceTax(Math.round(fee * 0.18 * 100) / 100);
+    setInvoiceTax(0);
     setShowInvoiceForm(true);
   };
 
@@ -736,12 +730,18 @@ export default function AppointmentDetailPage() {
                 </div>
 
                 {(isReceptionist || isAdmin) && !showInvoiceForm && (
-                  <button
-                    onClick={handleOpenInvoiceForm}
-                    className="w-full bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-1.5 border border-cyan-100"
-                  >
-                    <Plus className="w-4 h-4" /> Generate Invoice
-                  </button>
+                  ['IN_PROGRESS', 'COMPLETED'].includes(appt.status) ? (
+                    <button
+                      onClick={handleOpenInvoiceForm}
+                      className="w-full bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-1.5 border border-cyan-100"
+                    >
+                      <Plus className="w-4 h-4" /> Generate Invoice
+                    </button>
+                  ) : (
+                    <p className="text-xs text-slate-400 text-center">
+                      Billing is available once the patient is checked in or the visit is completed.
+                    </p>
+                  )
                 )}
 
                 {showInvoiceForm && (
@@ -775,10 +775,6 @@ export default function AppointmentDetailPage() {
                           min="0"
                           required
                         />
-                      </div>
-                      <div className="flex justify-between bg-white p-2 rounded-lg border border-slate-100">
-                        <span className="text-slate-400 font-semibold">18% GST (Auto-calculated):</span>
-                        <span className="font-bold text-slate-800">{formatCurrency(invoiceTax)}</span>
                       </div>
                       <div>
                         <label className="block text-slate-500 font-semibold mb-1">Billing Notes (Optional)</label>

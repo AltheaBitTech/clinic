@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { pharmacySalesApi } from '@/lib/api';
-import { ArrowLeft, Receipt, Loader2, RotateCcw, Undo2 } from 'lucide-react';
+import { pharmacySalesApi, pharmaciesApi } from '@/lib/api';
+import { ArrowLeft, Receipt, Loader2, RotateCcw, Undo2, Printer } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { printSaleInvoice } from '@/lib/printInvoice';
 import toast from 'react-hot-toast';
 
 const statusStyles: Record<string, string> = {
@@ -30,6 +31,11 @@ export default function PharmacySaleDetailPage() {
   const { data: sale, isLoading } = useQuery({
     queryKey: ['pharmacy-sale', id],
     queryFn: () => pharmacySalesApi.getOne(id).then((r) => r.data),
+  });
+
+  const { data: pharmacy } = useQuery({
+    queryKey: ['pharmacy-mine'],
+    queryFn: () => pharmaciesApi.getMine().then((r) => r.data),
   });
 
   if (isLoading) {
@@ -63,9 +69,17 @@ export default function PharmacySaleDetailPage() {
             </p>
           </div>
         </div>
-        <span className={`badge text-xs font-bold ${statusStyles[sale.paymentStatus] || 'bg-slate-100 text-slate-600'}`}>
-          {sale.paymentStatus}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`badge text-xs font-bold ${statusStyles[sale.paymentStatus] || 'bg-slate-100 text-slate-600'}`}>
+            {sale.paymentStatus}
+          </span>
+          <button
+            onClick={() => printSaleInvoice(sale, pharmacy)}
+            className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
+          >
+            <Printer className="w-3.5 h-3.5" /> Print Invoice
+          </button>
+        </div>
       </div>
 
       <div className="card mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">

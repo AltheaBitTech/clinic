@@ -7,10 +7,17 @@ import { PurchaseOrderStatus, StockMovementType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { StockService } from '../pharmacy-shared/stock.service';
 import { PharmacyAuditService } from '../pharmacy-shared/pharmacy-audit.service';
+import { EmailService } from '../email/email.service';
 import {
   CreatePurchaseOrderDto,
   ReceivePurchaseOrderDto,
+  SendPurchaseOrderEmailDto,
 } from './dto/purchase-order.dto';
+
+const PURCHASE_ORDER_DETAIL_INCLUDE = {
+  supplier: true,
+  items: { include: { medicine: true } },
+};
 
 @Injectable()
 export class PharmacyPurchasesService {
@@ -18,6 +25,7 @@ export class PharmacyPurchasesService {
     private readonly prisma: PrismaService,
     private readonly stockService: StockService,
     private readonly auditService: PharmacyAuditService,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(
@@ -125,7 +133,7 @@ export class PharmacyPurchasesService {
   async findOne(id: string, pharmacyId: string) {
     const order = await this.prisma.purchaseOrder.findFirst({
       where: { id, pharmacyId },
-      include: { supplier: true, items: { include: { medicine: true } } },
+      include: PURCHASE_ORDER_DETAIL_INCLUDE,
     });
     if (!order) throw new NotFoundException('Purchase order not found');
     return order;
@@ -242,6 +250,253 @@ export class PharmacyPurchasesService {
       );
 
       return updated;
+    });
+  }
+
+  // ─── PDF / sharing ──────────────────────────────────────────────────────
+
+  async getPdfFile(
+    id: string,
+    pharmacyId: string,
+  ): Promise<{ buffer: Buffer; fileName: string }> {
+    const order = await this.findOne(id, pharmacyId);
+    const pharmacy = await this.prisma.pharmacy.findUnique({
+      where: { id: pharmacyId },
+    });
+    const buffer = await this.generatePdfBuffer(order, pharmacy);
+    return { buffer, fileName: `${order.orderNo}.pdf` };
+  }
+
+  async getPublicPdfFile(
+    id: string,
+  ): Promise<{ buffer: Buffer; fileName: string }> {
+    const order = await this.prisma.purchaseOrder.findUnique({
+      where: { id },
+      include: PURCHASE_ORDER_DETAIL_INCLUDE,
+    });
+    if (!order) throw new NotFoundException('Purchase order not found');
+    const pharmacy = await this.prisma.pharmacy.findUnique({
+      where: { id: order.pharmacyId },
+    });
+    const buffer = await this.generatePdfBuffer(order, pharmacy);
+    return { buffer, fileName: `${order.orderNo}.pdf` };
+  }
+
+  async emailToSupplier(
+    id: string,
+    pharmacyId: string,
+    dto: SendPurchaseOrderEmailDto,
+  ): Promise<{ sent: true; recipientEmail: string }> {
+    const order = await this.findOne(id, pharmacyId);
+    const recipientEmail = dto.email || order.supplier.email;
+    if (!recipientEmail) {
+      throw new BadRequestException(
+        'Supplier has no email on file — provide one to send to',
+      );
+    }
+
+    const pharmacy = await this.prisma.pharmacy.findUnique({
+      where: { id: pharmacyId },
+    });
+    const buffer = await this.generatePdfBuffer(order, pharmacy);
+
+    await this.emailService.sendPurchaseOrderToSupplier({
+      recipientEmail,
+      supplierName: order.supplier.name,
+      pharmacyName: pharmacy?.name || 'Pharmacy',
+      orderNo: order.orderNo,
+      total: Number(order.total),
+      pdfBuffer: buffer,
+    });
+
+    return { sent: true, recipientEmail };
+  }
+
+  private generatePdfBuffer(order: any, pharmacy: any): Promise<Buffer> {
+    const PDFDocument = require('pdfkit');
+
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      const chunks: Buffer[] = [];
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      const marginX = 50;
+      const contentWidth = doc.page.width - marginX * 2;
+      const money = (v: number) =>
+        `Rs. ${Number(v).toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
+      const formatDate = (d: Date | string) =>
+        new Date(d).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        });
+      const drawDivider = () => {
+        doc.moveDown(0.4);
+        doc
+          .strokeColor('#ccc')
+          .moveTo(marginX, doc.y)
+          .lineTo(marginX + contentWidth, doc.y)
+          .stroke();
+        doc.strokeColor('black');
+        doc.moveDown(0.5);
+      };
+      const sectionHeading = (title: string) => {
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#0e7490').text(title);
+        doc.fillColor('black');
+        doc.moveDown(0.3);
+      };
+      const labelValueRow = (label: string, value: string) => {
+        doc
+          .font('Helvetica-Bold')
+          .fontSize(10)
+          .text(label, marginX, doc.y, { continued: true });
+        doc.font('Helvetica').text(` : ${value}`);
+      };
+      const summaryRow = (label: string, value: string, bold = false) => {
+        const y = doc.y;
+        doc
+          .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+          .fontSize(10)
+          .text(label, marginX, y, { width: contentWidth - 120 });
+        doc.text(value, marginX + contentWidth - 120, y, {
+          width: 120,
+          align: 'right',
+        });
+        doc.moveDown(0.4);
+      };
+
+      // ─── Header ───
+      doc
+        .fontSize(18)
+        .font('Helvetica-Bold')
+        .fillColor('#0e7490')
+        .text(pharmacy?.name || 'Pharmacy');
+      doc.fillColor('black');
+      const addressLine = [pharmacy?.address, pharmacy?.city, pharmacy?.state]
+        .filter(Boolean)
+        .join(', ');
+      if (addressLine)
+        doc.fontSize(9).font('Helvetica').fillColor('#666').text(addressLine);
+      if (pharmacy?.phone)
+        doc.fontSize(9).fillColor('#666').text(`Phone: ${pharmacy.phone}`);
+      doc.fillColor('black');
+      doc.moveDown(0.5);
+
+      doc
+        .fontSize(16)
+        .font('Helvetica-Bold')
+        .fillColor('#0e7490')
+        .text('PURCHASE ORDER', { align: 'right' });
+      doc.fillColor('black');
+      drawDivider();
+
+      // ─── Order meta ───
+      labelValueRow('Order No', order.orderNo);
+      labelValueRow(
+        'Order Date',
+        order.orderDate ? formatDate(order.orderDate) : '—',
+      );
+      labelValueRow('Status', String(order.status).replace(/_/g, ' '));
+      if (order.invoiceNo) labelValueRow('Invoice No', order.invoiceNo);
+      if (order.invoiceDate)
+        labelValueRow('Invoice Date', formatDate(order.invoiceDate));
+      drawDivider();
+
+      // ─── Supplier ───
+      sectionHeading('Supplier');
+      labelValueRow('Name', order.supplier.name);
+      if (order.supplier.phone) labelValueRow('Phone', order.supplier.phone);
+      if (order.supplier.email) labelValueRow('Email', order.supplier.email);
+      if (order.supplier.gstin) labelValueRow('GSTIN', order.supplier.gstin);
+      drawDivider();
+
+      // ─── Items table ───
+      sectionHeading('Items');
+      const colWidths = [155, 80, 45, 65, 45, 105];
+      const headers = ['Medicine', 'Batch', 'Qty', 'Rate', 'GST%', 'Amount'];
+      const drawRow = (
+        values: string[],
+        opts: { bold?: boolean; color?: string } = {},
+      ) => {
+        if (doc.y > doc.page.height - 100) doc.addPage();
+        const y = doc.y;
+        let x = marginX;
+        doc
+          .font(opts.bold ? 'Helvetica-Bold' : 'Helvetica')
+          .fontSize(8.5)
+          .fillColor(opts.color || 'black');
+        values.forEach((v, i) => {
+          doc.text(v, x, y, {
+            width: colWidths[i],
+            align: i >= 2 ? 'right' : 'left',
+          });
+          x += colWidths[i];
+        });
+        doc.fillColor('black');
+        doc.y = y + 16;
+      };
+
+      drawRow(headers, { bold: true, color: '#666' });
+      doc
+        .strokeColor('#ccc')
+        .moveTo(marginX, doc.y)
+        .lineTo(marginX + contentWidth, doc.y)
+        .stroke();
+      doc.strokeColor('black');
+      doc.moveDown(0.2);
+
+      for (const item of order.items || []) {
+        drawRow([
+          item.medicine?.name || item.medicineId,
+          item.batchNo,
+          String(item.quantity),
+          money(item.rate),
+          item.gstPercent != null ? `${item.gstPercent}%` : '—',
+          money(Number(item.rate) * item.quantity),
+        ]);
+      }
+      doc.moveDown(0.5);
+      drawDivider();
+
+      // ─── Totals ───
+      const gstInvoiceAmount =
+        Number(order.subtotal) -
+        Number(order.discount) -
+        Number(order.cashDiscount ?? 0) +
+        Number(order.tax);
+
+      summaryRow('Item Total', money(order.subtotal));
+      summaryRow('Less Prod Discount', `- ${money(order.discount)}`);
+      summaryRow(
+        'Less Cash Discount',
+        `- ${money(order.cashDiscount ?? 0)}`,
+      );
+      summaryRow('GST + CESS', money(order.tax));
+      summaryRow('GST Invoice Amount', money(gstInvoiceAmount), true);
+      summaryRow('Less Cr. Note', `- ${money(order.creditNote ?? 0)}`);
+      summaryRow('Add Dr. Note', `+ ${money(order.debitNote ?? 0)}`);
+      summaryRow('Other +/-, R/o', money(order.otherAdjustment ?? 0));
+      doc.moveDown(0.2);
+      doc.fillColor('#0e7490');
+      summaryRow('Net Payable', money(order.total), true);
+      doc.fillColor('black');
+      drawDivider();
+
+      doc
+        .fontSize(9)
+        .font('Helvetica-Oblique')
+        .fillColor('#555')
+        .text('This is a computer-generated purchase order.', {
+          align: 'right',
+        });
+      doc.fillColor('black');
+
+      doc.end();
     });
   }
 }

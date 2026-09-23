@@ -46,9 +46,18 @@ export class PharmacyCatalogController {
   @Get()
   @ApiOperation({ summary: 'List/search medicines in this pharmacy’s catalog' })
   @ApiQuery({ name: 'search', required: false })
-  async findAll(@CurrentUser() user: any, @Query('search') search?: string) {
+  @ApiQuery({ name: 'includeInactive', required: false, type: Boolean })
+  async findAll(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('includeInactive') includeInactive?: string,
+  ) {
     const pharmacy = await this.pharmaciesService.getMine(user.id);
-    return this.catalogService.findAll(pharmacy.id, search);
+    return this.catalogService.findAll(
+      pharmacy.id,
+      search,
+      includeInactive === 'true',
+    );
   }
 
   @Get(':id')

@@ -181,8 +181,14 @@ export class DashboardService {
   }
 
   async getPatientDashboard(patientId: string) {
-    const [upcomingAppts, activeMedicines, recentReports, recentPrescriptions] =
-      await Promise.all([
+    const [
+      upcomingAppts,
+      activeMedicines,
+      recentReports,
+      recentPrescriptions,
+      pendingInvoices,
+      pendingDue,
+    ] = await Promise.all([
         this.prisma.appointment.findMany({
           where: {
             patientId,
@@ -229,6 +235,15 @@ export class DashboardService {
             },
           },
         }),
+        this.prisma.invoice.findMany({
+          where: { patientId, status: 'PENDING' },
+          orderBy: { createdAt: 'desc' },
+          take: 3,
+        }),
+        this.prisma.invoice.aggregate({
+          where: { patientId, status: 'PENDING' },
+          _sum: { total: true },
+        }),
       ]);
 
     return {
@@ -236,6 +251,8 @@ export class DashboardService {
       activeMedicines,
       recentReports,
       recentPrescriptions,
+      pendingInvoices,
+      pendingDueAmount: pendingDue._sum.total || 0,
     };
   }
 

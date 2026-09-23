@@ -78,9 +78,18 @@ export class AppointmentsController {
   }
 
   @Put(':id')
-  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST)
+  @Roles(
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.DOCTOR,
+    UserRole.RECEPTIONIST,
+    UserRole.PATIENT,
+  )
   @ApiOperation({ summary: 'Update appointment status/details' })
-  update(@Param('id') id: string, @Body() dto: UpdateAppointmentDto) {
-    return this.appointmentsService.update(id, dto);
+  update(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateAppointmentDto,
+  ) {
+    return this.appointmentsService.update(user, id, dto);
   }
 }

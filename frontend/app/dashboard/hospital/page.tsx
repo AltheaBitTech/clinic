@@ -1,17 +1,18 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { dashboardApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
   Users, Calendar, Stethoscope, Receipt, TrendingUp,
-  AlertCircle, UserCheck, Clock, AlertTriangle, RefreshCw
+  AlertCircle, UserCheck, Clock, AlertTriangle, RefreshCw, ArrowRight
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 
 function StatCard({
-  label, value, icon: Icon, color, subtext
-}: { label: string; value: string | number; icon: React.ElementType; color: string; subtext?: string }) {
+  label, value, icon: Icon, color, subtext, href, hrefLabel
+}: { label: string; value: string | number; icon: React.ElementType; color: string; subtext?: string; href?: string; hrefLabel?: string }) {
   return (
     <div className="card hover:shadow-md transition-all duration-200">
       <div className="flex items-start justify-between mb-3 sm:mb-4">
@@ -22,6 +23,11 @@ function StatCard({
       <p className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1 truncate">{value}</p>
       <p className="text-sm font-medium text-slate-600">{label}</p>
       {subtext && <p className="text-xs text-slate-400 mt-1">{subtext}</p>}
+      {href && (
+        <Link href={href} className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 mt-2">
+          {hrefLabel || 'View More'} <ArrowRight className="w-3 h-3" />
+        </Link>
+      )}
     </div>
   );
 }
@@ -81,7 +87,7 @@ export default function HospitalDashboard() {
         <StatCard label="Today's Appointments" value={stats?.todayAppointments || 0} icon={Calendar} color="bg-cyan-500" />
         <StatCard label="Total Patients" value={stats?.totalPatients || 0} icon={Users} color="bg-emerald-500" />
         <StatCard label="Active Doctors" value={stats?.totalDoctors || 0} icon={Stethoscope} color="bg-purple-500" />
-        <StatCard label="Today's Revenue" value={formatCurrency(stats?.todayRevenue || 0)} icon={TrendingUp} color="bg-amber-500" subtext={`${stats?.pendingPayments || 0} pending invoices`} />
+        <StatCard label="Today's Revenue" value={formatCurrency(stats?.todayRevenue || 0)} icon={TrendingUp} color="bg-amber-500" subtext={`${stats?.pendingPayments || 0} pending invoices`} href="/dashboard/billing" hrefLabel="View full billing & revenue" />
       </div>
 
       {/* Secondary Stats */}

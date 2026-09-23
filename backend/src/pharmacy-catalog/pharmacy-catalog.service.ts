@@ -25,11 +25,15 @@ export class PharmacyCatalogService {
     });
   }
 
-  async findAll(pharmacyId: string, search?: string) {
+  async findAll(
+    pharmacyId: string,
+    search?: string,
+    includeInactive?: boolean,
+  ) {
     return this.prisma.pharmacyMedicine.findMany({
       where: {
         pharmacyId,
-        isActive: true,
+        ...(includeInactive ? {} : { isActive: true }),
         ...(search
           ? {
               OR: [

@@ -78,6 +78,15 @@ export type InvoiceCreatedEmail = {
 
 export type PaymentReceivedEmail = InvoiceCreatedEmail & { paidAt?: Date };
 
+export type PurchaseOrderEmail = {
+  recipientEmail: string;
+  supplierName: string;
+  pharmacyName: string;
+  orderNo: string;
+  total: number;
+  pdfBuffer: Buffer;
+};
+
 export type SubscriptionStatusEmail = {
   recipientEmail: string;
   adminName?: string;
@@ -556,6 +565,31 @@ Amount due: ${amount}`,
     });
   }
 
+  async sendPurchaseOrderToSupplier(params: PurchaseOrderEmail): Promise<void> {
+    const supplierName = this.toSafePlainText(params.supplierName) || 'Supplier';
+    const pharmacyName =
+      this.toSafePlainText(params.pharmacyName) || 'the pharmacy';
+    const amount = this.formatMoney(params.total);
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: `Purchase Order ${params.orderNo} from ${pharmacyName}`,
+      context: `purchase order email (orderNo=${params.orderNo})`,
+      html: `<p>Hello ${this.escapeHtml(supplierName)},</p>
+<p>Please find attached purchase order <strong>${this.escapeHtml(params.orderNo)}</strong> from <strong>${this.escapeHtml(pharmacyName)}</strong>.</p>
+<p><strong>Order total:</strong> ${this.escapeHtml(amount)}</p>`,
+      text: `Hello ${supplierName},
+
+Please find attached purchase order ${params.orderNo} from ${pharmacyName}.
+
+Order total: ${amount}`,
+      throwOnFailure: true,
+      attachments: [
+        { filename: `${params.orderNo}.pdf`, content: params.pdfBuffer },
+      ],
+    });
+  }
+
   async sendPaymentReceived(params: PaymentReceivedEmail): Promise<void> {
     const invoiceId = params.invoiceId ?? 'unknown';
     const patientName = this.toSafePlainText(params.patientName) || 'Patient';
@@ -981,11 +1015,18 @@ Arogyix Team`,
     text: string;
     context: string;
     throwOnFailure?: boolean;
+    attachments?: { filename: string; content: Buffer }[];
   }): Promise<void> {
     const apiKey = this.config.get<string>('RESEND_API_KEY')?.trim();
     const from = this.config.get<string>('RESEND_FROM_EMAIL')?.trim();
 
     if (!apiKey || !from) {
+      if (this.config.get<string>('NODE_ENV') === 'development') {
+        this.logger.warn(
+          `[DEV] Resend is not configured — printing ${params.context} instead of sending (recipient=${this.maskEmail(params.recipientEmail?.trim() ?? '')}):\n${params.text}`,
+        );
+        return;
+      }
       this.logger.warn(`Skipping ${params.context}: Resend is not configured`);
       if (params.throwOnFailure) {
         throw new Error('Email delivery is not configured');
@@ -1010,6 +1051,7 @@ Arogyix Team`,
       subject: params.subject,
       html: params.html,
       text: params.text,
+      ...(params.attachments ? { attachments: params.attachments } : {}),
     };
 
     const resend = this.createResendClient(apiKey);

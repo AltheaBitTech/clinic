@@ -37,35 +37,86 @@ export class BillingController {
     @Query('patientId') patientId?: string,
     @Query('status') status?: string,
     @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
-    return this.svc.findAll(user.tenantId, patientId, status, page);
+    // Patients may only ever list their own invoices, regardless of what
+    // patientId is passed in — prevents one patient from reading another's bills.
+    const scopedPatientId =
+      user.role === UserRole.PATIENT ? user.patient?.id : patientId;
+    return this.svc.findAll(
+      user.tenantId,
+      scopedPatientId,
+      status,
+      page,
+      limit,
+      startDate,
+      endDate,
+    );
+  }
+
+  @Get('invoices/export')
+  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.RECEPTIONIST)
+  @ApiOperation({ summary: 'Export invoices as CSV' })
+  async exportInvoices(
+    @CurrentUser() user: any,
+    @Res() res: Response,
+    @Query('status') status?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const csv = await this.svc.exportInvoices(
+      user.tenantId,
+      undefined,
+      status,
+      startDate,
+      endDate,
+    );
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="invoices_${Date.now()}.csv"`,
+    );
+    res.send(csv);
   }
 
   @Get('invoices/:id')
   @ApiOperation({ summary: 'Get invoice by ID' })
-  findOne(@Param('id') id: string) {
-    return this.svc.findOne(id);
+  async findOne(@CurrentUser() user: any, @Param('id') id: string) {
+    const invoice = await this.svc.findOne(id);
+    this.assertAccessible(user, invoice);
+    return invoice;
   }
 
   @Get('invoices/:id/pdf')
   @ApiOperation({ summary: 'Download invoice PDF' })
-  async downloadPdf(@Param('id') id: string, @Res() res: Response) {
+  async downloadPdf(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const invoice = await this.svc.findOne(id);
+    this.assertAccessible(user, invoice);
     const { filePath, fileName } = await this.svc.getInvoicePdfFile(id);
     res.download(filePath, fileName);
+  }
+
+  private assertAccessible(user: any, invoice: any) {
+    if (invoice.tenantId !== user.tenantId) {
+      throw new ForbiddenException('You are not authorized to view this invoice');
+    }
+    if (user.role === UserRole.PATIENT && invoice.patient.userId !== user.id) {
+      throw new ForbiddenException('You are not authorized to view this invoice');
+    }
   }
 
   @Put('invoices/:id/pay')
   @Roles(UserRole.HOSPITAL_ADMIN, UserRole.RECEPTIONIST, UserRole.PATIENT)
   @ApiOperation({ summary: 'Mark invoice as paid' })
   async markPaid(@CurrentUser() user: any, @Param('id') id: string) {
-    if (user.role === UserRole.PATIENT) {
-      const invoice = await this.svc.findOne(id);
-      if (invoice.patient.userId !== user.id) {
-        throw new ForbiddenException(
-          'You are not authorized to pay this invoice',
-        );
-      }
-    }
-    return this.svc.markAsPaid(id);
+    const invoice = await this.svc.findOne(id);
+    this.assertAccessible(user, invoice);
+    return this.svc.markAsPaid(id, { role: user.role });
   }
 }

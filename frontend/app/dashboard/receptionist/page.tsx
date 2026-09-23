@@ -13,6 +13,11 @@ import {
 import toast from 'react-hot-toast';
 import { cn, formatCurrency, getStatusColor, getInitials } from '@/lib/utils';
 
+// Billing only applies once a visit has started or finished — an
+// appointment that never happened (NO_SHOW/CANCELLED) or hasn't started yet
+// (SCHEDULED/CONFIRMED) shouldn't offer bill generation.
+const BILLABLE_APPOINTMENT_STATUSES = ['IN_PROGRESS', 'COMPLETED'];
+
 export default function ReceptionistDashboard() {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -352,7 +357,7 @@ export default function ReceptionistDashboard() {
                               {formatCurrency(appt.invoice.total)}
                             </span>
                           </div>
-                        ) : (
+                        ) : BILLABLE_APPOINTMENT_STATUSES.includes(appt.status) ? (
                           <button
                             onClick={() => handleGenerateInvoice(appt.id, appt.patient.id, appt.doctor?.consultationFee)}
                             disabled={generateQuickInvoiceMutation.isPending}
@@ -360,6 +365,8 @@ export default function ReceptionistDashboard() {
                           >
                             Generate Bill
                           </button>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-medium">Not billable</span>
                         )}
                       </td>
 

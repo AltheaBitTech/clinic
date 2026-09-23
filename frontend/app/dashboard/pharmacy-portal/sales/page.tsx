@@ -3,10 +3,12 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { pharmacySalesApi, pharmacyInventoryApi, pharmacyPatientsApi } from '@/lib/api';
+import { pharmacySalesApi, pharmacyInventoryApi, pharmacyPatientsApi, pharmaciesApi } from '@/lib/api';
 import { formatCurrency, formatDateTime, isValidPhone } from '@/lib/utils';
+import { printSaleInvoice } from '@/lib/printInvoice';
 import {
   Receipt, Plus, Loader2, Sparkles, Search, Trash2, X, User, ChevronRight, CreditCard,
+  Printer, ChevronUp, ChevronDown, ChevronsUpDown, RotateCcw as ResetIcon,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -31,22 +33,158 @@ type PaymentRow = {
 const paymentMethods = ['CASH', 'CARD', 'UPI', 'NETBANKING', 'WALLET', 'OTHER'];
 
 const statusStyles: Record<string, string> = {
-  PENDING: 'bg-amber-50 text-amber-700',
-  PAID: 'bg-emerald-50 text-emerald-700',
-  REFUNDED: 'bg-indigo-50 text-indigo-700',
-  CANCELLED: 'bg-red-50 text-red-700',
+  PENDING: 'bg-amber-50 text-amber-700 border border-amber-100',
+  PAID: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+  REFUNDED: 'bg-indigo-50 text-indigo-700 border border-indigo-100',
+  CANCELLED: 'bg-red-50 text-red-700 border border-red-100',
 };
+
+const saleStatusStyles: Record<string, string> = {
+  COMPLETED: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+  PARTIALLY_RETURNED: 'bg-amber-50 text-amber-700 border border-amber-100',
+  RETURNED: 'bg-indigo-50 text-indigo-700 border border-indigo-100',
+  CANCELLED: 'bg-red-50 text-red-700 border border-red-100',
+};
+
+const saleStatusLabels: Record<string, string> = {
+  COMPLETED: 'Completed',
+  PARTIALLY_RETURNED: 'Partially Returned',
+  RETURNED: 'Returned',
+  CANCELLED: 'Cancelled',
+};
+
+/** Derives an overall fulfilment status for a sale from its payment status and any recorded returns. */
+function computeSaleStatus(sale: any): keyof typeof saleStatusLabels {
+  if (sale.paymentStatus === 'CANCELLED') return 'CANCELLED';
+  const returns = sale.returns || [];
+  if (returns.length === 0) return 'COMPLETED';
+  const soldQty = (sale.items || []).reduce((sum: number, i: any) => sum + i.quantity, 0);
+  const returnedQty = returns.reduce(
+    (sum: number, r: any) => sum + (r.items || []).reduce((s: number, ri: any) => s + ri.quantity, 0),
+    0,
+  );
+  return soldQty > 0 && returnedQty >= soldQty ? 'RETURNED' : 'PARTIALLY_RETURNED';
+}
 
 const lineAmount = (c: CartItem) => (Number(c.unitPrice) || 0) * (Number(c.quantity) || 0);
 const lineTax = (c: CartItem) => (lineAmount(c) * (Number(c.gstPercent) || 0)) / 100;
 
+type SortField = 'invoiceNo' | 'customer' | 'total' | 'date';
+
+const PAGE_SIZE_OPTIONS = [10, 25, 50];
+
 export default function PharmacySalesPage() {
   const [isPosOpen, setIsPosOpen] = useState(false);
+
+  const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [saleStatusFilter, setSaleStatusFilter] = useState('');
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
 
   const { data: sales, isLoading } = useQuery({
     queryKey: ['pharmacy-sales'],
     queryFn: () => pharmacySalesApi.getAll().then((r) => r.data),
   });
+
+  const { data: pharmacy } = useQuery({
+    queryKey: ['pharmacy-mine'],
+    queryFn: () => pharmaciesApi.getMine().then((r) => r.data),
+  });
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+    setPage(1);
+  };
+
+  const clearFilters = () => {
+    setInvoiceSearch('');
+    setCustomerSearch('');
+    setDateFrom('');
+    setDateTo('');
+    setPaymentStatusFilter('');
+    setSaleStatusFilter('');
+    setPage(1);
+  };
+
+  const hasActiveFilters =
+    !!invoiceSearch || !!customerSearch || !!dateFrom || !!dateTo || !!paymentStatusFilter || !!saleStatusFilter;
+
+  const filteredSales = useMemo(() => {
+    let list = (sales || []).map((s: any) => ({
+      ...s,
+      customerName: s.patient?.name || 'Walk-in',
+      saleStatus: computeSaleStatus(s),
+    }));
+
+    if (invoiceSearch.trim()) {
+      const q = invoiceSearch.trim().toLowerCase();
+      list = list.filter((s: any) => s.invoiceNo.toLowerCase().includes(q));
+    }
+    if (customerSearch.trim()) {
+      const q = customerSearch.trim().toLowerCase();
+      list = list.filter((s: any) => s.customerName.toLowerCase().includes(q));
+    }
+    if (dateFrom) {
+      const from = new Date(dateFrom).getTime();
+      list = list.filter((s: any) => new Date(s.createdAt).getTime() >= from);
+    }
+    if (dateTo) {
+      const to = new Date(dateTo).getTime() + 24 * 60 * 60 * 1000 - 1;
+      list = list.filter((s: any) => new Date(s.createdAt).getTime() <= to);
+    }
+    if (paymentStatusFilter) {
+      list = list.filter((s: any) => s.paymentStatus === paymentStatusFilter);
+    }
+    if (saleStatusFilter) {
+      list = list.filter((s: any) => s.saleStatus === saleStatusFilter);
+    }
+
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...list].sort((a: any, b: any) => {
+      switch (sortField) {
+        case 'invoiceNo':
+          return dir * a.invoiceNo.localeCompare(b.invoiceNo);
+        case 'customer':
+          return dir * a.customerName.localeCompare(b.customerName);
+        case 'total':
+          return dir * (Number(a.total) - Number(b.total));
+        case 'date':
+        default:
+          return dir * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      }
+    });
+  }, [sales, invoiceSearch, customerSearch, dateFrom, dateTo, paymentStatusFilter, saleStatusFilter, sortField, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSales.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedSales = filteredSales.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const renderSortIcon = (field: SortField) => {
+    if (sortField !== field) return <ChevronsUpDown className="w-3 h-3 text-slate-300" />;
+    return sortDir === 'asc' ? <ChevronUp className="w-3 h-3 text-cyan-600" /> : <ChevronDown className="w-3 h-3 text-cyan-600" />;
+  };
+
+  const sortableHeader = (field: SortField, label: string) => (
+    <th
+      onClick={() => toggleSort(field)}
+      className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer select-none hover:text-cyan-700 transition-colors"
+    >
+      <span className="inline-flex items-center gap-1">
+        {label} {renderSortIcon(field)}
+      </span>
+    </th>
+  );
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-6xl mx-auto">
@@ -64,6 +202,77 @@ export default function PharmacySalesPage() {
       </div>
 
       <div className="card">
+        {/* Filters */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4 pb-4 border-b border-slate-100">
+          <div className="relative col-span-2 sm:col-span-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={invoiceSearch}
+              onChange={(e) => { setInvoiceSearch(e.target.value); setPage(1); }}
+              placeholder="Invoice No."
+              className="input text-xs py-1.5 pl-7 w-full"
+            />
+          </div>
+          <div className="relative col-span-2 sm:col-span-1">
+            <User className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={customerSearch}
+              onChange={(e) => { setCustomerSearch(e.target.value); setPage(1); }}
+              placeholder="Customer"
+              className="input text-xs py-1.5 pl-7 w-full"
+            />
+          </div>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+            title="From date"
+            className="input text-xs py-1.5 w-full"
+          />
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+            title="To date"
+            className="input text-xs py-1.5 w-full"
+          />
+          <select
+            value={paymentStatusFilter}
+            onChange={(e) => { setPaymentStatusFilter(e.target.value); setPage(1); }}
+            className="input text-xs py-1.5 appearance-none w-full"
+          >
+            <option value="">All Payment Status</option>
+            {Object.keys(statusStyles).map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <div className="flex gap-1.5">
+            <select
+              value={saleStatusFilter}
+              onChange={(e) => { setSaleStatusFilter(e.target.value); setPage(1); }}
+              className="input text-xs py-1.5 appearance-none w-full"
+            >
+              <option value="">All Sale Status</option>
+              {Object.entries(saleStatusLabels).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                title="Clear filters"
+                aria-label="Clear filters"
+                className="shrink-0 flex items-center justify-center w-8 h-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg border-none bg-slate-50 transition-colors cursor-pointer"
+              >
+                <ResetIcon className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="py-12 flex justify-center items-center gap-2 text-slate-400 text-sm font-medium">
             <Loader2 className="w-5 h-5 animate-spin text-cyan-600" /> Loading sales...
@@ -73,46 +282,119 @@ export default function PharmacySalesPage() {
             <Receipt className="w-12 h-12 text-slate-200 mx-auto mb-4" />
             <p className="text-slate-400">No sales recorded yet.</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Invoice No.</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customer</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Items</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</th>
-                  <th className="py-3 px-4"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {sales.map((s: any) => (
-                  <tr key={s.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-none">
-                    <td className="py-3 px-4 text-xs font-semibold text-slate-900">{s.invoiceNo}</td>
-                    <td className="py-3 px-4 text-xs text-slate-600">{s.patient?.name || 'Walk-in'}</td>
-                    <td className="py-3 px-4 text-xs text-slate-600">{s.items?.length ?? 0}</td>
-                    <td className="py-3 px-4 text-xs font-semibold text-slate-800">{formatCurrency(s.total)}</td>
-                    <td className="py-3 px-4 text-xs">
-                      <span className={`badge text-[10px] font-bold ${statusStyles[s.paymentStatus] || 'bg-slate-100 text-slate-600'}`}>
-                        {s.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-xs text-slate-500">{formatDateTime(s.createdAt)}</td>
-                    <td className="py-3 px-4 text-right">
-                      <Link
-                        href={`/dashboard/pharmacy-portal/sales/${s.id}`}
-                        className="inline-flex items-center gap-1 text-cyan-600 hover:bg-cyan-50 px-2 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                      >
-                        View <ChevronRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        ) : filteredSales.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-400">No sales match your filters.</p>
           </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto rounded-xl border border-slate-100">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 divide-x divide-slate-200/70">
+                    {sortableHeader('invoiceNo', 'Invoice No.')}
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100/60">
+                      <span className="inline-flex items-center gap-1 cursor-pointer select-none hover:text-cyan-700 transition-colors" onClick={() => toggleSort('customer')}>
+                        Customer {renderSortIcon('customer')}
+                      </span>
+                    </th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Items</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100/60">
+                      <span className="inline-flex items-center gap-1 cursor-pointer select-none hover:text-cyan-700 transition-colors" onClick={() => toggleSort('total')}>
+                        Total {renderSortIcon('total')}
+                      </span>
+                    </th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Payment Status</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100/60">Sale Status</th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      <span className="inline-flex items-center gap-1 cursor-pointer select-none hover:text-cyan-700 transition-colors" onClick={() => toggleSort('date')}>
+                        Date {renderSortIcon('date')}
+                      </span>
+                    </th>
+                    <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100/60 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {paginatedSales.map((s: any) => (
+                    <tr key={s.id} className="hover:bg-cyan-50/30 transition-colors divide-x divide-slate-100">
+                      <td className="py-3 px-4 text-xs font-semibold text-slate-900">{s.invoiceNo}</td>
+                      <td className="py-3 px-4 text-xs text-slate-700 font-medium bg-slate-50/50">{s.customerName}</td>
+                      <td className="py-3 px-4 text-xs text-slate-600">{s.items?.length ?? 0}</td>
+                      <td className="py-3 px-4 text-xs font-bold text-slate-800 bg-slate-50/50">{formatCurrency(s.total)}</td>
+                      <td className="py-3 px-4 text-xs">
+                        <span className={`badge text-[10px] font-bold ${statusStyles[s.paymentStatus] || 'bg-slate-100 text-slate-600'}`}>
+                          {s.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-xs bg-slate-50/50">
+                        <span className={`badge text-[10px] font-bold ${saleStatusStyles[s.saleStatus] || 'bg-slate-100 text-slate-600'}`}>
+                          {saleStatusLabels[s.saleStatus] || s.saleStatus}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-500">{formatDateTime(s.createdAt)}</td>
+                      <td className="py-3 px-4 bg-slate-50/50">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => printSaleInvoice(s, pharmacy)}
+                            title="Print invoice"
+                            aria-label="Print invoice"
+                            className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-cyan-600 bg-white hover:bg-cyan-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                          </button>
+                          <Link
+                            href={`/dashboard/pharmacy-portal/sales/${s.id}`}
+                            className="inline-flex items-center gap-1 text-cyan-600 hover:bg-cyan-50 px-2 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                          >
+                            View <ChevronRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 pt-4 border-t border-slate-100">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>
+                  Showing <span className="font-semibold text-slate-700">{paginatedSales.length}</span> of{' '}
+                  <span className="font-semibold text-slate-700">{filteredSales.length}</span> sales
+                </span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                  className="input text-xs py-1 px-2 appearance-none w-auto"
+                >
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <option key={n} value={n}>{n} / page</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-slate-500 font-medium">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

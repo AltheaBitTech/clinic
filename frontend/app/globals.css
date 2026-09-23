@@ -41,6 +41,19 @@
   ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 9999px; transition: background-color 0.2s; }
   ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 
+  /* Dark glass-theme inputs (register/login): stop browser autofill from
+     painting its default white/yellow background over the dark fields */
+  input.text-white:-webkit-autofill,
+  input.text-white:-webkit-autofill:hover,
+  input.text-white:-webkit-autofill:focus,
+  input.text-white:-webkit-autofill:active {
+    -webkit-text-fill-color: #ffffff;
+    caret-color: #ffffff;
+    box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.9) inset;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.9) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
   /* Elegantly Formatted Table */
   table {
     width: 100%;

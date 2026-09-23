@@ -358,8 +358,28 @@ export class AppointmentsService {
     return appointment;
   }
 
-  async update(id: string, dto: UpdateAppointmentDto) {
+  async update(user: any, id: string, dto: UpdateAppointmentDto) {
     const appointment = await this.findOne(id);
+
+    if (user.role === 'PATIENT') {
+      const patient = await this.prisma.patient.findUnique({
+        where: { userId: user.id },
+      });
+      if (!patient || appointment.patientId !== patient.id) {
+        throw new NotFoundException('Appointment not found');
+      }
+      if (
+        dto.status !== 'CANCELLED' ||
+        Object.keys(dto).some(
+          (key) => !['status', 'cancelReason'].includes(key),
+        )
+      ) {
+        throw new BadRequestException(
+          'Patients may only cancel their own appointments',
+        );
+      }
+    }
+
     const previousScheduledAt = appointment.scheduledAt;
     const isReschedule =
       !!dto.scheduledAt &&

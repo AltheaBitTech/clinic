@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pharmacyMedicinesApi } from '@/lib/api';
-import { Pill, Plus, Search, Loader2, Sparkles, Pencil } from 'lucide-react';
+import { Pill, Plus, Search, Loader2, Sparkles, Pencil, Power } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const PAGE_SIZE = 10;
 
 type MedicineForm = {
   name: string;
@@ -35,24 +38,22 @@ const emptyForm: MedicineForm = {
 export default function PharmacyMedicinesPage() {
   const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showInactive, setShowInactive] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<MedicineForm>(emptyForm);
+  const [page, setPage] = useState(1);
 
   const { data: medicines, isLoading } = useQuery({
-    queryKey: ['pharmacy-medicines', searchQuery],
-    queryFn: () => pharmacyMedicinesApi.getAll({ search: searchQuery || undefined }).then((r) => r.data),
+    queryKey: ['pharmacy-medicines', searchQuery, showInactive],
+    queryFn: () =>
+      pharmacyMedicinesApi
+        .getAll({ search: searchQuery || undefined, includeInactive: showInactive || undefined })
+        .then((r) => r.data),
   });
 
-  const createMutation = useMutation({
-    mutationFn: (payload: any) => pharmacyMedicinesApi.create(payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['pharmacy-medicines'] });
-      toast.success('Medicine added to catalog');
-      closeModal();
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to add medicine'),
-  });
+  const totalPages = Math.max(1, Math.ceil((medicines?.length || 0) / PAGE_SIZE));
+  const paginatedMedicines = medicines?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) || [];
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => pharmacyMedicinesApi.update(id, data),
@@ -64,11 +65,15 @@ export default function PharmacyMedicinesPage() {
     onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to update medicine'),
   });
 
-  const openCreateModal = () => {
-    setEditingId(null);
-    setForm(emptyForm);
-    setIsModalOpen(true);
-  };
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      pharmacyMedicinesApi.update(id, { isActive }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['pharmacy-medicines'] });
+      toast.success(variables.isActive ? 'Medicine reactivated' : 'Medicine discontinued');
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to update medicine'),
+  });
 
   const openEditModal = (medicine: any) => {
     setEditingId(medicine.id);
@@ -113,12 +118,10 @@ export default function PharmacyMedicinesPage() {
     };
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: payload });
-    } else {
-      createMutation.mutate(payload);
     }
   };
 
-  const isSaving = createMutation.isPending || updateMutation.isPending;
+  const isSaving = updateMutation.isPending;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-6xl mx-auto">
@@ -130,22 +133,34 @@ export default function PharmacyMedicinesPage() {
           </h1>
           <p className="page-subtitle">Medicines your pharmacy stocks, sells and dispenses.</p>
         </div>
-        <button onClick={openCreateModal} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
+        <Link
+          href="/dashboard/pharmacy-portal/medicines/new"
+          className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+        >
           <Plus className="w-4 h-4" /> Add Medicine
-        </button>
+        </Link>
       </div>
 
-      <div className="card mb-6">
-        <div className="relative">
+      <div className="card mb-6 flex flex-col sm:flex-row gap-3 sm:items-center">
+        <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             placeholder="Search by name, generic name, brand or barcode..."
             className="input pl-10"
           />
         </div>
+        <label className="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={showInactive}
+            onChange={(e) => { setShowInactive(e.target.checked); setPage(1); }}
+            className="rounded border-slate-300"
+          />
+          Show discontinued
+        </label>
       </div>
 
       <div className="card">
@@ -169,12 +184,18 @@ export default function PharmacyMedicinesPage() {
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sale Price</th>
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reorder Level</th>
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Rx</th>
+                  <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {medicines.map((m: any) => (
-                  <tr key={m.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-none">
+                {paginatedMedicines.map((m: any, idx: number) => (
+                  <tr
+                    key={m.id}
+                    className={`hover:bg-cyan-50/30 transition-colors border-b border-slate-50 last:border-none ${
+                      idx % 2 === 1 ? 'bg-slate-50/50' : ''
+                    }`}
+                  >
                     <td className="py-3 px-4 text-xs font-semibold text-slate-900">
                       {m.name}
                       {m.genericName && <p className="text-[11px] text-slate-400 font-normal">{m.genericName}</p>}
@@ -190,7 +211,14 @@ export default function PharmacyMedicinesPage() {
                         <span className="text-slate-400">—</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-xs text-right">
+                    <td className="py-3 px-4 text-xs">
+                      {m.isActive ? (
+                        <span className="badge bg-emerald-50 text-emerald-700 text-[10px] font-bold">Active</span>
+                      ) : (
+                        <span className="badge bg-slate-200 text-slate-600 text-[10px] font-bold">Discontinued</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-xs text-right whitespace-nowrap">
                       <button
                         onClick={() => openEditModal(m)}
                         aria-label={`Edit ${m.name}`}
@@ -198,11 +226,50 @@ export default function PharmacyMedicinesPage() {
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
+                      <button
+                        onClick={() => toggleActiveMutation.mutate({ id: m.id, isActive: !m.isActive })}
+                        disabled={toggleActiveMutation.isPending}
+                        aria-label={m.isActive ? `Discontinue ${m.name}` : `Reactivate ${m.name}`}
+                        title={m.isActive ? 'Discontinue this medicine' : 'Reactivate this medicine'}
+                        className={`p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer ${
+                          m.isActive ? 'text-slate-400 hover:bg-red-50 hover:text-red-600' : 'text-slate-400 hover:bg-emerald-50 hover:text-emerald-600'
+                        }`}
+                      >
+                        <Power className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {medicines && medicines.length > 0 && totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-100">
+            <p className="text-xs text-slate-500">
+              Showing <span className="font-semibold text-slate-700">{paginatedMedicines.length}</span> of{' '}
+              <span className="font-semibold text-slate-700">{medicines.length}</span> medicines
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <span className="text-xs font-semibold text-slate-600 px-2">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -212,7 +279,7 @@ export default function PharmacyMedicinesPage() {
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
               <Sparkles className="w-5 h-5 text-cyan-600" />
-              {editingId ? 'Edit Medicine' : 'Add Medicine to Catalog'}
+              Edit Medicine
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -346,7 +413,7 @@ export default function PharmacyMedicinesPage() {
                   Cancel
                 </button>
                 <button type="submit" disabled={isSaving} className="btn-primary">
-                  {isSaving ? 'Saving...' : editingId ? 'Save Changes' : 'Add to Catalog'}
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

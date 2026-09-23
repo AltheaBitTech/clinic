@@ -29,6 +29,7 @@ export class PharmacySalesService {
         items: { include: { medicine: true, batch: true } },
         payments: true,
         patient: true,
+        returns: { include: { items: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -49,123 +50,133 @@ export class PharmacySalesService {
   }
 
   async create(pharmacyId: string, userId: string, dto: CreateSaleDto) {
-    return this.prisma.$transaction(async (tx) => {
-      const saleCount = await tx.sale.count({ where: { pharmacyId } });
-      const invoiceNo = `INV-${new Date().getFullYear()}-${String(saleCount + 1).padStart(5, '0')}`;
+    return this.prisma.$transaction(
+      async (tx) => {
+        const saleCount = await tx.sale.count({ where: { pharmacyId } });
+        const invoiceNo = `INV-${new Date().getFullYear()}-${String(saleCount + 1).padStart(5, '0')}`;
 
-      const sale = await tx.sale.create({
-        data: {
-          pharmacyId,
-          patientId: dto.patientId,
-          invoiceNo,
-          subtotal: 0,
-          discount: dto.discount ?? 0,
-          tax: 0,
-          total: 0,
-          paymentStatus: PaymentStatus.PENDING,
-        },
-      });
+        const sale = await tx.sale.create({
+          data: {
+            pharmacyId,
+            patientId: dto.patientId,
+            invoiceNo,
+            subtotal: 0,
+            discount: dto.discount ?? 0,
+            tax: 0,
+            total: 0,
+            paymentStatus: PaymentStatus.PENDING,
+          },
+        });
 
-      let subtotal = 0;
-      let tax = 0;
+        let subtotal = 0;
+        let tax = 0;
 
-      for (const line of dto.items) {
-        const totalQty = line.quantity;
-        const picks = line.batchId
-          ? [{ batchId: line.batchId, quantity: totalQty }]
-          : await this.stockService.pickFefoBatches(
-              tx,
+        for (const line of dto.items) {
+          const totalQty = line.quantity;
+          const picks = line.batchId
+            ? [{ batchId: line.batchId, quantity: totalQty }]
+            : await this.stockService.pickFefoBatches(
+                tx,
+                pharmacyId,
+                line.medicineId,
+                totalQty,
+              );
+
+          const perUnitDiscount = (line.discount ?? 0) / totalQty;
+          const perUnitTax = (line.tax ?? 0) / totalQty;
+
+          for (const pick of picks) {
+            const batch = await tx.medicineBatch.findFirst({
+              where: {
+                id: pick.batchId,
+                medicineId: line.medicineId,
+                medicine: { pharmacyId },
+              },
+            });
+            if (!batch) {
+              throw new BadRequestException(
+                'Batch not found for this medicine',
+              );
+            }
+            const unitPrice = line.unitPrice ?? Number(batch.salePrice);
+            const portionDiscount = perUnitDiscount * pick.quantity;
+            const portionTax = perUnitTax * pick.quantity;
+
+            await tx.saleItem.create({
+              data: {
+                saleId: sale.id,
+                medicineId: line.medicineId,
+                batchId: pick.batchId,
+                quantity: pick.quantity,
+                unitPrice,
+                discount: portionDiscount,
+                tax: portionTax,
+              },
+            });
+
+            await this.stockService.deductStock(tx, {
               pharmacyId,
-              line.medicineId,
-              totalQty,
-            );
-
-        const perUnitDiscount = (line.discount ?? 0) / totalQty;
-        const perUnitTax = (line.tax ?? 0) / totalQty;
-
-        for (const pick of picks) {
-          const batch = await tx.medicineBatch.findFirst({
-            where: {
-              id: pick.batchId,
-              medicineId: line.medicineId,
-              medicine: { pharmacyId },
-            },
-          });
-          if (!batch) {
-            throw new BadRequestException('Batch not found for this medicine');
-          }
-          const unitPrice = line.unitPrice ?? Number(batch.salePrice);
-          const portionDiscount = perUnitDiscount * pick.quantity;
-          const portionTax = perUnitTax * pick.quantity;
-
-          await tx.saleItem.create({
-            data: {
-              saleId: sale.id,
               medicineId: line.medicineId,
               batchId: pick.batchId,
               quantity: pick.quantity,
-              unitPrice,
-              discount: portionDiscount,
-              tax: portionTax,
+              type: StockMovementType.SALE,
+              referenceType: 'SALE',
+              referenceId: sale.id,
+              createdBy: userId,
+            });
+
+            subtotal += unitPrice * pick.quantity;
+            tax += portionTax;
+          }
+        }
+
+        const discount = dto.discount ?? 0;
+        const total = subtotal - discount + tax;
+        const paidAmount = dto.payments.reduce((sum, p) => sum + p.amount, 0);
+
+        for (const payment of dto.payments) {
+          await tx.payment.create({
+            data: {
+              saleId: sale.id,
+              method: payment.method,
+              amount: payment.amount,
+              referenceNo: payment.referenceNo,
             },
           });
-
-          await this.stockService.deductStock(tx, {
-            pharmacyId,
-            medicineId: line.medicineId,
-            batchId: pick.batchId,
-            quantity: pick.quantity,
-            type: StockMovementType.SALE,
-            referenceType: 'SALE',
-            referenceId: sale.id,
-            createdBy: userId,
-          });
-
-          subtotal += unitPrice * pick.quantity;
-          tax += portionTax;
         }
-      }
 
-      const discount = dto.discount ?? 0;
-      const total = subtotal - discount + tax;
-      const paidAmount = dto.payments.reduce((sum, p) => sum + p.amount, 0);
-
-      for (const payment of dto.payments) {
-        await tx.payment.create({
+        const updatedSale = await tx.sale.update({
+          where: { id: sale.id },
           data: {
-            saleId: sale.id,
-            method: payment.method,
-            amount: payment.amount,
-            referenceNo: payment.referenceNo,
+            subtotal,
+            tax,
+            total,
+            paymentStatus:
+              paidAmount >= total ? PaymentStatus.PAID : PaymentStatus.PENDING,
           },
+          include: { items: true, payments: true, patient: true },
         });
-      }
 
-      const updatedSale = await tx.sale.update({
-        where: { id: sale.id },
-        data: {
-          subtotal,
-          tax,
-          total,
-          paymentStatus:
-            paidAmount >= total ? PaymentStatus.PAID : PaymentStatus.PENDING,
-        },
-        include: { items: true, payments: true, patient: true },
-      });
+        await this.auditService.log(
+          pharmacyId,
+          userId,
+          'SALE_CREATED',
+          'Sale',
+          sale.id,
+          undefined,
+          { invoiceNo, total },
+          tx,
+        );
 
-      await this.auditService.log(
-        pharmacyId,
-        userId,
-        'SALE_CREATED',
-        'Sale',
-        sale.id,
-        undefined,
-        { invoiceNo, total },
-        tx,
-      );
-
-      return updatedSale;
-    });
+        return updatedSale;
+      },
+      // Cart checkout does several sequential round trips per line item
+      // (batch lookup, stock deduction, sale item + stock movement inserts).
+      // Against a remote DB the default 5s interactive-transaction timeout
+      // can be exceeded for multi-item carts, which aborts the whole sale
+      // with an opaque P2028 "Transaction already closed" error.
+      { maxWait: 10000, timeout: 20000 },
+    );
   }
 
   async createReturn(
@@ -207,60 +218,63 @@ export class PharmacySalesService {
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const total = dto.items.reduce((sum, i) => sum + i.amount, 0);
+    return this.prisma.$transaction(
+      async (tx) => {
+        const total = dto.items.reduce((sum, i) => sum + i.amount, 0);
 
-      const ret = await tx.return.create({
-        data: {
-          pharmacyId,
-          saleId: sale.id,
-          type: ReturnType.CUSTOMER,
-          reason: dto.reason,
-          status: ReturnStatus.COMPLETED,
-          total,
-          items: {
-            create: dto.items.map((i) => ({
-              medicineId: i.medicineId,
-              batchId: i.batchId,
-              quantity: i.quantity,
-              amount: i.amount,
-            })),
+        const ret = await tx.return.create({
+          data: {
+            pharmacyId,
+            saleId: sale.id,
+            type: ReturnType.CUSTOMER,
+            reason: dto.reason,
+            status: ReturnStatus.COMPLETED,
+            total,
+            items: {
+              create: dto.items.map((i) => ({
+                medicineId: i.medicineId,
+                batchId: i.batchId,
+                quantity: i.quantity,
+                amount: i.amount,
+              })),
+            },
           },
-        },
-        include: { items: true },
-      });
-
-      for (const item of dto.items) {
-        await this.stockService.addStock(tx, {
-          pharmacyId,
-          medicineId: item.medicineId,
-          batchId: item.batchId,
-          quantity: item.quantity,
-          type: StockMovementType.RETURN_IN,
-          referenceType: 'RETURN',
-          referenceId: ret.id,
-          createdBy: userId,
-          reason: dto.reason,
+          include: { items: true },
         });
-      }
 
-      await tx.sale.update({
-        where: { id: sale.id },
-        data: { total: { decrement: total } },
-      });
+        for (const item of dto.items) {
+          await this.stockService.addStock(tx, {
+            pharmacyId,
+            medicineId: item.medicineId,
+            batchId: item.batchId,
+            quantity: item.quantity,
+            type: StockMovementType.RETURN_IN,
+            referenceType: 'RETURN',
+            referenceId: ret.id,
+            createdBy: userId,
+            reason: dto.reason,
+          });
+        }
 
-      await this.auditService.log(
-        pharmacyId,
-        userId,
-        'SALE_RETURN_CREATED',
-        'Return',
-        ret.id,
-        undefined,
-        { saleId: sale.id, total },
-        tx,
-      );
+        await tx.sale.update({
+          where: { id: sale.id },
+          data: { total: { decrement: total } },
+        });
 
-      return ret;
-    });
+        await this.auditService.log(
+          pharmacyId,
+          userId,
+          'SALE_RETURN_CREATED',
+          'Return',
+          ret.id,
+          undefined,
+          { saleId: sale.id, total },
+          tx,
+        );
+
+        return ret;
+      },
+      { maxWait: 10000, timeout: 20000 },
+    );
   }
 }

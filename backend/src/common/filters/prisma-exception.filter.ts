@@ -71,6 +71,10 @@ export class PrismaExceptionFilter implements ExceptionFilter {
             : 'This action references a related record that no longer exists.',
         );
       }
+      case 'P2028':
+        return new BadRequestException(
+          'This took too long to process and was cancelled. Please try again.',
+        );
       default: {
         const isProduction = process.env.NODE_ENV === 'production';
         const message = isProduction

@@ -46,7 +46,21 @@ export default function PharmacyPrescriptionsPage() {
         <p className="page-subtitle">Verify and dispense prescriptions for your patients.</p>
       </div>
 
-      <div className="flex border-b border-slate-200 mb-6 gap-2 overflow-x-auto">
+      {/* Mobile: status dropdown */}
+      <div className="sm:hidden mb-6">
+        <select
+          value={activeTab}
+          onChange={(e) => setActiveTab(e.target.value as Tab)}
+          className="input text-sm font-semibold appearance-none w-full"
+        >
+          {tabs.map(({ key, label }) => (
+            <option key={key} value={key}>{label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Desktop/tablet: tabs */}
+      <div className="hidden sm:flex border-b border-slate-200 mb-6 gap-2 overflow-x-auto">
         {tabs.map(({ key, label }) => (
           <button
             key={key}

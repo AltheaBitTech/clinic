@@ -6,7 +6,7 @@ import { io, Socket } from 'socket.io-client';
 import { chatApi, doctorsApi, patientsApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { cn, getInitials, timeAgo, formatDateTime } from '@/lib/utils';
-import { MessageSquare, Search, Send, X, Plus, Stethoscope } from 'lucide-react';
+import { MessageSquare, Search, Send, X, Plus, Stethoscope, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface ChatPerson {
@@ -182,9 +182,14 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen flex animate-fade-in">
+    <div className="h-full flex animate-fade-in overflow-hidden">
       {/* Rooms list */}
-      <aside className="w-80 shrink-0 border-r border-slate-100 bg-white flex flex-col">
+      <aside
+        className={cn(
+          'w-full lg:w-80 shrink-0 border-r border-slate-100 bg-white flex-col',
+          selectedRoomId ? 'hidden lg:flex' : 'flex',
+        )}
+      >
         <div className="px-5 py-5 border-b border-slate-100">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-lg font-bold text-slate-900">Messages</h1>
@@ -267,7 +272,12 @@ export default function ChatPage() {
       </aside>
 
       {/* Thread */}
-      <section className="flex-1 flex flex-col min-w-0 bg-slate-50">
+      <section
+        className={cn(
+          'flex-1 flex-col min-w-0 bg-slate-50',
+          selectedRoomId ? 'flex' : 'hidden lg:flex',
+        )}
+      >
         {!selectedRoom ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
             <MessageSquare className="w-14 h-14 text-slate-200 mb-4" />
@@ -276,7 +286,14 @@ export default function ChatPage() {
           </div>
         ) : (
           <>
-            <header className="px-6 py-4 bg-white border-b border-slate-100 flex items-center gap-3 shrink-0">
+            <header className="px-4 sm:px-6 py-4 bg-white border-b border-slate-100 flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => setSelectedRoomId(null)}
+                className="p-1.5 -ml-1.5 rounded-lg hover:bg-slate-100 shrink-0 lg:hidden"
+                aria-label="Back to conversations"
+              >
+                <ArrowLeft className="w-4.5 h-4.5 text-slate-600" />
+              </button>
               {(() => {
                 const person = counterpartOf(selectedRoom);
                 return (
@@ -298,7 +315,7 @@ export default function ChatPage() {
               })()}
             </header>
 
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-3">
               {messagesQuery.isLoading ? (
                 [...Array(4)].map((_, i) => (
                   <div key={i} className={cn('flex', i % 2 ? 'justify-end' : 'justify-start')}>
@@ -315,7 +332,7 @@ export default function ChatPage() {
                   const isMine = message.senderId === user?.id;
                   return (
                     <div key={message.id} className={cn('flex', isMine ? 'justify-end' : 'justify-start')}>
-                      <div className={cn('max-w-[70%] rounded-2xl px-4 py-2.5', isMine ? 'bg-cyan-600 text-white rounded-br-md' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-md')}>
+                      <div className={cn('max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-2.5', isMine ? 'bg-cyan-600 text-white rounded-br-md' : 'bg-white border border-slate-100 text-slate-700 rounded-bl-md')}>
                         <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                         <p className={cn('text-[10px] mt-1', isMine ? 'text-cyan-200' : 'text-slate-400')} title={formatDateTime(message.createdAt)}>
                           {timeAgo(message.createdAt)}
@@ -328,7 +345,7 @@ export default function ChatPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            <form onSubmit={handleSend} className="px-6 py-4 bg-white border-t border-slate-100 flex items-center gap-3 shrink-0">
+            <form onSubmit={handleSend} className="px-4 sm:px-6 py-3 sm:py-4 bg-white border-t border-slate-100 flex items-center gap-3 shrink-0">
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}

@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/lib/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { io, Socket } from 'socket.io-client';
 import Link from 'next/link';
@@ -56,7 +56,7 @@ const navItems: NavItem[] = [
   { label: 'Lab Reports', href: '/dashboard/pathology-portal/reports', icon: BarChart3, roles: ['PATHOLOGY'] },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'PATIENT'] },
   { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare, roles: ['DOCTOR', 'PATIENT'] },
-  { label: 'Billing', href: '/dashboard/billing', icon: Receipt, roles: ['HOSPITAL_ADMIN', 'RECEPTIONIST'] },
+  { label: 'Billing', href: '/dashboard/billing', icon: Receipt, roles: ['HOSPITAL_ADMIN', 'RECEPTIONIST', 'PATIENT'] },
   { label: 'Staff', href: '/dashboard/staff', icon: UserCheck, roles: ['HOSPITAL_ADMIN'] },
   { label: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['HOSPITAL_ADMIN'] },
   { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, roles: ['ALL'] },
@@ -69,6 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
 
   const { data: notificationsData } = useQuery({
     queryKey: ['notifications'],
@@ -101,6 +102,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Close the mobile drawer whenever the route changes
   useEffect(() => {
     setMobileNavOpen(false);
+  }, [pathname]);
+
+  // The page content scrolls inside <main>, not the window, so Next.js's
+  // built-in scroll-to-top on navigation never applies here — reset it
+  // manually or a new page can render already scrolled to the old position.
+  useEffect(() => {
+    mainRef.current?.scrollTo(0, 0);
   }, [pathname]);
 
   // Redirect away from another role's dashboard home if navigated to directly
@@ -290,7 +298,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main ref={mainRef} className="flex-1 overflow-y-auto">
           {children}
         </main>
       </div>

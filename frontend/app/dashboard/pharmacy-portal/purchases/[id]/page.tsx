@@ -5,9 +5,18 @@ import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { pharmacyPurchasesApi } from '@/lib/api';
-import { ArrowLeft, PackageCheck, Loader2, ClipboardList } from 'lucide-react';
+import {
+  ArrowLeft,
+  PackageCheck,
+  Loader2,
+  ClipboardList,
+  Download,
+  Mail,
+  MessageCircle,
+} from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog';
 
 const statusStyles: Record<string, string> = {
   DRAFT: 'bg-slate-200 text-slate-600',
@@ -21,11 +30,53 @@ export default function PharmacyPurchaseOrderDetailPage() {
   const { id } = useParams() as { id: string };
   const qc = useQueryClient();
   const [receiveQuantities, setReceiveQuantities] = useState<Record<string, string>>({});
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['pharmacy-purchase-order', id],
     queryFn: () => pharmacyPurchasesApi.getOne(id).then((r) => r.data),
   });
+
+  const handleDownload = async () => {
+    try {
+      setIsDownloading(true);
+      const res = await pharmacyPurchasesApi.downloadPdf(id);
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${order?.orderNo || 'purchase-order'}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download purchase order');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const openEmailDialog = () => {
+    setEmailInput(order?.supplier?.email || '');
+    setIsEmailDialogOpen(true);
+  };
+
+  const emailMutation = useMutation({
+    mutationFn: (email: string) => pharmacyPurchasesApi.emailToSupplier(id, email || undefined),
+    onSuccess: (res) => {
+      toast.success(`Purchase order emailed to ${res.data.recipientEmail}`);
+      setIsEmailDialogOpen(false);
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to email purchase order'),
+  });
+
+  const handleWhatsAppShare = () => {
+    const link = pharmacyPurchasesApi.publicPdfUrl(id);
+    const message = `Purchase Order ${order?.orderNo || ''} — view/download: ${link}`;
+    const phoneDigits = (order?.supplier?.phone || '').replace(/\D/g, '');
+    const phone = phoneDigits ? (phoneDigits.length === 10 ? `91${phoneDigits}` : phoneDigits) : '';
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
 
   const receiveMutation = useMutation({
     mutationFn: (items: { purchaseItemId: string; receivedQuantity: number }[]) =>
@@ -87,10 +138,65 @@ export default function PharmacyPurchaseOrderDetailPage() {
             </p>
           </div>
         </div>
-        <span className={`badge text-xs font-bold ${statusStyles[order.status] || 'bg-slate-100 text-slate-600'}`}>
-          {order.status.replace('_', ' ')}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`badge text-xs font-bold ${statusStyles[order.status] || 'bg-slate-100 text-slate-600'}`}>
+            {order.status.replace('_', ' ')}
+          </span>
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            title="Download purchase order PDF"
+            aria-label="Download purchase order PDF"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-cyan-600 hover:bg-cyan-50 transition-colors disabled:opacity-50"
+          >
+            {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={openEmailDialog}
+            title="Send purchase order via email"
+            aria-label="Send purchase order via email"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-cyan-600 hover:bg-cyan-50 transition-colors"
+          >
+            <Mail className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleWhatsAppShare}
+            title="Send purchase order via WhatsApp"
+            aria-label="Send purchase order via WhatsApp"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
+
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogTitle>
+            <Mail className="w-4 h-4 text-cyan-600" /> Email Purchase Order
+          </DialogTitle>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Recipient email</label>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="supplier@example.com"
+                className="input text-sm w-full"
+              />
+            </div>
+            <button
+              onClick={() => emailMutation.mutate(emailInput)}
+              disabled={emailMutation.isPending || !emailInput}
+              className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
+            >
+              {emailMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+              {emailMutation.isPending ? 'Sending...' : 'Send Email'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="card mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div>

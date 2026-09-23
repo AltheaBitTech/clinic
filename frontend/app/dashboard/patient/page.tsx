@@ -3,8 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Calendar, Pill, FileText, ClipboardList, AlertTriangle, RefreshCw } from 'lucide-react';
-import { cn, formatDateTime, formatDate } from '@/lib/utils';
+import { Calendar, Pill, FileText, ClipboardList, AlertTriangle, RefreshCw, Receipt } from 'lucide-react';
+import { cn, formatDateTime, formatDate, formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function PatientDashboard() {
@@ -111,7 +111,7 @@ export default function PatientDashboard() {
           ) : (
             <div className="space-y-3">
               {stats.recentPrescriptions.map((rx: any) => (
-                <div key={rx.id} className="flex items-start gap-3 p-4 border border-slate-100 rounded-xl">
+                <div key={rx.id} className="flex items-start gap-3 p-5 border border-slate-200 rounded-xl bg-slate-50 hover:border-slate-300 hover:bg-slate-100/60 transition-colors">
                   <div className="flex-1">
                     <p className="font-semibold text-slate-800 text-sm">
                       Dr. {rx.doctor.user.firstName} {rx.doctor.user.lastName}
@@ -119,16 +119,54 @@ export default function PatientDashboard() {
                     <p className="text-xs text-slate-500 mt-0.5">{rx.diagnosis || 'General consultation'}</p>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {rx.medicines.slice(0, 3).map((m: any) => (
-                        <span key={m.id} className="badge bg-slate-100 text-slate-600">{m.name}</span>
+                        <span key={m.id} className="badge bg-white text-slate-600 border border-slate-200">{m.name}</span>
                       ))}
                       {rx.medicines.length > 3 && (
-                        <span className="badge bg-slate-100 text-slate-500">+{rx.medicines.length - 3} more</span>
+                        <span className="badge bg-white text-slate-500 border border-slate-200">+{rx.medicines.length - 3} more</span>
                       )}
                     </div>
                   </div>
                   <p className="text-xs text-slate-400">{formatDate(rx.createdAt)}</p>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Billing */}
+        <div className="card">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center">
+                <Receipt className="w-5 h-5 text-rose-600" />
+              </div>
+              <h3 className="font-semibold text-slate-800">Billing</h3>
+            </div>
+            <Link href="/dashboard/billing" className="text-xs font-semibold text-cyan-600 hover:text-cyan-700">
+              View all
+            </Link>
+          </div>
+          {(stats?.pendingInvoices || []).length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-6">No pending bills</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-3 bg-rose-50 rounded-xl flex items-center justify-between">
+                <span className="text-xs font-semibold text-rose-700">Amount Due</span>
+                <span className="text-sm font-bold text-rose-700">{formatCurrency(stats?.pendingDueAmount || 0)}</span>
+              </div>
+              {stats.pendingInvoices.map((inv: any) => (
+                <Link
+                  key={inv.id}
+                  href="/dashboard/billing"
+                  className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                >
+                  <span className="text-xs font-mono font-semibold text-slate-700">{inv.invoiceNo}</span>
+                  <span className="text-xs font-bold text-slate-800">{formatCurrency(inv.total)}</span>
+                </Link>
+              ))}
+              <Link href="/dashboard/billing" className="btn-primary w-full text-center text-xs !py-2 block">
+                Pay Now
+              </Link>
             </div>
           )}
         </div>

@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import * as fs from 'fs';
@@ -12,6 +17,11 @@ const INVOICE_INCLUDE = {
   },
   tenant: true,
 };
+
+// Billing only makes sense once a visit has actually happened (or is in
+// progress) — an appointment that never occurred (NO_SHOW/CANCELLED) or
+// hasn't started yet (SCHEDULED/CONFIRMED) shouldn't be billable.
+const BILLABLE_APPOINTMENT_STATUSES = ['IN_PROGRESS', 'COMPLETED'];
 
 @Injectable()
 export class BillingService {
@@ -27,6 +37,20 @@ export class BillingService {
   }
 
   async createInvoice(tenantId: string, data: any) {
+    if (data.appointmentId) {
+      const appointment = await this.prisma.appointment.findFirst({
+        where: { id: data.appointmentId, tenantId },
+      });
+      if (!appointment) {
+        throw new NotFoundException('Appointment not found');
+      }
+      if (!BILLABLE_APPOINTMENT_STATUSES.includes(appointment.status)) {
+        throw new BadRequestException(
+          'A bill can only be generated once the patient is checked in or the appointment is completed',
+        );
+      }
+    }
+
     const total =
       Number(data.amount) - Number(data.discount || 0) + Number(data.tax || 0);
     const invoice = await this.prisma.invoice.create({
@@ -71,17 +95,35 @@ export class BillingService {
     return updated;
   }
 
+  private buildDateRangeWhere(startDate?: string, endDate?: string) {
+    if (!startDate && !endDate) return undefined;
+    const range: { gte?: Date; lte?: Date } = {};
+    if (startDate) range.gte = new Date(startDate);
+    if (endDate) range.lte = new Date(endDate);
+    return range;
+  }
+
   async findAll(
     tenantId: string,
     patientId?: string,
     status?: string,
     page = 1,
     limit = 20,
+    startDate?: string,
+    endDate?: string,
   ) {
+    page = Number(page) || 1;
+    limit = Number(limit) || 20;
     const skip = (page - 1) * limit;
     const where: any = { tenantId };
     if (patientId) where.patientId = patientId;
     if (status) where.status = status;
+    const createdAtRange = this.buildDateRangeWhere(startDate, endDate);
+    if (createdAtRange) where.createdAt = createdAtRange;
+
+    const revenueWhere: any = { tenantId, status: 'PAID' };
+    const paidAtRange = this.buildDateRangeWhere(startDate, endDate);
+    if (paidAtRange) revenueWhere.paidAt = paidAtRange;
 
     const [data, total, revenue] = await Promise.all([
       this.prisma.invoice.findMany({
@@ -107,7 +149,7 @@ export class BillingService {
       }),
       this.prisma.invoice.count({ where }),
       this.prisma.invoice.aggregate({
-        where: { tenantId, status: 'PAID' },
+        where: revenueWhere,
         _sum: { total: true },
       }),
     ]);
@@ -115,7 +157,94 @@ export class BillingService {
     return { data, total, page, limit, totalRevenue: revenue._sum.total || 0 };
   }
 
-  async markAsPaid(id: string) {
+  async exportInvoices(
+    tenantId: string,
+    patientId?: string,
+    status?: string,
+    startDate?: string,
+    endDate?: string,
+  ) {
+    const where: any = { tenantId };
+    if (patientId) where.patientId = patientId;
+    if (status) where.status = status;
+    const createdAtRange = this.buildDateRangeWhere(startDate, endDate);
+    if (createdAtRange) where.createdAt = createdAtRange;
+
+    const invoices = await this.prisma.invoice.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        patient: {
+          include: { user: { select: { firstName: true, lastName: true } } },
+        },
+        appointment: {
+          select: {
+            doctor: {
+              include: { user: { select: { firstName: true, lastName: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    const escapeCsv = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const header = [
+      'Invoice No',
+      'Patient Name',
+      'Doctor',
+      'Issue Date',
+      'Amount',
+      'Discount',
+      'Tax',
+      'Total',
+      'Status',
+      'Paid At',
+    ];
+    const rows = invoices.map((inv) => {
+      const patientName =
+        `${inv.patient.user.firstName} ${inv.patient.user.lastName}`.trim();
+      const doctor = inv.appointment?.doctor
+        ? `Dr. ${inv.appointment.doctor.user.firstName} ${inv.appointment.doctor.user.lastName}`
+        : 'N/A';
+      return [
+        inv.invoiceNo,
+        patientName,
+        doctor,
+        inv.createdAt.toISOString(),
+        Number(inv.amount).toFixed(2),
+        Number(inv.discount || 0).toFixed(2),
+        Number(inv.tax || 0).toFixed(2),
+        Number(inv.total).toFixed(2),
+        inv.status,
+        inv.paidAt ? inv.paidAt.toISOString() : '',
+      ]
+        .map((field) => escapeCsv(String(field)))
+        .join(',');
+    });
+
+    return [header.join(','), ...rows].join('\n');
+  }
+
+  async markAsPaid(id: string, actingUser: { role: string }) {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id },
+      include: { appointment: true },
+    });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+
+    // Staff collecting payment must wait until the visit has started/finished.
+    // A patient paying their own pending invoice is treated as an intentional
+    // advance payment and is exempt from this check.
+    if (
+      invoice.appointment &&
+      actingUser.role !== 'PATIENT' &&
+      !BILLABLE_APPOINTMENT_STATUSES.includes(invoice.appointment.status)
+    ) {
+      throw new BadRequestException(
+        'Invoice cannot be marked as paid before the patient is checked in or the appointment is completed',
+      );
+    }
+
     const updated = await this.prisma.invoice.update({
       where: { id },
       data: { status: 'PAID', paidAt: new Date() },

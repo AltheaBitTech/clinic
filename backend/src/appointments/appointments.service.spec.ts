@@ -222,7 +222,9 @@ describe('AppointmentsService.update — completing an appointment', () => {
     prisma.appointment.findUnique.mockResolvedValue(makeAppointment(future));
 
     await expect(
-      service.update('appt_1', { status: 'COMPLETED' } as any),
+      service.update({ role: 'DOCTOR' } as any, 'appt_1', {
+        status: 'COMPLETED',
+      } as any),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(prisma.appointment.update).not.toHaveBeenCalled();
   });
@@ -232,7 +234,9 @@ describe('AppointmentsService.update — completing an appointment', () => {
     prisma.appointment.findUnique.mockResolvedValue(makeAppointment(past));
 
     await expect(
-      service.update('appt_1', { status: 'COMPLETED' } as any),
+      service.update({ role: 'DOCTOR' } as any, 'appt_1', {
+        status: 'COMPLETED',
+      } as any),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(prisma.appointment.update).not.toHaveBeenCalled();
   });
@@ -244,7 +248,9 @@ describe('AppointmentsService.update — completing an appointment', () => {
     prisma.prescription.count.mockResolvedValue(0);
 
     await expect(
-      service.update('appt_1', { status: 'COMPLETED' } as any),
+      service.update({ role: 'DOCTOR' } as any, 'appt_1', {
+        status: 'COMPLETED',
+      } as any),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(prisma.appointment.update).not.toHaveBeenCalled();
   });
@@ -255,7 +261,7 @@ describe('AppointmentsService.update — completing an appointment', () => {
     );
     prisma.prescription.count.mockResolvedValue(1);
 
-    const result = await service.update('appt_1', {
+    const result = await service.update({ role: 'DOCTOR' } as any, 'appt_1', {
       status: 'COMPLETED',
     } as any);
 

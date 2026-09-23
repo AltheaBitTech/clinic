@@ -262,7 +262,7 @@ export default function NewPatientPage() {
                   type="text"
                   required
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(e) => setFirstName(stripDigits(e.target.value))}
                   placeholder="e.g. John"
                   className="input"
                 />
@@ -277,7 +277,7 @@ export default function NewPatientPage() {
                 type="text"
                 required
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={(e) => setLastName(stripDigits(e.target.value))}
                 placeholder="e.g. Doe"
                 className="input"
               />

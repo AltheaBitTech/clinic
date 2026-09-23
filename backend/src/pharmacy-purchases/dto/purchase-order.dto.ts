@@ -4,6 +4,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsDateString,
+  IsEmail,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -158,4 +159,14 @@ export class ReceivePurchaseOrderDto {
   @ValidateNested({ each: true })
   @Type(() => ReceivePurchaseItemDto)
   items: ReceivePurchaseItemDto[];
+}
+
+export class SendPurchaseOrderEmailDto {
+  @ApiPropertyOptional({
+    example: 'supplier@example.com',
+    description: 'Overrides the supplier email on file',
+  })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
 }

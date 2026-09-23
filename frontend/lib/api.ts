@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://clinic-jlq8.onrender.com/api/v1';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://clinic-jlq8.onrender.com/api/v1';
 console.log('API_URL:', API_URL);
 const api = axios.create({
   baseURL: API_URL,
@@ -160,6 +160,8 @@ export const billingApi = {
   getOne: (id: string) => api.get(`/billing/invoices/${id}`),
   markPaid: (id: string) => api.put(`/billing/invoices/${id}/pay`),
   downloadInvoicePdf: (id: string) => api.get(`/billing/invoices/${id}/pdf`, { responseType: 'blob' }),
+  exportInvoices: (params?: any) =>
+    api.get('/billing/invoices/export', { params, responseType: 'blob' }),
 };
 
 export const tenantRequestsApi = {
@@ -261,6 +263,10 @@ export const pharmacyPurchasesApi = {
   getAll: () => api.get('/pharmacy/purchases'),
   getOne: (id: string) => api.get(`/pharmacy/purchases/${id}`),
   receive: (id: string, data: any) => api.post(`/pharmacy/purchases/${id}/receive`, data),
+  downloadPdf: (id: string) => api.get(`/pharmacy/purchases/${id}/pdf`, { responseType: 'blob' }),
+  emailToSupplier: (id: string, email?: string) =>
+    api.post(`/pharmacy/purchases/${id}/email`, email ? { email } : {}),
+  publicPdfUrl: (id: string) => `${API_URL}/pharmacy/purchases/${id}/pdf/public`,
 };
 
 export const pharmacyPatientsApi = {

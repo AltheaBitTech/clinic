@@ -139,7 +139,7 @@ function HospitalPicker({
             placeholder="Search hospitals by name or city"
             className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
           />
-          <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-white/10 bg-white/[0.03] divide-y divide-white/5">
+          <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-white/15 bg-slate-950/70 shadow-xl divide-y divide-white/10">
             {loading && (
               <div className="px-4 py-3 text-sm text-slate-400 flex items-center gap-2">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching...
@@ -336,6 +336,7 @@ function RegisterForm() {
                   </span>
                   <input
                     {...register('firstName')}
+                    onChange={(e) => setValue('firstName' as any, stripDigits(e.target.value), { shouldValidate: true })}
                     placeholder="John"
                     className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-10 pr-3 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
                   />
@@ -351,6 +352,7 @@ function RegisterForm() {
                   </span>
                   <input
                     {...register('lastName')}
+                    onChange={(e) => setValue('lastName' as any, stripDigits(e.target.value), { shouldValidate: true })}
                     placeholder="Doe"
                     className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-10 pr-3 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"
                   />
@@ -388,7 +390,9 @@ function RegisterForm() {
                   <input
                     {...register('phone' as any)}
                     onChange={(e) => setValue('phone' as any, e.target.value.replace(/\D/g, '').slice(0, 10), { shouldValidate: true })}
+                    type="tel"
                     inputMode="numeric"
+                    pattern="\d{10}"
                     maxLength={10}
                     placeholder="9876543210"
                     className="w-full bg-white/[0.04] border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all font-light text-sm"

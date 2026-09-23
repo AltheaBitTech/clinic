@@ -211,8 +211,7 @@ export default function NewAppointmentPage() {
 
   // Selected details breakdown
   const consultationFee = Number(selectedDoctor?.consultationFee || 0);
-  const serviceTax = consultationFee * 0.18; // 18% tax
-  const totalCost = consultationFee + serviceTax;
+  const totalCost = consultationFee;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
@@ -664,10 +663,6 @@ export default function NewAppointmentPage() {
                 <div className="flex items-center justify-between text-sm text-slate-600">
                   <span>Consultation Fee</span>
                   <span>{formatCurrency(consultationFee)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-600">
-                  <span>Service GST (18%)</span>
-                  <span>{formatCurrency(serviceTax)}</span>
                 </div>
                 <div className="flex items-center justify-between font-bold text-slate-800 text-base border-t border-slate-100 pt-2 mt-1">
                   <span>Total Payable</span>

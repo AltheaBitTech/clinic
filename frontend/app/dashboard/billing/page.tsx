@@ -2,65 +2,82 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { billingApi, patientsApi, doctorsApi } from '@/lib/api';
+import { startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, subYears } from 'date-fns';
+import Link from 'next/link';
+import { billingApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import {
-  Receipt, Plus, Search, CheckCircle2, ChevronDown,
-  Loader2, DollarSign, Calendar, Clock, Sparkles, FileText, User,
-  Download, Mail, MessageCircle
+  Receipt, Plus, ChevronDown,
+  Loader2, DollarSign, Clock,
+  Download, Mail, MessageCircle, FileDown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getInitials, formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate, formatCurrency } from '@/lib/utils';
+import PatientBillingView from './PatientBillingView';
+
+type PeriodFilter = 'ALL' | 'THIS_MONTH' | 'PREV_MONTH' | 'THIS_YEAR' | 'PREV_YEAR' | 'CUSTOM';
+
+const PERIOD_LABELS: Record<PeriodFilter, string> = {
+  ALL: 'All Time',
+  THIS_MONTH: 'This Month',
+  PREV_MONTH: 'Previous Month',
+  THIS_YEAR: 'This Year',
+  PREV_YEAR: 'Previous Year',
+  CUSTOM: 'Custom Range',
+};
+
+function getPeriodRange(period: PeriodFilter, customStart: string, customEnd: string): { startDate?: string; endDate?: string } {
+  const now = new Date();
+  switch (period) {
+    case 'THIS_MONTH':
+      return { startDate: startOfMonth(now).toISOString(), endDate: endOfMonth(now).toISOString() };
+    case 'PREV_MONTH': {
+      const prev = subMonths(now, 1);
+      return { startDate: startOfMonth(prev).toISOString(), endDate: endOfMonth(prev).toISOString() };
+    }
+    case 'THIS_YEAR':
+      return { startDate: startOfYear(now).toISOString(), endDate: endOfYear(now).toISOString() };
+    case 'PREV_YEAR': {
+      const prev = subYears(now, 1);
+      return { startDate: startOfYear(prev).toISOString(), endDate: endOfYear(prev).toISOString() };
+    }
+    case 'CUSTOM':
+      return {
+        startDate: customStart ? new Date(customStart).toISOString() : undefined,
+        endDate: customEnd ? new Date(`${customEnd}T23:59:59.999`).toISOString() : undefined,
+      };
+    default:
+      return {};
+  }
+}
 
 export default function BillingPage() {
+  const { user } = useAuth();
+
+  if (user?.role === 'PATIENT') {
+    return <PatientBillingView />;
+  }
+
+  return <AdminBillingView />;
+}
+
+function AdminBillingView() {
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
-  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
-
-  // Form states for creating invoice
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
-  const [patientSearch, setPatientSearch] = useState('');
-  const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
-
-  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
-  const [doctorSearch, setDoctorSearch] = useState('');
-  const [isDoctorDropdownOpen, setIsDoctorDropdownOpen] = useState(false);
-
-  const [amount, setAmount] = useState(500);
-  const [discount, setDiscount] = useState(0);
-  const [tax, setTax] = useState(90); // 18% GST default for 500
-  const [notes, setNotes] = useState('');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('ALL');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Queries
+  const { startDate, endDate } = getPeriodRange(periodFilter, customStart, customEnd);
   const { data: invoicesData, isLoading } = useQuery({
-    queryKey: ['invoices', statusFilter, page],
-    queryFn: () => billingApi.getInvoices({ status: statusFilter || undefined, page }).then((r) => r.data),
-  });
-
-  const { data: patientsData, isLoading: isLoadingPatients } = useQuery({
-    queryKey: ['patients-search', patientSearch],
-    queryFn: () => patientsApi.getAll({ search: patientSearch, limit: 10 }).then((r) => r.data),
-  });
-
-  const { data: doctorsData, isLoading: isLoadingDoctors } = useQuery({
-    queryKey: ['doctors-search', doctorSearch],
-    queryFn: () => doctorsApi.getAll().then((r) => r.data),
+    queryKey: ['invoices', statusFilter, page, periodFilter, customStart, customEnd],
+    queryFn: () => billingApi.getInvoices({ status: statusFilter || undefined, page, startDate, endDate }).then((r) => r.data),
   });
 
   // Mutations
-  const createInvoiceMutation = useMutation({
-    mutationFn: (payload: any) => billingApi.createInvoice(payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['invoices'] });
-      toast.success('Invoice generated successfully!');
-      closeModal();
-    },
-    onError: (err: any) => {
-      const msg = err.response?.data?.message || 'Failed to create invoice';
-      toast.error(msg);
-    }
-  });
-
   const markPaidMutation = useMutation({
     mutationFn: (id: string) => billingApi.markPaid(id),
     onSuccess: () => {
@@ -94,6 +111,25 @@ export default function BillingPage() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const res = await billingApi.exportInvoices({ status: statusFilter || undefined, startDate, endDate });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `billing-export-${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to export billing data');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleEmailShare = (inv: any) => {
     toast('Emailing invoices will be available soon.', { icon: '📧' });
   };
@@ -101,66 +137,6 @@ export default function BillingPage() {
   const handleWhatsappShare = (inv: any) => {
     toast('Sending invoices via WhatsApp will be available soon.', { icon: '💬' });
   };
-
-  const closeModal = () => {
-    setIsInvoiceModalOpen(false);
-    setSelectedPatient(null);
-    setPatientSearch('');
-    setSelectedDoctor(null);
-    setDoctorSearch('');
-    setAmount(500);
-    setDiscount(0);
-    setTax(90);
-    setNotes('');
-  };
-
-  // Pre-calculate tax (18%) when amount or discount changes
-  const handleAmountChange = (val: number) => {
-    setAmount(val);
-    const net = val - discount;
-    setTax(Math.round(net * 0.18 * 100) / 100);
-  };
-
-  const handleDiscountChange = (val: number) => {
-    setDiscount(val);
-    const net = amount - val;
-    setTax(Math.round(net * 0.18 * 100) / 100);
-  };
-
-  // Pre-populate consultation fee when doctor is selected
-  const handleDoctorSelect = (doc: any) => {
-    setSelectedDoctor(doc);
-    setDoctorSearch(`Dr. ${doc.user.firstName} ${doc.user.lastName}`);
-    const fee = Number(doc.consultationFee || 500);
-    setAmount(fee);
-    const net = fee - discount;
-    setTax(Math.round(net * 0.18 * 100) / 100);
-    setIsDoctorDropdownOpen(false);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedPatient?.id) {
-      toast.error('Please select a patient');
-      return;
-    }
-
-    createInvoiceMutation.mutate({
-      patientId: selectedPatient.id,
-      amount: Number(amount),
-      discount: Number(discount),
-      tax: Number(tax),
-      notes: notes || undefined,
-    });
-  };
-
-  // Filtering doctors list
-  const filteredDoctors = doctorsData?.data?.filter((doc: any) => {
-    const fullName = `${doc.user.firstName} ${doc.user.lastName}`.toLowerCase();
-    const query = doctorSearch.toLowerCase();
-    return fullName.includes(query);
-  }) || [];
 
   // Summary Metrics
   const totalRevenue = invoicesData?.totalRevenue || 0;
@@ -178,9 +154,9 @@ export default function BillingPage() {
           </h1>
           <p className="page-subtitle">Track patient billing records, generate clinic invoices, and record payments.</p>
         </div>
-        <button onClick={() => setIsInvoiceModalOpen(true)} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
+        <Link href="/dashboard/billing/new" className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Create Invoice
-        </button>
+        </Link>
       </div>
 
       {/* Stats Overview */}
@@ -191,7 +167,9 @@ export default function BillingPage() {
           </div>
           <div>
             <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalRevenue)}</p>
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mt-0.5">Total Revenue Collected</p>
+            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mt-0.5">
+              Revenue Collected {periodFilter !== 'ALL' ? `· ${PERIOD_LABELS[periodFilter]}` : ''}
+            </p>
           </div>
         </div>
 
@@ -218,24 +196,72 @@ export default function BillingPage() {
 
       {/* Filters & Content Table */}
       <div className="card">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="font-semibold text-slate-800 text-sm">All Invoices</h3>
-          
-          <div className="relative w-44">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="input appearance-none pr-10 text-xs py-1.5"
-            >
-              <option value="">All Statuses</option>
-              <option value="PAID">Paid Only</option>
-              <option value="PENDING">Pending Only</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        <div className="flex flex-col gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 className="font-semibold text-slate-800 text-sm">All Invoices</h3>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-44">
+                <select
+                  value={periodFilter}
+                  onChange={(e) => {
+                    setPeriodFilter(e.target.value as PeriodFilter);
+                    setPage(1);
+                  }}
+                  className="input appearance-none pr-10 text-xs py-1.5"
+                >
+                  {(Object.keys(PERIOD_LABELS) as PeriodFilter[]).map((key) => (
+                    <option key={key} value={key}>{PERIOD_LABELS[key]}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+
+              <div className="relative w-44">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="input appearance-none pr-10 text-xs py-1.5"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="PAID">Paid Only</option>
+                  <option value="PENDING">Pending Only</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="btn-secondary flex items-center gap-1.5 text-xs py-1.5 px-3 disabled:opacity-50"
+              >
+                {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+                Export
+              </button>
+            </div>
           </div>
+
+          {periodFilter === 'CUSTOM' && (
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-xs font-semibold text-slate-500">From</label>
+              <input
+                type="date"
+                value={customStart}
+                onChange={(e) => { setCustomStart(e.target.value); setPage(1); }}
+                className="input text-xs py-1.5 w-40"
+              />
+              <label className="text-xs font-semibold text-slate-500">To</label>
+              <input
+                type="date"
+                value={customEnd}
+                onChange={(e) => { setCustomEnd(e.target.value); setPage(1); }}
+                className="input text-xs py-1.5 w-40"
+              />
+            </div>
+          )}
         </div>
 
         {isLoading ? (
@@ -454,225 +480,6 @@ export default function BillingPage() {
           </>
         )}
       </div>
-
-      {/* CREATE INVOICE MODAL */}
-      {isInvoiceModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="min-h-full flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[calc(100dvh-2rem)] overflow-y-auto my-auto">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-                <Sparkles className="w-5 h-5 text-cyan-600" />
-                Generate Clinic Invoice
-              </h3>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-              
-                {/* Patient Search */}
-                <div className="relative">
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Search Patient <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={patientSearch}
-                      onFocus={() => setIsPatientDropdownOpen(true)}
-                      onChange={(e) => {
-                        setPatientSearch(e.target.value);
-                        setIsPatientDropdownOpen(true);
-                      }}
-                      placeholder="Search patient by name or code..."
-                      className="input pl-10"
-                      required
-                    />
-                    {selectedPatient && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedPatient(null);
-                          setPatientSearch('');
-                        }}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md transition-colors"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  {isPatientDropdownOpen && (
-                    <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-48 overflow-y-auto divide-y divide-slate-50">
-                      {isLoadingPatients ? (
-                        <div className="p-3 text-center text-xs text-slate-400">Searching...</div>
-                      ) : patientsData?.data?.length === 0 ? (
-                        <div className="p-3 text-center text-xs text-slate-400">No patient found.</div>
-                      ) : (
-                        patientsData?.data?.map((p: any) => (
-                          <div
-                            key={p.id}
-                            onClick={() => {
-                              setSelectedPatient(p);
-                              setPatientSearch(`${p.user.firstName} ${p.user.lastName}`);
-                              setIsPatientDropdownOpen(false);
-                            }}
-                            className="p-3 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
-                          >
-                            <span>{p.user.firstName} {p.user.lastName}</span>
-                            <span className="text-[10px] bg-slate-100 text-slate-500 font-mono px-1.5 py-0.5 rounded">{p.patientCode}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                  {isPatientDropdownOpen && (
-                    <div className="fixed inset-0 z-0" onClick={() => setIsPatientDropdownOpen(false)} />
-                  )}
-                </div>
-
-                {/* Doctor Search (to prefill fee) */}
-                <div className="relative">
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Select Consulting Doctor (Optional)
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={doctorSearch}
-                      onFocus={() => setIsDoctorDropdownOpen(true)}
-                      onChange={(e) => {
-                        setDoctorSearch(e.target.value);
-                        setIsDoctorDropdownOpen(true);
-                      }}
-                      placeholder="Search doctor to pull consulting fees..."
-                      className="input pl-10"
-                    />
-                    {selectedDoctor && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedDoctor(null);
-                          setDoctorSearch('');
-                        }}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md transition-colors"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  {isDoctorDropdownOpen && (
-                    <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-10 max-h-40 overflow-y-auto divide-y divide-slate-50">
-                      {isLoadingDoctors ? (
-                        <div className="p-3 text-center text-xs text-slate-400">Loading...</div>
-                      ) : filteredDoctors.length === 0 ? (
-                        <div className="p-3 text-center text-xs text-slate-400">No doctors.</div>
-                      ) : (
-                        filteredDoctors.map((d: any) => (
-                          <div
-                            key={d.id}
-                            onClick={() => handleDoctorSelect(d)}
-                            className="p-3 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
-                          >
-                            <span>Dr. {d.user.firstName} {d.user.lastName}</span>
-                            <span className="text-[10px] text-cyan-600 bg-cyan-50 font-bold px-1.5 py-0.5 rounded">{formatCurrency(d.consultationFee)}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                  {isDoctorDropdownOpen && (
-                    <div className="fixed inset-0 z-0" onClick={() => setIsDoctorDropdownOpen(false)} />
-                  )}
-                </div>
-
-                {/* Consultation amount, discount, tax */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                      Amount (INR) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      value={amount}
-                      onChange={(e) => handleAmountChange(Number(e.target.value))}
-                      min={0}
-                      className="input text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                      Discount
-                    </label>
-                    <input
-                      type="number"
-                      value={discount}
-                      onChange={(e) => handleDiscountChange(Number(e.target.value))}
-                      min={0}
-                      max={amount}
-                      className="input text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                      Tax (18% GST)
-                    </label>
-                    <input
-                      type="number"
-                      value={tax}
-                      onChange={(e) => setTax(Number(e.target.value))}
-                      min={0}
-                      className="input text-xs"
-                    />
-                  </div>
-                </div>
-
-                {/* Total Payable Recap */}
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Net Total Invoice Cost</span>
-                    <span className="text-xs text-slate-500">Amount - Discount + Tax</span>
-                  </div>
-                  <span className="text-xl font-black text-cyan-600">
-                    {formatCurrency(Number(amount) - Number(discount) + Number(tax))}
-                  </span>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Billing Notes / Remarks
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="e.g. Regular health checkup consultation billing"
-                    className="input text-xs min-h-[60px]"
-                  />
-                </div>
-
-                {/* Footer */}
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-6">
-                  <button type="button" onClick={closeModal} className="btn-secondary">
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={createInvoiceMutation.isPending || !selectedPatient}
-                    className="btn-primary"
-                  >
-                    {createInvoiceMutation.isPending ? 'Generating...' : 'Generate Invoice'}
-                  </button>
-                </div>
-
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
