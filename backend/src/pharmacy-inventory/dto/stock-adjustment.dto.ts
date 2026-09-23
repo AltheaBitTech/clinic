@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { BatchStatus } from '@prisma/client';
 import {
   IsDateString,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -86,4 +88,55 @@ export class CreateBatchDto {
   @IsString()
   @IsNotEmpty()
   reason: string;
+}
+
+export class UpdateBatchDto {
+  @ApiPropertyOptional({ example: 'BATCH-2026-01' })
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  batchNo?: string;
+
+  @ApiPropertyOptional({ example: '2026-01-15' })
+  @IsDateString()
+  @IsOptional()
+  mfgDate?: string;
+
+  @ApiPropertyOptional({ example: '2027-06-30' })
+  @IsDateString()
+  @IsOptional()
+  expiryDate?: string;
+
+  @ApiPropertyOptional({ example: 8.5, description: 'Purchase rate per unit' })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  purchasePrice?: number;
+
+  @ApiPropertyOptional({ example: 12 })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  mrp?: number;
+
+  @ApiPropertyOptional({ example: 10 })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  salePrice?: number;
+
+  @ApiPropertyOptional({ example: 'clx123supplier' })
+  @IsString()
+  @IsOptional()
+  supplierId?: string;
+
+  @ApiPropertyOptional({
+    enum: BatchStatus,
+    example: BatchStatus.BLOCKED,
+    description:
+      'Set to BLOCKED to deactivate this batch, or ACTIVE to reactivate it',
+  })
+  @IsEnum(BatchStatus)
+  @IsOptional()
+  status?: BatchStatus;
 }

@@ -77,6 +77,15 @@ export class PharmacyCatalogController {
     @Body() dto: UpdatePharmacyMedicineDto,
   ) {
     const pharmacy = await this.pharmaciesService.getMine(user.id);
-    return this.catalogService.update(id, pharmacy.id, dto);
+    return this.catalogService.update(id, pharmacy.id, user.id, dto);
+  }
+
+  @Get(':id/price-history')
+  @ApiOperation({
+    summary: 'MRP / sale price change history for a medicine',
+  })
+  async priceHistory(@CurrentUser() user: any, @Param('id') id: string) {
+    const pharmacy = await this.pharmaciesService.getMine(user.id);
+    return this.catalogService.priceHistory(id, pharmacy.id);
   }
 }

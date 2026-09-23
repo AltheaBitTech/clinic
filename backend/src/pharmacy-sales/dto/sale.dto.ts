@@ -7,6 +7,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
   Min,
   ValidateNested,
@@ -125,4 +126,28 @@ export class CreateCustomerReturnDto {
   @ValidateNested({ each: true })
   @Type(() => ReturnItemDto)
   items: ReturnItemDto[];
+}
+
+export class CancelSaleDto {
+  @ApiProperty({ example: 'Wrong items billed by mistake' })
+  @IsString()
+  @IsNotEmpty()
+  reason: string;
+}
+
+export class RecordSalePaymentDto {
+  @ApiProperty({ example: 'CASH' })
+  @IsString()
+  @IsNotEmpty()
+  method: string;
+
+  @ApiProperty({ example: 219.76, description: 'Amount being paid now' })
+  @IsNumber()
+  @IsPositive()
+  amount: number;
+
+  @ApiPropertyOptional({ example: 'UPI-REF-98765' })
+  @IsString()
+  @IsOptional()
+  referenceNo?: string;
 }

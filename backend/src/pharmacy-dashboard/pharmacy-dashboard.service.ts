@@ -26,6 +26,7 @@ export class PharmacyDashboardService {
         }),
         this.prisma.sale.findMany({
           where: { pharmacyId, createdAt: { gte: startOfDay } },
+          include: { payments: true },
         }),
         this.prisma.medicineBatch.count({
           where: {
@@ -42,7 +43,8 @@ export class PharmacyDashboardService {
     }).length;
 
     const todaysSalesTotal = todaysSales.reduce(
-      (sum, s) => sum + Number(s.total),
+      (sum, s) =>
+        sum + s.payments.reduce((paid, p) => paid + Number(p.amount), 0),
       0,
     );
 

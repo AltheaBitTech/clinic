@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pharmacyMedicinesApi } from '@/lib/api';
-import { Pill, Plus, Search, Loader2, Sparkles, Pencil, Power } from 'lucide-react';
+import { Pill, Plus, Search, Loader2, Sparkles, Pencil, Power, History, X } from 'lucide-react';
+import { formatDateTime } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 const PAGE_SIZE = 10;
@@ -43,6 +44,13 @@ export default function PharmacyMedicinesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<MedicineForm>(emptyForm);
   const [page, setPage] = useState(1);
+  const [historyMedicine, setHistoryMedicine] = useState<any | null>(null);
+
+  const { data: priceHistory, isLoading: isLoadingHistory } = useQuery({
+    queryKey: ['pharmacy-medicine-price-history', historyMedicine?.id],
+    queryFn: () => pharmacyMedicinesApi.getPriceHistory(historyMedicine.id).then((r) => r.data),
+    enabled: !!historyMedicine,
+  });
 
   const { data: medicines, isLoading } = useQuery({
     queryKey: ['pharmacy-medicines', searchQuery, showInactive],
@@ -219,6 +227,14 @@ export default function PharmacyMedicinesPage() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-xs text-right whitespace-nowrap">
+                      <button
+                        onClick={() => setHistoryMedicine(m)}
+                        aria-label={`Price history for ${m.name}`}
+                        title="Price history"
+                        className="text-slate-400 hover:bg-slate-100 hover:text-slate-600 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer"
+                      >
+                        <History className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         onClick={() => openEditModal(m)}
                         aria-label={`Edit ${m.name}`}
@@ -417,6 +433,57 @@ export default function PharmacyMedicinesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {historyMedicine && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <History className="w-5 h-5 text-cyan-600" />
+                Price History — {historyMedicine.name}
+              </h3>
+              <button
+                onClick={() => setHistoryMedicine(null)}
+                aria-label="Close"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg border-none bg-transparent cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {isLoadingHistory ? (
+              <div className="py-8 flex justify-center">
+                <Loader2 className="w-5 h-5 animate-spin text-cyan-600" />
+              </div>
+            ) : !priceHistory || priceHistory.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-8">
+                No price changes recorded yet. The current MRP/sale price were set when this medicine was added.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {priceHistory.map((h: any) => (
+                  <li key={h.id} className="text-xs border border-slate-100 rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-semibold text-slate-700">{formatDateTime(h.changedAt)}</span>
+                      <span className="text-slate-400">{h.changedBy}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-slate-600">
+                      <div>
+                        MRP: <span className="line-through text-slate-400">₹{Number(h.before?.mrp ?? 0).toFixed(2)}</span>{' '}
+                        → <span className="font-semibold text-slate-800">₹{Number(h.after?.mrp ?? 0).toFixed(2)}</span>
+                      </div>
+                      <div>
+                        Sale Price: <span className="line-through text-slate-400">₹{Number(h.before?.salePrice ?? 0).toFixed(2)}</span>{' '}
+                        → <span className="font-semibold text-slate-800">₹{Number(h.after?.salePrice ?? 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}

@@ -8,7 +8,7 @@ import { formatCurrency, formatDateTime, isValidPhone } from '@/lib/utils';
 import { printSaleInvoice } from '@/lib/printInvoice';
 import {
   Receipt, Plus, Loader2, Sparkles, Search, Trash2, X, User, ChevronRight, CreditCard,
-  Printer, ChevronUp, ChevronDown, ChevronsUpDown, RotateCcw as ResetIcon,
+  Printer, ChevronUp, ChevronDown, ChevronsUpDown, RotateCcw as ResetIcon, Ban, AlertTriangle, Wallet,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -75,6 +75,8 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 export default function PharmacySalesPage() {
   const [isPosOpen, setIsPosOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<any>(null);
+  const [payTarget, setPayTarget] = useState<any>(null);
 
   const [invoiceSearch, setInvoiceSearch] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
@@ -343,6 +345,26 @@ export default function PharmacySalesPage() {
                           >
                             <Printer className="w-3.5 h-3.5" />
                           </button>
+                          {s.paymentStatus === 'PENDING' && (
+                            <button
+                              onClick={() => setPayTarget(s)}
+                              title="Pay remaining amount"
+                              aria-label="Pay remaining amount"
+                              className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-emerald-600 bg-white hover:bg-emerald-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Wallet className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {s.saleStatus === 'COMPLETED' && (
+                            <button
+                              onClick={() => setCancelTarget(s)}
+                              title="Cancel sale"
+                              aria-label="Cancel sale"
+                              className="flex items-center justify-center w-7 h-7 text-slate-500 hover:text-red-600 bg-white hover:bg-red-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Ban className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           <Link
                             href={`/dashboard/pharmacy-portal/sales/${s.id}`}
                             className="inline-flex items-center gap-1 text-cyan-600 hover:bg-cyan-50 px-2 py-1.5 rounded-lg text-xs font-semibold transition-colors"
@@ -399,6 +421,187 @@ export default function PharmacySalesPage() {
       </div>
 
       {isPosOpen && <PosModal onClose={() => setIsPosOpen(false)} />}
+      {cancelTarget && <CancelSaleModal sale={cancelTarget} onClose={() => setCancelTarget(null)} />}
+      {payTarget && <PaySaleModal sale={payTarget} onClose={() => setPayTarget(null)} />}
+    </div>
+  );
+}
+
+function PaySaleModal({ sale, onClose }: { sale: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const paidAmount = (sale.payments || []).reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+  const balanceDue = Math.max(Number(sale.total) - paidAmount, 0);
+
+  const [method, setMethod] = useState('CASH');
+  const [amount, setAmount] = useState(balanceDue > 0 ? balanceDue.toFixed(2) : '');
+  const [referenceNo, setReferenceNo] = useState('');
+
+  const payMutation = useMutation({
+    mutationFn: (payload: any) => pharmacySalesApi.pay(sale.id, payload),
+    onSuccess: (res) => {
+      const updated = res.data;
+      toast.success(updated.paymentStatus === 'PAID' ? 'Payment recorded — invoice fully paid' : 'Payment recorded');
+      qc.invalidateQueries({ queryKey: ['pharmacy-sales'] });
+      qc.invalidateQueries({ queryKey: ['pharmacy-sale', sale.id] });
+      onClose();
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to record payment'),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = Number(amount);
+    if (!amt || amt <= 0) {
+      toast.error('Enter a valid payment amount');
+      return;
+    }
+    if (amt > balanceDue + 0.01) {
+      toast.error(`Amount cannot exceed the outstanding balance of ${formatCurrency(balanceDue)}`);
+      return;
+    }
+    payMutation.mutate({ method, amount: amt, referenceNo: referenceNo.trim() || undefined });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
+        <div className="flex items-start gap-3 pb-3 border-b border-slate-100 mb-4">
+          <div className="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center shrink-0">
+            <Wallet className="w-4.5 h-4.5 text-cyan-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">Pay Remaining Amount</h3>
+            <p className="text-xs text-slate-500">
+              Outstanding balance on {sale.invoiceNo} is <span className="font-semibold text-amber-600">{formatCurrency(balanceDue)}</span>.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Payment Method
+            </label>
+            <select value={method} onChange={(e) => setMethod(e.target.value)} className="input text-sm appearance-none">
+              {paymentMethods.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Amount <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              min={0.01}
+              max={balanceDue}
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="input text-sm"
+              autoFocus
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Reference No. (optional)
+            </label>
+            <input
+              type="text"
+              value={referenceNo}
+              onChange={(e) => setReferenceNo(e.target.value)}
+              placeholder="e.g. UPI transaction ID"
+              className="input text-sm"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-2">
+            <button type="button" onClick={onClose} className="btn-secondary">
+              Cancel
+            </button>
+            <button type="submit" disabled={payMutation.isPending} className="btn-primary">
+              {payMutation.isPending ? 'Recording...' : 'Record Payment'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function CancelSaleModal({ sale, onClose }: { sale: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [reason, setReason] = useState('');
+
+  const cancelMutation = useMutation({
+    mutationFn: (payload: any) => pharmacySalesApi.cancel(sale.id, payload),
+    onSuccess: () => {
+      toast.success('Sale cancelled and stock restored');
+      qc.invalidateQueries({ queryKey: ['pharmacy-sales'] });
+      qc.invalidateQueries({ queryKey: ['pharmacy-sale', sale.id] });
+      qc.invalidateQueries({ queryKey: ['pharmacy-inventory-batches'] });
+      qc.invalidateQueries({ queryKey: ['pharmacy-inventory-movements'] });
+      onClose();
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to cancel sale'),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reason.trim()) {
+      toast.error('A cancellation reason is required');
+      return;
+    }
+    cancelMutation.mutate({ reason: reason.trim() });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
+        <div className="flex items-start gap-3 pb-3 border-b border-slate-100 mb-4">
+          <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-4.5 h-4.5 text-red-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">Cancel Sale</h3>
+            <p className="text-xs text-slate-500">
+              This will permanently cancel invoice {sale.invoiceNo} and return all sold items back to stock. This cannot be undone.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Reason <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Billed by mistake, wrong medicines added..."
+              className="input text-sm"
+              autoFocus
+              required
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-2">
+            <button type="button" onClick={onClose} className="btn-secondary">
+              Keep Sale
+            </button>
+            <button
+              type="submit"
+              disabled={cancelMutation.isPending}
+              className="flex items-center gap-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl transition-colors disabled:opacity-60"
+            >
+              {cancelMutation.isPending ? 'Cancelling...' : 'Yes, Cancel Sale'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

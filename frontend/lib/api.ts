@@ -239,6 +239,7 @@ export const pharmacyMedicinesApi = {
   getAll: (params?: any) => api.get('/pharmacy/medicines', { params }),
   getOne: (id: string) => api.get(`/pharmacy/medicines/${id}`),
   update: (id: string, data: any) => api.patch(`/pharmacy/medicines/${id}`, data),
+  getPriceHistory: (id: string) => api.get(`/pharmacy/medicines/${id}/price-history`),
 };
 
 export const pharmacyInventoryApi = {
@@ -249,6 +250,7 @@ export const pharmacyInventoryApi = {
   getMovements: (params?: any) => api.get('/pharmacy/inventory/movements', { params }),
   createAdjustment: (data: any) => api.post('/pharmacy/inventory/adjustments', data),
   createBatch: (data: any) => api.post('/pharmacy/inventory/batches', data),
+  updateBatch: (id: string, data: any) => api.patch(`/pharmacy/inventory/batches/${id}`, data),
 };
 
 export const pharmacySuppliersApi = {
@@ -288,11 +290,25 @@ export const pharmacySalesApi = {
   getAll: () => api.get('/pharmacy/sales'),
   getOne: (id: string) => api.get(`/pharmacy/sales/${id}`),
   createReturn: (id: string, data: any) => api.post(`/pharmacy/sales/${id}/return`, data),
+  cancel: (id: string, data: any) => api.post(`/pharmacy/sales/${id}/cancel`, data),
+  pay: (id: string, data: any) => api.post(`/pharmacy/sales/${id}/pay`, data),
 };
 
 export const pharmacyReportsApi = {
   getSales: (params?: any) => api.get('/pharmacy/reports/sales', { params }),
+  exportSales: (params?: any) =>
+    api.get('/pharmacy/reports/sales/export', { params, responseType: 'blob' }),
   getPurchases: (params?: any) => api.get('/pharmacy/reports/purchases', { params }),
+  exportPurchases: (params?: any) =>
+    api.get('/pharmacy/reports/purchases/export', { params, responseType: 'blob' }),
+  getSupplierHistorySummary: () => api.get('/pharmacy/reports/suppliers-history'),
+  getSupplierHistory: (supplierId: string) =>
+    api.get(`/pharmacy/reports/suppliers/${supplierId}/history`),
+  exportSupplierHistory: (supplierId: string, params?: any) =>
+    api.get(`/pharmacy/reports/suppliers/${supplierId}/history/export`, {
+      params,
+      responseType: 'blob',
+    }),
   getInventory: () => api.get('/pharmacy/reports/inventory'),
   getExpiry: (withinDays?: number) =>
     api.get('/pharmacy/reports/expiry', { params: { withinDays } }),

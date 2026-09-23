@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -12,6 +20,7 @@ import { PharmaciesService } from '../pharmacies/pharmacies.service';
 import {
   CreateBatchDto,
   CreateStockAdjustmentDto,
+  UpdateBatchDto,
 } from './dto/stock-adjustment.dto';
 import { PharmacyInventoryService } from './pharmacy-inventory.service';
 
@@ -87,5 +96,19 @@ export class PharmacyInventoryController {
   async createBatch(@CurrentUser() user: any, @Body() dto: CreateBatchDto) {
     const pharmacy = await this.pharmaciesService.getMine(user.id);
     return this.inventoryService.createBatch(pharmacy.id, user.id, dto);
+  }
+
+  @Patch('batches/:id')
+  @ApiOperation({
+    summary:
+      'Update a batch, or deactivate/reactivate it via status (BLOCKED/ACTIVE)',
+  })
+  async updateBatch(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateBatchDto,
+  ) {
+    const pharmacy = await this.pharmaciesService.getMine(user.id);
+    return this.inventoryService.updateBatch(pharmacy.id, user.id, id, dto);
   }
 }

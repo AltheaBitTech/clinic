@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { pharmacySalesApi, pharmaciesApi } from '@/lib/api';
-import { ArrowLeft, Receipt, Loader2, RotateCcw, Undo2, Printer } from 'lucide-react';
+import { ArrowLeft, Receipt, Loader2, RotateCcw, Undo2, Printer, Ban, AlertTriangle, Wallet } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { printSaleInvoice } from '@/lib/printInvoice';
 import toast from 'react-hot-toast';
@@ -27,6 +27,8 @@ const returnStatusStyles: Record<string, string> = {
 export default function PharmacySaleDetailPage() {
   const { id } = useParams() as { id: string };
   const [isReturnOpen, setIsReturnOpen] = useState(false);
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [isPayOpen, setIsPayOpen] = useState(false);
 
   const { data: sale, isLoading } = useQuery({
     queryKey: ['pharmacy-sale', id],
@@ -50,6 +52,9 @@ export default function PharmacySaleDetailPage() {
 
   const lineAmount = (item: any) => Number(item.unitPrice) * item.quantity;
   const lineTotal = (item: any) => lineAmount(item) - Number(item.discount || 0) + Number(item.tax || 0);
+
+  const paidAmount = (sale.payments || []).reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+  const balanceDue = Math.max(Number(sale.total) - paidAmount, 0);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-4xl mx-auto">
@@ -79,6 +84,22 @@ export default function PharmacySaleDetailPage() {
           >
             <Printer className="w-3.5 h-3.5" /> Print Invoice
           </button>
+          {sale.paymentStatus === 'PENDING' && (
+            <button
+              onClick={() => setIsPayOpen(true)}
+              className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
+            >
+              <Wallet className="w-3.5 h-3.5" /> Pay Remaining Amount
+            </button>
+          )}
+          {sale.paymentStatus !== 'CANCELLED' && (sale.returns || []).length === 0 && (
+            <button
+              onClick={() => setIsCancelOpen(true)}
+              className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5 text-red-600 hover:bg-red-50 border-red-100"
+            >
+              <Ban className="w-3.5 h-3.5" /> Cancel Sale
+            </button>
+          )}
         </div>
       </div>
 
@@ -99,6 +120,20 @@ export default function PharmacySaleDetailPage() {
           <p className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Total</p>
           <p className="text-sm font-bold text-slate-900">{formatCurrency(sale.total)}</p>
         </div>
+        {sale.paymentStatus !== 'CANCELLED' && (
+          <>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Amount Paid</p>
+              <p className="text-sm font-bold text-emerald-700">{formatCurrency(paidAmount)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Balance Due</p>
+              <p className={`text-sm font-bold ${balanceDue > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+                {formatCurrency(balanceDue)}
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="card mb-6">
@@ -217,6 +252,8 @@ export default function PharmacySaleDetailPage() {
       </div>
 
       {isReturnOpen && <RecordReturnModal sale={sale} onClose={() => setIsReturnOpen(false)} />}
+      {isCancelOpen && <CancelSaleModal sale={sale} onClose={() => setIsCancelOpen(false)} />}
+      {isPayOpen && <PaySaleModal sale={sale} balanceDue={balanceDue} onClose={() => setIsPayOpen(false)} />}
     </div>
   );
 }
@@ -375,6 +412,184 @@ function RecordReturnModal({ sale, onClose }: { sale: any; onClose: () => void }
             </button>
             <button type="submit" disabled={returnMutation.isPending} className="btn-primary">
               {returnMutation.isPending ? 'Recording...' : 'Record Return'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function CancelSaleModal({ sale, onClose }: { sale: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [reason, setReason] = useState('');
+
+  const cancelMutation = useMutation({
+    mutationFn: (payload: any) => pharmacySalesApi.cancel(sale.id, payload),
+    onSuccess: () => {
+      toast.success('Sale cancelled and stock restored');
+      qc.invalidateQueries({ queryKey: ['pharmacy-sale', sale.id] });
+      qc.invalidateQueries({ queryKey: ['pharmacy-sales'] });
+      qc.invalidateQueries({ queryKey: ['pharmacy-inventory-batches'] });
+      qc.invalidateQueries({ queryKey: ['pharmacy-inventory-movements'] });
+      onClose();
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to cancel sale'),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reason.trim()) {
+      toast.error('A cancellation reason is required');
+      return;
+    }
+    cancelMutation.mutate({ reason: reason.trim() });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
+        <div className="flex items-start gap-3 pb-3 border-b border-slate-100 mb-4">
+          <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-4.5 h-4.5 text-red-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">Cancel Sale</h3>
+            <p className="text-xs text-slate-500">
+              This will permanently cancel invoice {sale.invoiceNo} and return all sold items back to stock. This cannot be undone.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Reason <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Billed by mistake, wrong medicines added..."
+              className="input text-sm"
+              autoFocus
+              required
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-2">
+            <button type="button" onClick={onClose} className="btn-secondary">
+              Keep Sale
+            </button>
+            <button
+              type="submit"
+              disabled={cancelMutation.isPending}
+              className="flex items-center gap-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl transition-colors disabled:opacity-60"
+            >
+              {cancelMutation.isPending ? 'Cancelling...' : 'Yes, Cancel Sale'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+const paySaleMethods = ['CASH', 'CARD', 'UPI', 'NETBANKING', 'WALLET', 'OTHER'];
+
+function PaySaleModal({ sale, balanceDue, onClose }: { sale: any; balanceDue: number; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [method, setMethod] = useState('CASH');
+  const [amount, setAmount] = useState(balanceDue > 0 ? balanceDue.toFixed(2) : '');
+  const [referenceNo, setReferenceNo] = useState('');
+
+  const payMutation = useMutation({
+    mutationFn: (payload: any) => pharmacySalesApi.pay(sale.id, payload),
+    onSuccess: (res) => {
+      const updated = res.data;
+      toast.success(updated.paymentStatus === 'PAID' ? 'Payment recorded — invoice fully paid' : 'Payment recorded');
+      qc.invalidateQueries({ queryKey: ['pharmacy-sale', sale.id] });
+      qc.invalidateQueries({ queryKey: ['pharmacy-sales'] });
+      onClose();
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to record payment'),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = Number(amount);
+    if (!amt || amt <= 0) {
+      toast.error('Enter a valid payment amount');
+      return;
+    }
+    if (amt > balanceDue + 0.01) {
+      toast.error(`Amount cannot exceed the outstanding balance of ${formatCurrency(balanceDue)}`);
+      return;
+    }
+    payMutation.mutate({ method, amount: amt, referenceNo: referenceNo.trim() || undefined });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative">
+        <div className="flex items-start gap-3 pb-3 border-b border-slate-100 mb-4">
+          <div className="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center shrink-0">
+            <Wallet className="w-4.5 h-4.5 text-cyan-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">Pay Remaining Amount</h3>
+            <p className="text-xs text-slate-500">
+              Outstanding balance on {sale.invoiceNo} is <span className="font-semibold text-amber-600">{formatCurrency(balanceDue)}</span>.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Payment Method
+            </label>
+            <select value={method} onChange={(e) => setMethod(e.target.value)} className="input text-sm appearance-none">
+              {paySaleMethods.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Amount <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              min={0.01}
+              max={balanceDue}
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="input text-sm"
+              autoFocus
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Reference No. (optional)
+            </label>
+            <input
+              type="text"
+              value={referenceNo}
+              onChange={(e) => setReferenceNo(e.target.value)}
+              placeholder="e.g. UPI transaction ID"
+              className="input text-sm"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-2">
+            <button type="button" onClick={onClose} className="btn-secondary">
+              Cancel
+            </button>
+            <button type="submit" disabled={payMutation.isPending} className="btn-primary">
+              {payMutation.isPending ? 'Recording...' : 'Record Payment'}
             </button>
           </div>
         </form>

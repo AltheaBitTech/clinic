@@ -12,7 +12,12 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StockService } from '../pharmacy-shared/stock.service';
 import { PharmacyAuditService } from '../pharmacy-shared/pharmacy-audit.service';
-import { CreateCustomerReturnDto, CreateSaleDto } from './dto/sale.dto';
+import {
+  CancelSaleDto,
+  CreateCustomerReturnDto,
+  CreateSaleDto,
+  RecordSalePaymentDto,
+} from './dto/sale.dto';
 
 @Injectable()
 export class PharmacySalesService {
@@ -273,6 +278,145 @@ export class PharmacySalesService {
         );
 
         return ret;
+      },
+      { maxWait: 10000, timeout: 20000 },
+    );
+  }
+
+  async cancel(
+    saleId: string,
+    pharmacyId: string,
+    userId: string,
+    dto: CancelSaleDto,
+  ) {
+    const sale = await this.findOne(saleId, pharmacyId);
+
+    if (sale.paymentStatus === PaymentStatus.CANCELLED) {
+      throw new BadRequestException('This sale is already cancelled');
+    }
+    if (sale.returns.length > 0) {
+      throw new BadRequestException(
+        'Cannot cancel a sale that already has returns recorded against it',
+      );
+    }
+
+    return this.prisma.$transaction(
+      async (tx) => {
+        for (const item of sale.items) {
+          await this.stockService.addStock(tx, {
+            pharmacyId,
+            medicineId: item.medicineId,
+            batchId: item.batchId,
+            quantity: item.quantity,
+            type: StockMovementType.RETURN_IN,
+            referenceType: 'SALE_CANCEL',
+            referenceId: sale.id,
+            createdBy: userId,
+            reason: dto.reason,
+          });
+        }
+
+        const cancelledSale = await tx.sale.update({
+          where: { id: sale.id },
+          data: { paymentStatus: PaymentStatus.CANCELLED },
+          include: {
+            items: { include: { medicine: true, batch: true } },
+            payments: true,
+            patient: true,
+            returns: true,
+          },
+        });
+
+        await this.auditService.log(
+          pharmacyId,
+          userId,
+          'SALE_CANCELLED',
+          'Sale',
+          sale.id,
+          { paymentStatus: sale.paymentStatus },
+          { paymentStatus: PaymentStatus.CANCELLED, reason: dto.reason },
+          tx,
+        );
+
+        return cancelledSale;
+      },
+      { maxWait: 10000, timeout: 20000 },
+    );
+  }
+
+  async pay(
+    saleId: string,
+    pharmacyId: string,
+    userId: string,
+    dto: RecordSalePaymentDto,
+  ) {
+    const sale = await this.findOne(saleId, pharmacyId);
+
+    if (sale.paymentStatus === PaymentStatus.CANCELLED) {
+      throw new BadRequestException(
+        'Cannot record a payment against a cancelled sale',
+      );
+    }
+    if (sale.paymentStatus === PaymentStatus.PAID) {
+      throw new BadRequestException('This sale is already fully paid');
+    }
+
+    const paidSoFar = sale.payments.reduce(
+      (sum, p) => sum + Number(p.amount),
+      0,
+    );
+    const outstanding = Number(sale.total) - paidSoFar;
+
+    if (dto.amount > outstanding + 0.01) {
+      throw new BadRequestException(
+        `Payment amount cannot exceed the outstanding balance of ${outstanding.toFixed(2)}`,
+      );
+    }
+
+    return this.prisma.$transaction(
+      async (tx) => {
+        await tx.payment.create({
+          data: {
+            saleId: sale.id,
+            method: dto.method,
+            amount: dto.amount,
+            referenceNo: dto.referenceNo,
+          },
+        });
+
+        const newPaidTotal = paidSoFar + dto.amount;
+        const updatedSale = await tx.sale.update({
+          where: { id: sale.id },
+          data: {
+            paymentStatus:
+              newPaidTotal >= Number(sale.total)
+                ? PaymentStatus.PAID
+                : PaymentStatus.PENDING,
+          },
+          include: {
+            items: { include: { medicine: true, batch: true } },
+            payments: true,
+            patient: true,
+            returns: true,
+          },
+        });
+
+        await this.auditService.log(
+          pharmacyId,
+          userId,
+          'SALE_PAYMENT_RECORDED',
+          'Sale',
+          sale.id,
+          { paymentStatus: sale.paymentStatus, outstanding },
+          {
+            paymentStatus: updatedSale.paymentStatus,
+            amount: dto.amount,
+            method: dto.method,
+          },
+          tx,
+        );
+
+        return updatedSale;
       },
       { maxWait: 10000, timeout: 20000 },
     );

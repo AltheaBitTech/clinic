@@ -10,6 +10,7 @@ import { StockService } from '../pharmacy-shared/stock.service';
 import {
   CreateBatchDto,
   CreateStockAdjustmentDto,
+  UpdateBatchDto,
 } from './dto/stock-adjustment.dto';
 
 @Injectable()
@@ -179,6 +180,67 @@ export class PharmacyInventoryService {
 
       return movement;
     });
+  }
+
+  async updateBatch(
+    pharmacyId: string,
+    userId: string,
+    batchId: string,
+    dto: UpdateBatchDto,
+  ) {
+    const batch = await this.prisma.medicineBatch.findFirst({
+      where: { id: batchId, medicine: { pharmacyId } },
+    });
+    if (!batch) throw new NotFoundException('Batch not found');
+
+    if (dto.batchNo && dto.batchNo !== batch.batchNo) {
+      const existing = await this.prisma.medicineBatch.findUnique({
+        where: {
+          medicineId_batchNo: {
+            medicineId: batch.medicineId,
+            batchNo: dto.batchNo,
+          },
+        },
+      });
+      if (existing) {
+        throw new BadRequestException(
+          `Batch ${dto.batchNo} already exists for this medicine.`,
+        );
+      }
+    }
+
+    const updated = await this.prisma.medicineBatch.update({
+      where: { id: batchId },
+      data: {
+        ...(dto.batchNo !== undefined ? { batchNo: dto.batchNo } : {}),
+        ...(dto.mfgDate !== undefined
+          ? { mfgDate: new Date(dto.mfgDate) }
+          : {}),
+        ...(dto.expiryDate !== undefined
+          ? { expiryDate: new Date(dto.expiryDate) }
+          : {}),
+        ...(dto.purchasePrice !== undefined
+          ? { purchasePrice: dto.purchasePrice }
+          : {}),
+        ...(dto.mrp !== undefined ? { mrp: dto.mrp } : {}),
+        ...(dto.salePrice !== undefined ? { salePrice: dto.salePrice } : {}),
+        ...(dto.supplierId !== undefined ? { supplierId: dto.supplierId } : {}),
+        ...(dto.status !== undefined ? { status: dto.status } : {}),
+      },
+      include: { medicine: true, supplier: true },
+    });
+
+    await this.auditService.log(
+      pharmacyId,
+      userId,
+      'BATCH_UPDATE',
+      'MedicineBatch',
+      batch.id,
+      batch,
+      dto,
+    );
+
+    return this.withExpiryInfo(updated);
   }
 
   private async deductForAdjustment(

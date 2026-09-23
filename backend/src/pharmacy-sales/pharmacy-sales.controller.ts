@@ -4,7 +4,12 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { PharmaciesService } from '../pharmacies/pharmacies.service';
-import { CreateCustomerReturnDto, CreateSaleDto } from './dto/sale.dto';
+import {
+  CancelSaleDto,
+  CreateCustomerReturnDto,
+  CreateSaleDto,
+  RecordSalePaymentDto,
+} from './dto/sale.dto';
 import { PharmacySalesService } from './pharmacy-sales.service';
 
 @ApiTags('pharmacy-sales')
@@ -47,5 +52,29 @@ export class PharmacySalesController {
   ) {
     const pharmacy = await this.pharmaciesService.getMine(user.id);
     return this.salesService.createReturn(id, pharmacy.id, user.id, dto);
+  }
+
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancel a sale and restore its stock' })
+  async cancel(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: CancelSaleDto,
+  ) {
+    const pharmacy = await this.pharmaciesService.getMine(user.id);
+    return this.salesService.cancel(id, pharmacy.id, user.id, dto);
+  }
+
+  @Post(':id/pay')
+  @ApiOperation({
+    summary: 'Record a payment against the outstanding balance of a sale',
+  })
+  async pay(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: RecordSalePaymentDto,
+  ) {
+    const pharmacy = await this.pharmaciesService.getMine(user.id);
+    return this.salesService.pay(id, pharmacy.id, user.id, dto);
   }
 }

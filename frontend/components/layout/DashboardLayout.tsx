@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
   { label: 'Suppliers', href: '/dashboard/pharmacy-portal/suppliers', icon: Truck, roles: ['PHARMACY'] },
   { label: 'Purchase Orders', href: '/dashboard/pharmacy-portal/purchases', icon: ShoppingCart, roles: ['PHARMACY'] },
   { label: 'Sales', href: '/dashboard/pharmacy-portal/sales', icon: Receipt, roles: ['PHARMACY'] },
+  { label: 'Reports', href: '/dashboard/pharmacy-portal/reports', icon: BarChart3, roles: ['PHARMACY'] },
   { label: 'Rx Queue', href: '/dashboard/pharmacy-portal/prescriptions', icon: ClipboardList, roles: ['PHARMACY'] },
   { label: 'Pathology Labs', href: '/dashboard/pathology-labs', icon: FlaskConical, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { label: 'Lab Orders', href: '/dashboard/pathology-orders', icon: ClipboardList, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
