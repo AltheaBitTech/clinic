@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { pharmacyPrescriptionsApi } from '@/lib/api';
@@ -25,8 +26,12 @@ const statusStyles: Record<string, string> = {
   CANCELLED: 'bg-slate-200 text-slate-600',
 };
 
-export default function PharmacyPrescriptionsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('PENDING');
+const isTab = (value: string | null): value is Tab => tabs.some((t) => t.key === value);
+
+function PharmacyPrescriptionsContent() {
+  const searchParams = useSearchParams();
+  const statusParam = searchParams.get('status');
+  const [activeTab, setActiveTab] = useState<Tab>(isTab(statusParam) ? statusParam : 'PENDING');
 
   const { data: prescriptions, isLoading } = useQuery({
     queryKey: ['pharmacy-prescriptions', activeTab],
@@ -112,5 +117,19 @@ export default function PharmacyPrescriptionsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PharmacyPrescriptionsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-cyan-600" />
+        </div>
+      }
+    >
+      <PharmacyPrescriptionsContent />
+    </Suspense>
   );
 }

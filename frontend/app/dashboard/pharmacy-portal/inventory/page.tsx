@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pharmacyInventoryApi, pharmacySuppliersApi } from '@/lib/api';
 import {
@@ -22,8 +23,12 @@ const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
   { key: 'movements', label: 'Stock Ledger', icon: ListOrdered },
 ];
 
-export default function PharmacyInventoryPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('batches');
+const isTab = (value: string | null): value is Tab => tabs.some((t) => t.key === value);
+
+function PharmacyInventoryContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<Tab>(isTab(tabParam) ? tabParam : 'batches');
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-6xl mx-auto">
@@ -78,6 +83,20 @@ export default function PharmacyInventoryPage() {
       {activeTab === 'expiry' && <ExpiryTab />}
       {activeTab === 'movements' && <MovementsTab />}
     </div>
+  );
+}
+
+export default function PharmacyInventoryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-cyan-600" />
+        </div>
+      }
+    >
+      <PharmacyInventoryContent />
+    </Suspense>
   );
 }
 

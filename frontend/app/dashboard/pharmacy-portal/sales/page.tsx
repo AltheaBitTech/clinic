@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { pharmacySalesApi, pharmacyInventoryApi, pharmacyPatientsApi, pharmaciesApi } from '@/lib/api';
-import { formatCurrency, formatDateTime, isValidPhone } from '@/lib/utils';
+import { formatCurrency, formatDate, formatDateTime, isValidPhone } from '@/lib/utils';
 import { printSaleInvoice } from '@/lib/printInvoice';
 import {
   Receipt, Plus, Loader2, Sparkles, Search, Trash2, X, User, ChevronRight, CreditCard,
@@ -73,15 +74,19 @@ type SortField = 'invoiceNo' | 'customer' | 'total' | 'date';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
-export default function PharmacySalesPage() {
+function PharmacySalesContent() {
+  const searchParams = useSearchParams();
+  const isTodayFilter = searchParams.get('date') === 'today';
+  const todayStr = formatDate(new Date(), 'yyyy-MM-dd');
+
   const [isPosOpen, setIsPosOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<any>(null);
   const [payTarget, setPayTarget] = useState<any>(null);
 
   const [invoiceSearch, setInvoiceSearch] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [dateFrom, setDateFrom] = useState(isTodayFilter ? todayStr : '');
+  const [dateTo, setDateTo] = useState(isTodayFilter ? todayStr : '');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
   const [saleStatusFilter, setSaleStatusFilter] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
@@ -424,6 +429,20 @@ export default function PharmacySalesPage() {
       {cancelTarget && <CancelSaleModal sale={cancelTarget} onClose={() => setCancelTarget(null)} />}
       {payTarget && <PaySaleModal sale={payTarget} onClose={() => setPayTarget(null)} />}
     </div>
+  );
+}
+
+export default function PharmacySalesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-cyan-600" />
+        </div>
+      }
+    >
+      <PharmacySalesContent />
+    </Suspense>
   );
 }
 

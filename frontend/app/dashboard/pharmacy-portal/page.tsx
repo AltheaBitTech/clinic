@@ -141,14 +141,33 @@ export default function PharmacyPortalPage() {
       {!isEditing && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <SummaryCard icon={TrendingDown} label="Low Stock" value={summary?.lowStockCount ?? '—'} color="amber" />
-            <SummaryCard icon={AlertTriangle} label="Expiring Soon" value={summary?.expiringSoonCount ?? '—'} color="red" />
-            <SummaryCard icon={ClipboardList} label="Pending Rx" value={summary?.pendingPrescriptions ?? '—'} color="cyan" />
+            <SummaryCard
+              icon={TrendingDown}
+              label="Low Stock"
+              value={summary?.lowStockCount ?? '—'}
+              color="amber"
+              href="/dashboard/pharmacy-portal/inventory?tab=low-stock"
+            />
+            <SummaryCard
+              icon={AlertTriangle}
+              label="Expiring Soon"
+              value={summary?.expiringSoonCount ?? '—'}
+              color="red"
+              href="/dashboard/pharmacy-portal/inventory?tab=expiry"
+            />
+            <SummaryCard
+              icon={ClipboardList}
+              label="Pending Rx"
+              value={summary?.pendingPrescriptions ?? '—'}
+              color="cyan"
+              href="/dashboard/pharmacy-portal/prescriptions?status=PENDING"
+            />
             <SummaryCard
               icon={Receipt}
               label="Today's Sales"
               value={summary ? `₹${Number(summary.todaysSalesTotal).toFixed(0)}` : '—'}
               color="emerald"
+              href="/dashboard/pharmacy-portal/sales?date=today"
             />
           </div>
 
@@ -430,11 +449,13 @@ function SummaryCard({
   label,
   value,
   color,
+  href,
 }: {
   icon: React.ElementType;
   label: string;
   value: string | number;
   color: 'amber' | 'red' | 'cyan' | 'emerald';
+  href: string;
 }) {
   const colorStyles: Record<string, string> = {
     amber: 'bg-amber-50 text-amber-600',
@@ -443,7 +464,7 @@ function SummaryCard({
     emerald: 'bg-emerald-50 text-emerald-600',
   };
   return (
-    <div className="card flex items-center gap-3">
+    <Link href={href} className="card flex items-center gap-3 hover:border-cyan-200 hover:shadow-md transition-all">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${colorStyles[color]}`}>
         <Icon className="w-5 h-5" />
       </div>
@@ -451,7 +472,7 @@ function SummaryCard({
         <p className="text-lg font-bold text-slate-800 leading-tight">{value}</p>
         <p className="text-[11px] text-slate-400 truncate">{label}</p>
       </div>
-    </div>
+    </Link>
   );
 }
 

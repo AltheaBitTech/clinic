@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle, Activity, Pill, Handshake } from 'lucide-react';
+import { Calendar, FileText, Bell, Shield, Users, ArrowRight, CheckCircle, Activity, Pill, Handshake, FlaskConical, UserPlus, Settings, Rocket } from 'lucide-react';
 import ClinicRequestForm from '@/components/ClinicRequestForm';
 import PricingSection from '@/components/PricingSection';
 
@@ -11,6 +11,8 @@ const featureColorMap: Record<string, { bg: string; text: string; border: string
   purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
   blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
   rose: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
+  teal: { bg: 'bg-teal-500/10', text: 'text-teal-400', border: 'border-teal-500/20' },
+  indigo: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20' },
 };
 
 const jsonLd = {
@@ -20,7 +22,7 @@ const jsonLd = {
   applicationCategory: 'HealthApplication',
   operatingSystem: 'Web',
   description:
-    'All-in-one clinic management platform — appointments, digital prescriptions, medicine reminders, and patient timelines for hospitals and clinics.',
+    'All-in-one clinic management platform — appointments, digital prescriptions, pathology lab reports, medicine reminders, and patient timelines for hospitals, clinics, pharmacies, and diagnostic labs.',
   offers: {
     '@type': 'Offer',
     price: '0',
@@ -71,8 +73,11 @@ export default function HomePage() {
         <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-4 bg-gradient-to-r from-white via-cyan-100 to-emerald-200 bg-clip-text text-transparent tracking-tight">
           Healthcare management <br className="hidden md:inline" /> made simple.
         </h1>
-        <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-          Appointments, digital prescriptions, medicine reminders, patient timelines, and real-time chat — unified in a single, high-performance platform.
+        <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed font-light">
+          One platform to run appointments, digital prescriptions, pathology lab reports, pharmacy orders, medicine reminders, patient timelines, and real-time chat — built for hospitals, clinics, labs, and pharmacies alike.
+        </p>
+        <p className="text-sm md:text-base text-slate-500 max-w-xl mx-auto mb-10 font-light">
+          No setup fees. No long contracts. Get your team live in a day, not a month.
         </p>
         <div className="flex items-center justify-center gap-4.5 flex-wrap animate-slide-up">
           <Link href="/register" className="btn-primary flex items-center gap-2 text-base px-4 sm:px-6 lg:px-8 py-3.5 shadow-lg">
@@ -82,21 +87,38 @@ export default function HomePage() {
             Sign In
           </Link>
         </div>
+        <div className="flex items-center justify-center gap-6 mt-8 text-xs text-slate-500 flex-wrap">
+          {['Free 15-day trial', 'No credit card required', 'Cancel anytime'].map((t) => (
+            <span key={t} className="flex items-center gap-1.5 font-medium">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> {t}
+            </span>
+          ))}
+        </div>
       </section>
 
       {/* Entry Paths */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 relative">
         <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-3 tracking-tight">Not a hospital or clinic?</h2>
-        <p className="text-slate-400 text-center mb-10 max-w-xl mx-auto font-light">Arogyix works for pharmacies and partners too — pick the path that fits you.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <p className="text-slate-400 text-center mb-10 max-w-xl mx-auto font-light">Arogyix works for pharmacies, diagnostic labs, and partners too — pick the path that fits you.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-7 text-center hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 flex flex-col items-center">
             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
               <Pill className="w-5.5 h-5.5 text-emerald-400" />
             </div>
             <h3 className="font-semibold text-lg mb-2 text-slate-100">Own a pharmacy</h3>
-            <p className="text-slate-400 text-sm leading-relaxed font-light mb-5 flex-1">Register your pharmacy independently and manage orders on Arogyix.</p>
+            <p className="text-slate-400 text-sm leading-relaxed font-light mb-5 flex-1">Register your pharmacy independently, fulfill prescriptions, and manage orders on Arogyix.</p>
             <Link href="/register/pharmacy-business" className="text-emerald-400 hover:text-emerald-300 font-semibold text-sm transition-colors inline-flex items-center gap-1.5">
               Register your pharmacy <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-7 text-center hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 flex flex-col items-center">
+            <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-4">
+              <FlaskConical className="w-5.5 h-5.5 text-teal-400" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2 text-slate-100">Run a pathology lab</h3>
+            <p className="text-slate-400 text-sm leading-relaxed font-light mb-5 flex-1">Register your diagnostic lab, receive test orders from hospitals, and deliver digital reports faster.</p>
+            <Link href="/register/pathology-business" className="text-teal-400 hover:text-teal-300 font-semibold text-sm transition-colors inline-flex items-center gap-1.5">
+              Register your lab <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-7 text-center hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 flex flex-col items-center">
@@ -104,7 +126,7 @@ export default function HomePage() {
               <Handshake className="w-5.5 h-5.5 text-amber-400" />
             </div>
             <h3 className="font-semibold text-lg mb-2 text-slate-100">Become a referral partner</h3>
-            <p className="text-slate-400 text-sm leading-relaxed font-light mb-5 flex-1">Refer hospitals and pharmacies to Arogyix and earn for every signup.</p>
+            <p className="text-slate-400 text-sm leading-relaxed font-light mb-5 flex-1">Refer hospitals, labs, and pharmacies to Arogyix and earn for every signup.</p>
             <Link href="/register/referral" className="text-amber-400 hover:text-amber-300 font-semibold text-sm transition-colors inline-flex items-center gap-1.5">
               Sign up here <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -116,11 +138,13 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 relative">
         <div className="absolute -left-20 top-40 w-80 h-80 bg-emerald-600/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
         <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 tracking-tight">Everything your clinic needs</h2>
-        <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">From individual doctors to multi-speciality hospitals, Arogyix scales with your operation.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">From individual doctors to multi-speciality hospitals, labs, and pharmacies, Arogyix scales with your operation.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { icon: Calendar, color: 'cyan', title: 'Smart Appointments', desc: 'Book, reschedule, and track appointments. Automatic reminders 24h before.' },
             { icon: FileText, color: 'emerald', title: 'Digital Prescriptions', desc: 'Write prescriptions digitally. PDFs auto-generated and shared via WhatsApp & email.' },
+            { icon: FlaskConical, color: 'teal', title: 'Pathology & Lab Reports', desc: 'Order tests, track samples, and deliver digital lab reports straight to the patient timeline.' },
+            { icon: Pill, color: 'indigo', title: 'Pharmacy Network', desc: 'Route prescriptions to connected pharmacies and track order fulfillment in real time.' },
             { icon: Bell, color: 'amber', title: 'Medicine Reminders', desc: 'Push, SMS, WhatsApp, and email reminders for every medicine schedule.' },
             { icon: Activity, color: 'purple', title: 'Patient Timeline', desc: 'Chronological view of every visit, prescription, test, and follow-up.' },
             { icon: Shield, color: 'blue', title: 'Multi-Tenant Security', desc: 'Every hospital is fully isolated. RBAC with 5 roles. JWT auth.' },
@@ -137,6 +161,28 @@ export default function HomePage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 relative">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 tracking-tight">Up and running in three steps</h2>
+        <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto font-light">No IT team required. We handle the setup so you can focus on patient care.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+          {[
+            { icon: UserPlus, step: '1', title: 'Tell us about you', desc: 'Register your hospital, clinic, pharmacy, or lab in minutes — no paperwork or upfront payment needed.' },
+            { icon: Settings, step: '2', title: 'We set you up', desc: 'Our team configures your tenant, imports your staff, and gets your roles and permissions ready to go.' },
+            { icon: Rocket, step: '3', title: 'Go live', desc: 'Start booking appointments, writing prescriptions, ordering lab tests, and delighting patients — day one.' },
+          ].map(({ icon: Icon, step, title, desc }) => (
+            <div key={step} className="text-center relative">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mb-5 relative">
+                <Icon className="w-6.5 h-6.5 text-cyan-400" />
+                <span className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-cyan-500 text-slate-950 text-xs font-bold flex items-center justify-center">{step}</span>
+              </div>
+              <h3 className="font-semibold text-lg mb-2 text-slate-100">{title}</h3>
+              <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto font-light">{desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
