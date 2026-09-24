@@ -65,10 +65,17 @@ export class AppointmentsController {
   }
 
   @Get('missed-followups')
-  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR)
+  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST)
   @ApiOperation({ summary: 'Get missed follow-up appointments' })
   getMissedFollowUps(@CurrentUser() user: any) {
     return this.appointmentsService.getMissedFollowUps(user.tenantId);
+  }
+
+  @Post(':id/notify-followup')
+  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST)
+  @ApiOperation({ summary: 'Send the patient a reminder to book their follow-up' })
+  notifyFollowUp(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.appointmentsService.notifyFollowUp(user, id);
   }
 
   @Get(':id')

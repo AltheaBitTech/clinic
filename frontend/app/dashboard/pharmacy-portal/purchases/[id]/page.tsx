@@ -121,7 +121,7 @@ export default function PharmacyPurchaseOrderDetailPage() {
     Number(order.subtotal) - Number(order.discount) - Number(order.cashDiscount ?? 0) + Number(order.tax);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-7xl mx-auto">
       <Link href="/dashboard/pharmacy-portal/purchases" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-cyan-600 mb-4">
         <ArrowLeft className="w-4 h-4" /> Back to Purchase Orders
       </Link>

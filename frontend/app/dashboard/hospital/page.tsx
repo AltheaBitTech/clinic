@@ -101,6 +101,9 @@ export default function HospitalDashboard() {
           </div>
           <p className="text-3xl font-bold text-red-600">{stats?.missedFollowUps || 0}</p>
           <p className="text-sm text-slate-500 mt-1">Patients needing follow-up</p>
+          <Link href="/dashboard/follow-ups" className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 mt-2">
+            Manage follow-ups <ArrowRight className="w-3 h-3" />
+          </Link>
         </div>
 
         {/* Appointment Status Breakdown */}

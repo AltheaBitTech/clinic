@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pharmacyInventoryApi, pharmacySuppliersApi } from '@/lib/api';
 import {
   Boxes, AlertTriangle, TrendingDown, ListOrdered, SlidersHorizontal,
-  Loader2, Pencil, Sparkles,
+  Loader2, Pencil, Sparkles, ChevronDown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatDate } from '@/lib/utils';
@@ -111,9 +111,17 @@ type BatchForm = {
   active: boolean;
 };
 
+const BATCH_STATUS_FILTERS = [
+  { value: 'ALL', label: 'All Statuses' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'BLOCKED', label: 'Blocked' },
+  { value: 'EXPIRED', label: 'Expired' },
+];
+
 function BatchesTab() {
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState<any | null>(null);
   const [form, setForm] = useState<BatchForm | null>(null);
@@ -132,8 +140,14 @@ function BatchesTab() {
   });
   const lowStockIds = new Set((lowStockMedicines || []).map((m: any) => m.id));
 
-  const totalPages = Math.max(1, Math.ceil((batches?.length || 0) / BATCHES_PAGE_SIZE));
-  const paginatedBatches = (batches || []).slice((page - 1) * BATCHES_PAGE_SIZE, page * BATCHES_PAGE_SIZE);
+  const filteredBatches = (batches || []).filter((b: any) => {
+    if (statusFilter === 'ALL') return true;
+    const status = b.isExpired ? 'EXPIRED' : b.status;
+    return status === statusFilter;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredBatches.length / BATCHES_PAGE_SIZE));
+  const paginatedBatches = filteredBatches.slice((page - 1) * BATCHES_PAGE_SIZE, page * BATCHES_PAGE_SIZE);
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => pharmacyInventoryApi.updateBatch(id, data),
@@ -194,10 +208,19 @@ function BatchesTab() {
 
   return (
     <>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 mb-4">
+        <FilterSelect
+          value={statusFilter}
+          onChange={(v) => { setStatusFilter(v); setPage(1); }}
+          options={BATCH_STATUS_FILTERS}
+          label="Filter batches by status"
+        />
+      </div>
+
       <DataTable
         isLoading={isLoading}
         rows={paginatedBatches}
-        emptyLabel="No batches recorded yet."
+        emptyLabel={statusFilter === 'ALL' ? 'No batches recorded yet.' : 'No batches match this filter.'}
         getRowClassName={(b: any) => (lowStockIds.has(b.medicineId) ? 'bg-amber-50/60 border-l-2 border-l-amber-400' : '')}
         columns={[
           {
@@ -241,11 +264,11 @@ function BatchesTab() {
         ]}
       />
 
-      {batches && batches.length > 0 && totalPages > 1 && (
+      {filteredBatches.length > 0 && totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-100">
           <p className="text-xs text-slate-500">
             Showing <span className="font-semibold text-slate-700">{paginatedBatches.length}</span> of{' '}
-            <span className="font-semibold text-slate-700">{batches.length}</span> batches
+            <span className="font-semibold text-slate-700">{filteredBatches.length}</span> batches
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -407,44 +430,91 @@ function BatchesTab() {
   );
 }
 
+const LOW_STOCK_FILTERS = [
+  { value: 'ALL', label: 'All Levels' },
+  { value: 'OUT', label: 'Out of Stock' },
+  { value: 'LOW', label: 'Low (Below Reorder Level)' },
+];
+
 function LowStockTab() {
+  const [levelFilter, setLevelFilter] = useState('ALL');
   const { data: medicines, isLoading } = useQuery({
     queryKey: ['pharmacy-inventory-low-stock'],
     queryFn: () => pharmacyInventoryApi.getLowStock().then((r) => r.data),
   });
 
-  return (
-    <DataTable
-      isLoading={isLoading}
-      rows={medicines}
-      emptyLabel="Nothing is running low right now."
-      getRowClassName={() => 'bg-amber-50/60 border-l-2 border-l-amber-400'}
-      columns={[
-        {
-          header: 'Medicine',
-          render: (m: any) => (
-            <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-label="Below reorder level" /> {m.name}
-            </span>
-          ),
-        },
-        { header: 'In Stock', render: (m: any) => <span className="font-bold text-amber-700">{m.totalQuantity}</span> },
-        { header: 'Reorder Level', render: (m: any) => m.reorderLevel },
-      ]}
-    />
-  );
-}
-
-function ExpiryTab() {
-  const { data: batches, isLoading } = useQuery({
-    queryKey: ['pharmacy-inventory-expiry'],
-    queryFn: () => pharmacyInventoryApi.getExpiry().then((r) => r.data),
+  const filtered = (medicines || []).filter((m: any) => {
+    if (levelFilter === 'OUT') return m.totalQuantity === 0;
+    if (levelFilter === 'LOW') return m.totalQuantity > 0;
+    return true;
   });
 
   return (
-    <DataTable
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 mb-4">
+        <FilterSelect
+          value={levelFilter}
+          onChange={setLevelFilter}
+          options={LOW_STOCK_FILTERS}
+          label="Filter by stock level"
+        />
+      </div>
+
+      <DataTable
+        isLoading={isLoading}
+        rows={filtered}
+        emptyLabel={levelFilter === 'ALL' ? 'Nothing is running low right now.' : 'No medicines match this filter.'}
+        getRowClassName={() => 'bg-amber-50/60 border-l-2 border-l-amber-400'}
+        columns={[
+          {
+            header: 'Medicine',
+            render: (m: any) => (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-label="Below reorder level" /> {m.name}
+              </span>
+            ),
+          },
+          { header: 'In Stock', render: (m: any) => <span className="font-bold text-amber-700">{m.totalQuantity}</span> },
+          { header: 'Reorder Level', render: (m: any) => m.reorderLevel },
+        ]}
+      />
+    </>
+  );
+}
+
+const EXPIRY_FILTERS = [
+  { value: 'soon', label: 'Expiring Soon (default)' },
+  { value: 'expired', label: 'Expired Only' },
+  { value: '7', label: 'Within 7 Days' },
+  { value: '30', label: 'Within 30 Days' },
+  { value: '90', label: 'Within 90 Days' },
+];
+
+function ExpiryTab() {
+  const [windowFilter, setWindowFilter] = useState('soon');
+  const withinDays = ['7', '30', '90'].includes(windowFilter) ? Number(windowFilter) : undefined;
+
+  const { data: batches, isLoading } = useQuery({
+    queryKey: ['pharmacy-inventory-expiry', withinDays],
+    queryFn: () => pharmacyInventoryApi.getExpiry(withinDays).then((r) => r.data),
+  });
+
+  const rows = windowFilter === 'expired' ? (batches || []).filter((b: any) => b.isExpired) : batches;
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 mb-4">
+        <FilterSelect
+          value={windowFilter}
+          onChange={setWindowFilter}
+          options={EXPIRY_FILTERS}
+          label="Filter by expiry window"
+        />
+      </div>
+
+      <DataTable
       isLoading={isLoading}
-      rows={batches}
+      rows={rows}
       emptyLabel="Nothing is expired or expiring soon."
       columns={[
         { header: 'Medicine', render: (b: any) => b.medicine?.name },
@@ -461,30 +531,57 @@ function ExpiryTab() {
             ),
         },
       ]}
-    />
+      />
+    </>
   );
 }
 
+const MOVEMENT_TYPE_FILTERS = [
+  { value: 'ALL', label: 'All Types' },
+  { value: 'PURCHASE', label: 'Purchase' },
+  { value: 'SALE', label: 'Sale' },
+  { value: 'DISPENSE', label: 'Dispense' },
+  { value: 'RETURN_IN', label: 'Return In' },
+  { value: 'RETURN_OUT', label: 'Return Out' },
+  { value: 'ADJUSTMENT_IN', label: 'Adjustment In' },
+  { value: 'ADJUSTMENT_OUT', label: 'Adjustment Out' },
+];
+
 function MovementsTab() {
+  const [typeFilter, setTypeFilter] = useState('ALL');
+
   const { data: movements, isLoading } = useQuery({
     queryKey: ['pharmacy-inventory-movements'],
     queryFn: () => pharmacyInventoryApi.getMovements().then((r) => r.data),
   });
 
+  const filtered = (movements || []).filter((m: any) => typeFilter === 'ALL' || m.type === typeFilter);
+
   return (
-    <DataTable
-      isLoading={isLoading}
-      rows={movements}
-      emptyLabel="No stock movements recorded yet."
-      columns={[
-        { header: 'Date', render: (m: any) => formatDate(m.createdAt) },
-        { header: 'Medicine', render: (m: any) => m.medicine?.name },
-        { header: 'Batch No.', render: (m: any) => m.batch?.batchNo },
-        { header: 'Type', render: (m: any) => <span className="badge bg-slate-100 text-slate-600 text-[10px] font-bold">{m.type}</span> },
-        { header: 'Quantity', render: (m: any) => m.quantity },
-        { header: 'Reference', render: (m: any) => m.referenceType },
-      ]}
-    />
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 mb-4">
+        <FilterSelect
+          value={typeFilter}
+          onChange={setTypeFilter}
+          options={MOVEMENT_TYPE_FILTERS}
+          label="Filter by transaction type"
+        />
+      </div>
+
+      <DataTable
+        isLoading={isLoading}
+        rows={filtered}
+        emptyLabel={typeFilter === 'ALL' ? 'No stock movements recorded yet.' : 'No movements match this filter.'}
+        columns={[
+          { header: 'Date', render: (m: any) => formatDate(m.createdAt) },
+          { header: 'Medicine', render: (m: any) => m.medicine?.name },
+          { header: 'Batch No.', render: (m: any) => m.batch?.batchNo },
+          { header: 'Type', render: (m: any) => <span className="badge bg-slate-100 text-slate-600 text-[10px] font-bold">{m.type}</span> },
+          { header: 'Quantity', render: (m: any) => m.quantity },
+          { header: 'Reference', render: (m: any) => m.referenceType },
+        ]}
+      />
+    </>
   );
 }
 
@@ -495,6 +592,36 @@ function StatusBadge({ status }: { status: string }) {
     BLOCKED: 'bg-slate-200 text-slate-600',
   };
   return <span className={`badge text-[10px] font-bold ${styles[status] || styles.ACTIVE}`}>{status}</span>;
+}
+
+function FilterSelect({
+  value,
+  onChange,
+  options,
+  label,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  label: string;
+}) {
+  return (
+    <div className="relative w-full sm:w-56">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        className="input appearance-none pr-9 text-xs py-2 w-full"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+    </div>
+  );
 }
 
 function DataTable({

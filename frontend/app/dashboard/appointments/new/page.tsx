@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { doctorsApi, patientsApi, appointmentsApi } from '@/lib/api';
@@ -14,9 +14,12 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function NewAppointmentPage() {
+function NewAppointmentContent() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const patientIdParam = searchParams.get('patientId');
+  const doctorIdParam = searchParams.get('doctorId');
   const isPatient = user?.role === 'PATIENT';
 
   // State
@@ -59,6 +62,34 @@ export default function NewAppointmentPage() {
       setSelectedPatient(myPatientProfile);
     }
   }, [isPatient, myPatientProfile]);
+
+  // Pre-populate patient/doctor when arriving with ?patientId=&doctorId=
+  // (e.g. "Schedule Follow-up" from the Missed Follow-ups list)
+  const { data: paramPatient } = useQuery({
+    queryKey: ['patient-by-id', patientIdParam],
+    queryFn: () => patientsApi.getOne(patientIdParam!).then((r) => r.data),
+    enabled: !isPatient && !!patientIdParam,
+  });
+
+  useEffect(() => {
+    if (paramPatient) {
+      setSelectedPatient(paramPatient);
+      setPatientSearch(`${paramPatient.user.firstName} ${paramPatient.user.lastName}`);
+    }
+  }, [paramPatient]);
+
+  const { data: paramDoctor } = useQuery({
+    queryKey: ['doctor-by-id', doctorIdParam],
+    queryFn: () => doctorsApi.getOne(doctorIdParam!).then((r) => r.data),
+    enabled: !!doctorIdParam,
+  });
+
+  useEffect(() => {
+    if (paramDoctor) {
+      setSelectedDoctor(paramDoctor);
+      setDoctorSearch(`Dr. ${paramDoctor.user.firstName} ${paramDoctor.user.lastName}`);
+    }
+  }, [paramDoctor]);
 
   // Query Doctors
   const { data: doctorsData, isLoading: isLoadingDoctors } = useQuery({
@@ -845,5 +876,17 @@ export default function NewAppointmentPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function NewAppointmentPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-cyan-600" />
+      </div>
+    }>
+      <NewAppointmentContent />
+    </Suspense>
   );
 }

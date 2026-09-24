@@ -27,7 +27,7 @@ const EXPORT_ROW_CAP = 5000;
 @ApiTags('hospital-reports')
 @ApiBearerAuth()
 @Controller('hospital-reports')
-@Roles(UserRole.HOSPITAL_ADMIN)
+@Roles(UserRole.HOSPITAL_ADMIN, UserRole.RECEPTIONIST)
 export class HospitalReportsController {
   constructor(private readonly reportsService: HospitalReportsService) {}
 

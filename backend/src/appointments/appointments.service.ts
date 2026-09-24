@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
@@ -48,6 +49,7 @@ export class AppointmentsService {
     private prisma: PrismaService,
     private emailService: EmailService,
     private whatsappService: WhatsappService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(user: any, dto: CreateAppointmentDto) {
@@ -613,5 +615,49 @@ export class AppointmentsService {
       },
       take: 20,
     });
+  }
+
+  async notifyFollowUp(user: any, appointmentId: string) {
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id: appointmentId, tenantId: user.tenantId },
+      include: {
+        patient: { include: { user: true } },
+        doctor: { include: { user: true } },
+      },
+    });
+    if (!appointment) throw new NotFoundException('Appointment not found');
+    if (!appointment.followUpDate) {
+      throw new BadRequestException(
+        'This appointment has no follow-up scheduled',
+      );
+    }
+
+    const doctorName =
+      `Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`.trim();
+    const followUpDateStr = appointment.followUpDate.toLocaleDateString(
+      'en-IN',
+      { timeZone: CLINIC_TIMEZONE, day: 'numeric', month: 'long', year: 'numeric' },
+    );
+
+    await this.notificationsService.create(
+      appointment.patient.userId,
+      'Follow-up Reminder',
+      `It's time to schedule your follow-up with ${doctorName}, originally due on ${followUpDateStr}. Please book your next visit at your earliest convenience.`,
+      'PUSH',
+      undefined,
+      { appointmentId: appointment.id, type: 'FOLLOWUP_REMINDER' },
+    );
+
+    await this.prisma.patientTimeline.create({
+      data: {
+        patientId: appointment.patientId,
+        eventType: 'REMINDER_SENT',
+        title: 'Follow-up Reminder Sent',
+        description: `Reminder sent for follow-up with ${doctorName}`,
+        metadata: { appointmentId: appointment.id },
+      },
+    });
+
+    return { success: true };
   }
 }

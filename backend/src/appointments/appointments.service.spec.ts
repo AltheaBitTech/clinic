@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { AppointmentsService } from './appointments.service';
 import { EmailService } from '../email/email.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('AppointmentsService.create', () => {
@@ -76,6 +77,7 @@ describe('AppointmentsService.create', () => {
       prisma as unknown as PrismaService,
       emailService,
       whatsappService as unknown as WhatsappService,
+      {} as NotificationsService,
     );
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
@@ -209,6 +211,7 @@ describe('AppointmentsService.update — completing an appointment', () => {
       prisma as unknown as PrismaService,
       {} as EmailService,
       {} as WhatsappService,
+      {} as NotificationsService,
     );
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });

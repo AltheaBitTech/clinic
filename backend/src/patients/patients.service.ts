@@ -114,6 +114,7 @@ export class PatientsService {
           userName: `${user.firstName} ${user.lastName}`.trim(),
           role: 'PATIENT',
           hospitalName: tenant?.name,
+          temporaryPassword,
         });
       } catch (error) {
         const message =

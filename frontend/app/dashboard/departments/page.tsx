@@ -35,7 +35,7 @@ export default function DepartmentsPage() {
     },
     onError: (err: any) => {
       const msg = err.response?.data?.message || 'Failed to create department';
-      toast.error(msg);
+      toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
     }
   });
 
@@ -48,7 +48,7 @@ export default function DepartmentsPage() {
     },
     onError: (err: any) => {
       const msg = err.response?.data?.message || 'Failed to update department';
-      toast.error(msg);
+      toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
     }
   });
 

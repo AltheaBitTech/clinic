@@ -11,7 +11,7 @@ import {
   Activity, LayoutDashboard, Calendar, Users, FileText, Bell,
   MessageSquare, BarChart3, Receipt, Settings, LogOut, ChevronRight,
   Stethoscope, Building2, UserCheck, Package, ClipboardList, Pill, Store,
-  Boxes, Menu, X, Truck, ShoppingCart, Share2, FlaskConical, Microscope
+  Boxes, Menu, X, Truck, ShoppingCart, Share2, FlaskConical, Microscope, AlertCircle
 } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import { notificationsApi } from '@/lib/api';
@@ -33,6 +33,8 @@ const navItems: NavItem[] = [
   { label: 'Revenue Analytics', href: '/dashboard/super-admin/analytics', icon: BarChart3, roles: ['SUPER_ADMIN'] },
   { label: 'My Referral', href: '/dashboard/referral', icon: Share2, roles: ['REFERRAL'] },
   { label: 'Appointments', href: '/dashboard/appointments', icon: Calendar, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST', 'PATIENT'] },
+  { label: 'Follow-ups', href: '/dashboard/follow-ups', icon: AlertCircle, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { label: 'Reports', href: '/dashboard/receptionist/reports', icon: BarChart3, roles: ['RECEPTIONIST'] },
   { label: 'Patients', href: '/dashboard/patients', icon: Users, roles: ['HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { label: 'Doctors', href: '/dashboard/doctors', icon: Stethoscope, roles: ['HOSPITAL_ADMIN'] },
   { label: 'Departments', href: '/dashboard/departments', icon: Package, roles: ['HOSPITAL_ADMIN'] },

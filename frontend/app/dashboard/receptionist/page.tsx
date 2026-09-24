@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
   Calendar, Users, Receipt, TrendingUp, Plus, Search,
   CheckCircle2, Clock, UserCheck, XCircle, CreditCard,
-  UserPlus, DollarSign, Activity, ChevronRight, RefreshCw, Loader2
+  UserPlus, DollarSign, Activity, ChevronRight, RefreshCw, Loader2, AlertCircle, FileBarChart
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn, formatCurrency, getStatusColor, getInitials } from '@/lib/utils';
@@ -231,6 +231,14 @@ export default function ReceptionistDashboard() {
           <Link href="/dashboard/billing" className="btn bg-white border border-cyan-200 hover:bg-cyan-50 text-cyan-700 font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all">
             <CreditCard className="w-4 h-4" />
             Billing Center
+          </Link>
+          <Link href="/dashboard/follow-ups" className="btn bg-white border border-red-200 hover:bg-red-50 text-red-600 font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all">
+            <AlertCircle className="w-4 h-4" />
+            Missed Follow-ups
+          </Link>
+          <Link href="/dashboard/receptionist/reports" className="btn bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all">
+            <FileBarChart className="w-4 h-4" />
+            Reports
           </Link>
         </div>
       </div>

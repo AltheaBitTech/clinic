@@ -66,6 +66,7 @@ const DATE_PRESETS: { value: string; label: string }[] = [
   { value: 'week', label: 'This Week' },
   { value: 'month', label: 'This Month' },
   { value: 'year', label: 'This Year' },
+  { value: 'all', label: 'All Time' },
   { value: 'custom', label: 'Custom Range' },
 ];
 

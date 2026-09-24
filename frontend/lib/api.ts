@@ -109,6 +109,7 @@ export const appointmentsApi = {
   update: (id: string, data: any) => api.put(`/appointments/${id}`, data),
   getToday: () => api.get('/appointments/today'),
   getMissedFollowUps: () => api.get('/appointments/missed-followups'),
+  notifyFollowUp: (id: string) => api.post(`/appointments/${id}/notify-followup`),
 };
 
 export const prescriptionsApi = {
