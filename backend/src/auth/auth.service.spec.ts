@@ -8,6 +8,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { EmailService } from '../email/email.service';
@@ -148,6 +149,7 @@ describe('AuthService registration emails', () => {
       prisma as unknown as PrismaService,
       jwtService as unknown as JwtService,
       emailService as unknown as EmailService,
+      { get: jest.fn() } as unknown as ConfigService,
     );
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });

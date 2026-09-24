@@ -16,15 +16,13 @@ const featureColorMap: Record<string, { bg: string; text: string; border: string
 const plans = [
   {
     name: 'Free Trial',
-    price: '₹0',
-    period: '/ 15 days',
     tagline: 'Try every feature, no card required',
     icon: Sparkles,
     color: 'emerald',
     popular: false,
     cta: 'Start Free Trial',
     features: [
-      'Full access for 15 days',
+      'Full access for 3 months',
       'Up to 2 doctors & 50 patients',
       'Appointments & prescriptions',
       'Email support',
@@ -32,8 +30,6 @@ const plans = [
   },
   {
     name: 'Professional',
-    price: '₹2,999',
-    period: '/ month',
     tagline: 'For growing clinics & hospitals',
     icon: Activity,
     color: 'cyan',
@@ -49,8 +45,6 @@ const plans = [
   },
   {
     name: 'Enterprise',
-    price: 'Custom',
-    period: 'contact us',
     tagline: 'For multi-branch hospital networks',
     icon: Shield,
     color: 'purple',
@@ -79,7 +73,7 @@ function PricingSectionInner() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-      {plans.map(({ name, price, period, tagline, icon: Icon, color, popular, cta, features }) => {
+      {plans.map(({ name, tagline, icon: Icon, color, popular, cta, features }) => {
         const mapped = featureColorMap[color] || featureColorMap.cyan;
         const isSelected = selectedPlan === name;
         return (
@@ -106,11 +100,7 @@ function PricingSectionInner() {
               <Icon className={`w-5 h-5 ${mapped.text}`} />
             </div>
             <h3 className="font-bold text-xl mb-1 text-slate-100">{name}</h3>
-            <p className="text-slate-400 text-sm mb-5 font-light">{tagline}</p>
-            <div className="flex items-baseline gap-1.5 mb-6">
-              <span className="text-3.5xl font-extrabold text-white">{price}</span>
-              <span className="text-slate-400 text-sm font-light">{period}</span>
-            </div>
+            <p className="text-slate-400 text-sm mb-6 font-light">{tagline}</p>
             <ul className="space-y-3 mb-8">
               {features.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm text-slate-300 font-light">

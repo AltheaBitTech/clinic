@@ -17,6 +17,13 @@ export type RegistrationWelcomeEmail = {
   role: string;
   hospitalName?: string;
   temporaryPassword?: string;
+  loginUrl?: string;
+};
+
+export type PasswordResetEmail = {
+  recipientEmail: string;
+  userName?: string;
+  resetUrl: string;
 };
 
 export type EmailVerificationOtpEmail = {
@@ -272,6 +279,12 @@ If you need to make a change, please contact the clinic.`,
           `<p>Please sign in and change your password as soon as possible.</p>`,
       );
     }
+    if (params.loginUrl) {
+      htmlParts.push(
+        `<p><a href="${this.escapeHtml(params.loginUrl)}" style="display:inline-block;padding:10px 20px;background:#0891b2;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Sign in to Arogyix</a></p>` +
+          `<p>Or copy this link into your browser: ${this.escapeHtml(params.loginUrl)}</p>`,
+      );
+    }
     if (nextStep) {
       htmlParts.push(`<p>${this.escapeHtml(nextStep)}</p>`);
     }
@@ -289,6 +302,8 @@ If you need to make a change, please contact the clinic.`,
       temporaryPassword
         ? 'Please sign in and change your password as soon as possible.'
         : null,
+      params.loginUrl ? '' : null,
+      params.loginUrl ? `Sign in here: ${params.loginUrl}` : null,
       nextStep,
       '',
       '— The Arogyix Team',
@@ -330,6 +345,32 @@ ${otp}
 This code expires in ${expiresInMinutes} minutes. Enter it on the registration page to continue.
 
 If you did not request this code, you can ignore this email.
+
+— The Arogyix Team`,
+    });
+  }
+
+  async sendPasswordReset(params: PasswordResetEmail): Promise<void> {
+    const userName = this.toSafePlainText(params.userName) || 'there';
+    const resetUrl = params.resetUrl;
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: 'Reset your Arogyix password',
+      context: 'password reset',
+      html: `<p>Hello ${this.escapeHtml(userName)},</p>
+<p>We received a request to reset the password for your Arogyix account. Click the button below to choose a new password.</p>
+<p><a href="${this.escapeHtml(resetUrl)}" style="display:inline-block;padding:10px 20px;background:#0891b2;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Reset password</a></p>
+<p>Or copy this link into your browser: ${this.escapeHtml(resetUrl)}</p>
+<p>This link expires in 1 hour. If you didn't request this, you can safely ignore this email — your password won't be changed.</p>
+<p>— The Arogyix Team</p>`,
+      text: `Hello ${userName},
+
+We received a request to reset the password for your Arogyix account. Use the link below to choose a new password.
+
+${resetUrl}
+
+This link expires in 1 hour. If you didn't request this, you can safely ignore this email — your password won't be changed.
 
 — The Arogyix Team`,
     });

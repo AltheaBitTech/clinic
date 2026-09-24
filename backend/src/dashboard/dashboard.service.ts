@@ -129,8 +129,13 @@ export class DashboardService {
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-    const [todayAppts, totalPatients, pendingPrescriptions, recentAppts] =
-      await Promise.all([
+    const [
+      todayAppts,
+      totalPatients,
+      pendingPrescriptions,
+      missedFollowUps,
+      recentAppts,
+    ] = await Promise.all([
         this.prisma.appointment.count({
           where: {
             tenantId,
@@ -150,6 +155,14 @@ export class DashboardService {
             doctorId,
             status: 'COMPLETED',
             prescriptions: { none: {} },
+          },
+        }),
+        this.prisma.appointment.count({
+          where: {
+            tenantId,
+            doctorId,
+            status: 'COMPLETED',
+            followUpDate: { lt: new Date() },
           },
         }),
         this.prisma.appointment.findMany({
@@ -176,6 +189,7 @@ export class DashboardService {
       todayAppointments: todayAppts,
       totalPatients: totalPatients.length,
       pendingPrescriptions,
+      missedFollowUps,
       todaySchedule: recentAppts,
     };
   }

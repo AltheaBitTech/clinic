@@ -27,7 +27,7 @@ const jsonLd = {
     '@type': 'Offer',
     price: '0',
     priceCurrency: 'USD',
-    description: 'Free 15-day trial, no credit card required',
+    description: 'Free 3-month trial, no credit card required',
   },
 };
 
@@ -88,7 +88,7 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="flex items-center justify-center gap-6 mt-8 text-xs text-slate-500 flex-wrap">
-          {['Free 15-day trial', 'No credit card required', 'Cancel anytime'].map((t) => (
+          {['Free 3-month trial', 'No credit card required', 'Cancel anytime'].map((t) => (
             <span key={t} className="flex items-center gap-1.5 font-medium">
               <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> {t}
             </span>
@@ -232,7 +232,7 @@ export default function HomePage() {
             Get Started Free <ArrowRight className="w-4.5 h-4.5" />
           </Link>
           <div className="flex items-center justify-center gap-6 mt-10 text-xs text-slate-400 flex-wrap">
-            {['No credit card required', 'Free 15-day trial', 'Cancel anytime'].map((t) => (
+            {['No credit card required', 'Free 3-month trial', 'Cancel anytime'].map((t) => (
               <span key={t} className="flex items-center gap-1.5 font-medium">
                 <CheckCircle className="w-4 h-4 text-emerald-400" /> {t}
               </span>

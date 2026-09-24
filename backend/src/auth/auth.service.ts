@@ -10,6 +10,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { randomInt } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
@@ -22,6 +23,8 @@ import {
   AcceptInviteDto,
   SendRegisterEmailOtpDto,
   VerifyRegisterEmailOtpDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
 } from './dto/auth.dto';
 
 const EMAIL_OTP_TTL_MS = 10 * 60 * 1000;
@@ -35,6 +38,9 @@ const EMAIL_DELIVERY_FAILURE_MESSAGE =
 const EMAIL_VERIFICATION_REQUIRED_MESSAGE = 'Email verification is required';
 const EMAIL_VERIFICATION_INVALID_MESSAGE =
   'Email verification is invalid or has expired';
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+const PASSWORD_RESET_GENERIC_MESSAGE =
+  'If an account exists for that email, a password reset link has been sent.';
 
 @Injectable()
 export class AuthService {
@@ -44,6 +50,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private emailService: EmailService,
+    private config: ConfigService,
   ) {}
 
   private readonly userRelationsInclude = {
@@ -301,6 +308,84 @@ export class AuthService {
       user: this.sanitizeUser(user),
       ...tokens,
     };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const email = this.normalizeEmail(dto.email);
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    });
+
+    // Always return a generic response so the endpoint can't be used to
+    // enumerate which emails have accounts.
+    if (!user || !user.passwordHash) {
+      return { message: PASSWORD_RESET_GENERIC_MESSAGE };
+    }
+
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MS);
+    const resetToken = await this.prisma.passwordResetToken.create({
+      data: { userId: user.id, expiresAt },
+    });
+
+    try {
+      await this.emailService.sendPasswordReset({
+        recipientEmail: user.email,
+        userName: `${user.firstName} ${user.lastName}`.trim(),
+        resetUrl: `${this.getFrontendUrl()}/reset-password?token=${resetToken.token}`,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Password reset email failed (userId=${user.id}, error=${message})`,
+      );
+    }
+
+    return { message: PASSWORD_RESET_GENERIC_MESSAGE };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const resetToken = await this.prisma.passwordResetToken.findUnique({
+      where: { token: dto.token },
+    });
+
+    if (
+      !resetToken ||
+      resetToken.usedAt ||
+      resetToken.expiresAt < new Date()
+    ) {
+      throw new BadRequestException(
+        'This password reset link is invalid or has expired',
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 12);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { passwordHash, refreshToken: null },
+      }),
+      this.prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    return {
+      message:
+        'Your password has been reset. Please sign in with your new password.',
+    };
+  }
+
+  private getFrontendUrl(): string {
+    return (
+      this.config
+        .get<string>('FRONTEND_URL')
+        ?.split(',')[0]
+        ?.trim()
+        ?.replace(/\/+$/, '') || 'http://localhost:3000'
+    );
   }
 
   async sendOtp(phone: string) {

@@ -5,6 +5,7 @@ import {
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import {
@@ -21,6 +22,7 @@ export class PatientsService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private config: ConfigService,
   ) {}
 
   async create(tenantId: string, dto: CreatePatientDto) {
@@ -115,6 +117,7 @@ export class PatientsService {
           role: 'PATIENT',
           hospitalName: tenant?.name,
           temporaryPassword,
+          loginUrl: `${this.getFrontendUrl()}/login`,
         });
       } catch (error) {
         const message =
@@ -126,6 +129,16 @@ export class PatientsService {
     }
 
     return temporaryPassword ? { ...patient, temporaryPassword } : patient;
+  }
+
+  private getFrontendUrl(): string {
+    return (
+      this.config
+        .get<string>('FRONTEND_URL')
+        ?.split(',')[0]
+        ?.trim()
+        ?.replace(/\/+$/, '') || 'http://localhost:3000'
+    );
   }
 
   async findAll(tenantId: string, search?: string, page = 1, limit = 20) {

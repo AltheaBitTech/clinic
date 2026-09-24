@@ -198,10 +198,12 @@ function SalesReportTab() {
 
           <BreakdownGrid
             title="Month-wise Revenue"
+            labelHeader="Month"
             rows={report.monthWise.map((m: any) => ({ label: m.month, count: m.count, value: m.revenue }))}
           />
           <BreakdownGrid
             title="Year-wise Revenue"
+            labelHeader="Year"
             rows={report.yearWise.map((y: any) => ({ label: y.year, count: y.count, value: y.revenue }))}
           />
 
@@ -331,10 +333,12 @@ function PurchasesReportTab() {
 
           <BreakdownGrid
             title="Month-wise Purchases"
+            labelHeader="Month"
             rows={report.monthWise.map((m: any) => ({ label: m.month, count: m.count, value: m.amount }))}
           />
           <BreakdownGrid
             title="Supplier-wise Purchases"
+            labelHeader="Supplier"
             rows={report.supplierWise.map((s: any) => ({ label: s.supplierName, count: s.count, value: s.amount }))}
           />
 
@@ -495,7 +499,15 @@ function SupplierHistoryTab() {
   );
 }
 
-function BreakdownGrid({ title, rows }: { title: string; rows: { label: string; count: number; value: number }[] }) {
+function BreakdownGrid({
+  title,
+  labelHeader,
+  rows,
+}: {
+  title: string;
+  labelHeader: string;
+  rows: { label: string; count: number; value: number }[];
+}) {
   if (!rows.length) return null;
   return (
     <div className="mb-6">
@@ -504,7 +516,7 @@ function BreakdownGrid({ title, rows }: { title: string; rows: { label: string; 
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs font-semibold text-slate-400 border-b border-slate-100">
-              <th className="py-1.5 px-3"></th>
+              <th className="py-1.5 px-3">{labelHeader}</th>
               <th className="py-1.5 px-3">Count</th>
               <th className="py-1.5 px-3">Amount</th>
             </tr>

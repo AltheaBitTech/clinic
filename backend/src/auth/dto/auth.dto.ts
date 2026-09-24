@@ -160,3 +160,21 @@ export class VerifyRegisterEmailOtpDto {
   @Matches(/^\d{6}$/, { message: 'OTP must be a 6-digit code' })
   otp: string;
 }
+
+export class ForgotPasswordDto {
+  @ApiProperty({ example: 'john@example.com' })
+  @Transform(({ value }) => normalizeEmail(value))
+  @IsEmail()
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ description: 'Token from the password reset email link' })
+  @IsString()
+  token: string;
+
+  @ApiProperty({ example: 'newPassword123', minLength: 8 })
+  @IsString()
+  @MinLength(8)
+  newPassword: string;
+}

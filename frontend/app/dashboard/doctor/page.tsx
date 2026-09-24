@@ -1,9 +1,10 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { dashboardApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Calendar, Users, ClipboardList, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Calendar, Users, ClipboardList, Clock, AlertTriangle, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react';
 import { cn, formatDateTime } from '@/lib/utils';
 
 export default function DoctorDashboard() {
@@ -43,6 +44,21 @@ export default function DoctorDashboard() {
             <p className="text-sm text-slate-600">{label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Missed Follow-ups */}
+      <div className="card mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+          </div>
+          <h3 className="font-semibold text-slate-800">Missed Follow-ups</h3>
+        </div>
+        <p className="text-3xl font-bold text-red-600">{stats?.missedFollowUps || 0}</p>
+        <p className="text-sm text-slate-500 mt-1">Your patients whose follow-up date has passed</p>
+        <Link href="/dashboard/follow-ups" className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 mt-2">
+          Manage follow-ups <ArrowRight className="w-3 h-3" />
+        </Link>
       </div>
 
       {/* Today's Schedule */}
