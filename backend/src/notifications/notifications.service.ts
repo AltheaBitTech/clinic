@@ -40,9 +40,17 @@ export class NotificationsService {
     body: string,
     channel = 'PUSH',
     scheduledAt?: Date,
+    metadata?: Record<string, any>,
   ) {
     return this.prisma.notification.create({
-      data: { userId, title, body, channel: channel as any, scheduledAt },
+      data: {
+        userId,
+        title,
+        body,
+        channel: channel as any,
+        scheduledAt,
+        metadata,
+      },
     });
   }
 }

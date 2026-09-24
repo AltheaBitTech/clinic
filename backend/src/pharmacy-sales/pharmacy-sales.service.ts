@@ -162,6 +162,25 @@ export class PharmacySalesService {
           include: { items: true, payments: true, patient: true },
         });
 
+        if (updatedSale.paymentStatus === PaymentStatus.PENDING) {
+          const pharmacy = await tx.pharmacy.findUnique({
+            where: { id: pharmacyId },
+            select: { userId: true },
+          });
+          if (pharmacy?.userId) {
+            const outstanding = total - paidAmount;
+            await tx.notification.create({
+              data: {
+                userId: pharmacy.userId,
+                title: `Payment pending: ${updatedSale.invoiceNo}`,
+                body: `Invoice ${updatedSale.invoiceNo} has ₹${outstanding.toFixed(2)} outstanding.`,
+                channel: 'PUSH',
+                metadata: { type: 'SALE_PAYMENT_PENDING', saleId: sale.id },
+              },
+            });
+          }
+        }
+
         await this.auditService.log(
           pharmacyId,
           userId,

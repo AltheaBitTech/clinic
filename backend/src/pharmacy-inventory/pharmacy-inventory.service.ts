@@ -7,6 +7,7 @@ import { StockMovementType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PharmacyAuditService } from '../pharmacy-shared/pharmacy-audit.service';
 import { StockService } from '../pharmacy-shared/stock.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   CreateBatchDto,
   CreateStockAdjustmentDto,
@@ -19,6 +20,7 @@ export class PharmacyInventoryService {
     private readonly prisma: PrismaService,
     private readonly stockService: StockService,
     private readonly auditService: PharmacyAuditService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private withExpiryInfo<T extends { expiryDate: Date }>(batch: T) {
@@ -61,6 +63,62 @@ export class PharmacyInventoryService {
         return { ...m, totalQuantity };
       })
       .filter((m) => m.totalQuantity <= m.reorderLevel);
+  }
+
+  /**
+   * Scheduled daily scan (see reminders/cron) — a batch sitting untouched in
+   * inventory never triggers a stock-change event, so expiry needs a
+   * periodic sweep rather than the real-time check used for low stock.
+   * Notifies once per batch entering the expiring/expired window (dedup by
+   * checking for a prior EXPIRY_ALERT notification with the same batchId).
+   */
+  async runExpiryAlertScan() {
+    const pharmacies = await this.prisma.pharmacy.findMany({
+      where: { userId: { not: null } },
+      select: { id: true, userId: true },
+    });
+
+    let notified = 0;
+    for (const pharmacy of pharmacies) {
+      if (!pharmacy.userId) continue;
+      const expiring = await this.listExpiry(pharmacy.id);
+
+      for (const batch of expiring) {
+        const alreadyNotified = await this.prisma.notification.findFirst({
+          where: {
+            userId: pharmacy.userId,
+            AND: [
+              { metadata: { path: ['type'], equals: 'EXPIRY_ALERT' } },
+              { metadata: { path: ['batchId'], equals: batch.id } },
+            ],
+          },
+        });
+        if (alreadyNotified) continue;
+
+        const title = batch.isExpired
+          ? `Expired: ${batch.medicine.name} (batch ${batch.batchNo})`
+          : `Expiring soon: ${batch.medicine.name} (batch ${batch.batchNo})`;
+        const body = batch.isExpired
+          ? `Batch ${batch.batchNo} of ${batch.medicine.name} has expired.`
+          : `Batch ${batch.batchNo} of ${batch.medicine.name} expires in ${batch.daysToExpiry} day${batch.daysToExpiry === 1 ? '' : 's'}.`;
+
+        await this.notificationsService.create(
+          pharmacy.userId,
+          title,
+          body,
+          'PUSH',
+          undefined,
+          {
+            type: 'EXPIRY_ALERT',
+            batchId: batch.id,
+            medicineId: batch.medicineId,
+          },
+        );
+        notified++;
+      }
+    }
+
+    return { notified };
   }
 
   async listMovements(

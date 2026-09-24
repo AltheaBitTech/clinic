@@ -11,6 +11,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StockService } from '../pharmacy-shared/stock.service';
 import { PharmacyAuditService } from '../pharmacy-shared/pharmacy-audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   CreatePharmacyPrescriptionDto,
   DispensePrescriptionDto,
@@ -22,10 +23,11 @@ export class PharmacyPrescriptionsService {
     private readonly prisma: PrismaService,
     private readonly stockService: StockService,
     private readonly auditService: PharmacyAuditService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(pharmacyId: string, dto: CreatePharmacyPrescriptionDto) {
-    return this.prisma.pharmacyPrescription.create({
+    const prescription = await this.prisma.pharmacyPrescription.create({
       data: {
         pharmacyId,
         patientId: dto.patientId,
@@ -38,6 +40,23 @@ export class PharmacyPrescriptionsService {
       },
       include: { items: true, patient: true },
     });
+
+    const pharmacy = await this.prisma.pharmacy.findUnique({
+      where: { id: pharmacyId },
+      select: { userId: true },
+    });
+    if (pharmacy?.userId) {
+      await this.notificationsService.create(
+        pharmacy.userId,
+        'New prescription pending',
+        `A prescription for ${prescription.patient.name} was logged and is pending verification.`,
+        'PUSH',
+        undefined,
+        { type: 'NEW_PRESCRIPTION', prescriptionId: prescription.id },
+      );
+    }
+
+    return prescription;
   }
 
   async findAll(pharmacyId: string, status?: PharmacyPrescriptionStatus) {

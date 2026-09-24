@@ -1,10 +1,14 @@
 import { Controller, Get, Headers, UnauthorizedException } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
+import { PharmacyInventoryService } from '../pharmacy-inventory/pharmacy-inventory.service';
 import { RemindersService } from './reminders.service';
 
 @Controller('reminders/cron')
 export class RemindersController {
-  constructor(private readonly remindersService: RemindersService) {}
+  constructor(
+    private readonly remindersService: RemindersService,
+    private readonly pharmacyInventoryService: PharmacyInventoryService,
+  ) {}
 
   private assertCronSecret(authHeader?: string) {
     const expected = process.env.CRON_SECRET;
@@ -25,5 +29,12 @@ export class RemindersController {
   async triggerAppointmentReminders(@Headers('authorization') authHeader?: string) {
     this.assertCronSecret(authHeader);
     return this.remindersService.processAppointmentReminders();
+  }
+
+  @Public()
+  @Get('pharmacy-expiry')
+  async triggerPharmacyExpiryAlerts(@Headers('authorization') authHeader?: string) {
+    this.assertCronSecret(authHeader);
+    return this.pharmacyInventoryService.runExpiryAlertScan();
   }
 }

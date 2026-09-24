@@ -86,6 +86,8 @@ export class StockService {
       throw new BadRequestException('Insufficient stock in batch');
     }
 
+    await this.maybeNotifyLowStock(tx, input);
+
     return tx.stockMovement.create({
       data: {
         pharmacyId: input.pharmacyId,
@@ -97,6 +99,57 @@ export class StockService {
         referenceId: input.referenceId,
         createdBy: input.createdBy,
         reason: input.reason,
+      },
+    });
+  }
+
+  /**
+   * Fires an edge-triggered low-stock notification: only when this deduction
+   * takes the medicine's usable quantity from above its reorderLevel to at/below
+   * it, not on every subsequent sale while it's already low.
+   */
+  private async maybeNotifyLowStock(tx: Tx, input: StockMovementInput) {
+    const [medicine, usable] = await Promise.all([
+      tx.pharmacyMedicine.findUnique({
+        where: { id: input.medicineId },
+        select: { name: true, reorderLevel: true },
+      }),
+      tx.medicineBatch.aggregate({
+        _sum: { quantity: true },
+        where: {
+          medicineId: input.medicineId,
+          status: 'ACTIVE',
+          expiryDate: { gt: new Date() },
+        },
+      }),
+    ]);
+    if (!medicine) return;
+
+    const afterQty = usable._sum.quantity ?? 0;
+    const beforeQty = afterQty + input.quantity;
+    if (!(
+      beforeQty > medicine.reorderLevel && afterQty <= medicine.reorderLevel
+    )) {
+      return;
+    }
+
+    const pharmacy = await tx.pharmacy.findUnique({
+      where: { id: input.pharmacyId },
+      select: { userId: true },
+    });
+    if (!pharmacy?.userId) return;
+
+    await tx.notification.create({
+      data: {
+        userId: pharmacy.userId,
+        title: `Low stock: ${medicine.name}`,
+        body: `${medicine.name} has dropped to ${afterQty} unit${afterQty === 1 ? '' : 's'} (reorder level ${medicine.reorderLevel}).`,
+        channel: 'PUSH',
+        metadata: {
+          type: 'LOW_STOCK',
+          medicineId: input.medicineId,
+          pharmacyId: input.pharmacyId,
+        },
       },
     });
   }

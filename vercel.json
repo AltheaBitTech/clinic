@@ -33,6 +33,10 @@
         {
             "path": "/api/backend/api/v1/reminders/cron/appointments",
             "schedule": "0 * * * *"
+        },
+        {
+            "path": "/api/backend/api/v1/reminders/cron/pharmacy-expiry",
+            "schedule": "0 3 * * *"
         }
     ]
 }

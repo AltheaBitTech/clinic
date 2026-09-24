@@ -238,6 +238,34 @@ export class PharmacyPurchasesService {
         include: { items: true, supplier: true },
       });
 
+      if (
+        updated.status !== order.status &&
+        (updated.status === PurchaseOrderStatus.RECEIVED ||
+          updated.status === PurchaseOrderStatus.PARTIALLY_RECEIVED)
+      ) {
+        const pharmacy = await tx.pharmacy.findUnique({
+          where: { id: pharmacyId },
+          select: { userId: true },
+        });
+        if (pharmacy?.userId) {
+          const fully = updated.status === PurchaseOrderStatus.RECEIVED;
+          await tx.notification.create({
+            data: {
+              userId: pharmacy.userId,
+              title: fully
+                ? `Purchase order received: ${order.orderNo}`
+                : `Purchase order partially received: ${order.orderNo}`,
+              body: `Order ${order.orderNo} from ${updated.supplier.name} was ${fully ? 'fully' : 'partially'} received.`,
+              channel: 'PUSH',
+              metadata: {
+                type: 'PURCHASE_ORDER_RECEIVED',
+                purchaseOrderId: order.id,
+              },
+            },
+          });
+        }
+      }
+
       await this.auditService.log(
         pharmacyId,
         userId,
