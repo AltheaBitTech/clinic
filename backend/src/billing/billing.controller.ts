@@ -13,6 +13,7 @@ import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/billing.dto';
+import { VerifyPaymentDto } from './dto/verify-payment.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
@@ -104,19 +105,47 @@ export class BillingController {
 
   private assertAccessible(user: any, invoice: any) {
     if (invoice.tenantId !== user.tenantId) {
-      throw new ForbiddenException('You are not authorized to view this invoice');
+      throw new ForbiddenException(
+        'You are not authorized to view this invoice',
+      );
     }
     if (user.role === UserRole.PATIENT && invoice.patient.userId !== user.id) {
-      throw new ForbiddenException('You are not authorized to view this invoice');
+      throw new ForbiddenException(
+        'You are not authorized to view this invoice',
+      );
     }
   }
 
   @Put('invoices/:id/pay')
-  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.RECEPTIONIST, UserRole.PATIENT)
-  @ApiOperation({ summary: 'Mark invoice as paid' })
+  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.RECEPTIONIST)
+  @ApiOperation({ summary: 'Record an in-person cash/card payment as paid' })
   async markPaid(@CurrentUser() user: any, @Param('id') id: string) {
     const invoice = await this.svc.findOne(id);
     this.assertAccessible(user, invoice);
-    return this.svc.markAsPaid(id, { role: user.role });
+    return this.svc.markAsPaid(id);
+  }
+
+  @Post('invoices/:id/create-payment-order')
+  @Roles(UserRole.PATIENT)
+  @ApiOperation({ summary: 'Create a Razorpay order to pay an invoice online' })
+  async createPaymentOrder(@CurrentUser() user: any, @Param('id') id: string) {
+    const invoice = await this.svc.findOne(id);
+    this.assertAccessible(user, invoice);
+    return this.svc.createPaymentOrder(id);
+  }
+
+  @Post('invoices/:id/verify-payment')
+  @Roles(UserRole.PATIENT)
+  @ApiOperation({
+    summary: 'Verify a completed Razorpay payment and mark the invoice as paid',
+  })
+  async verifyPayment(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: VerifyPaymentDto,
+  ) {
+    const invoice = await this.svc.findOne(id);
+    this.assertAccessible(user, invoice);
+    return this.svc.verifyPayment(id, dto);
   }
 }

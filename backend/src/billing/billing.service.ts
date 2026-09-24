@@ -3,9 +3,14 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
+import { PaymentMethod } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { RazorpayService } from '../subscriptions/razorpay.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getUploadDir } from '../common/utils/upload.util';
@@ -30,6 +35,7 @@ export class BillingService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private razorpay: RazorpayService,
   ) {}
 
   private generateInvoiceNo(): string {
@@ -180,7 +186,9 @@ export class BillingService {
         appointment: {
           select: {
             doctor: {
-              include: { user: { select: { firstName: true, lastName: true } } },
+              include: {
+                user: { select: { firstName: true, lastName: true } },
+              },
             },
           },
         },
@@ -225,19 +233,19 @@ export class BillingService {
     return [header.join(','), ...rows].join('\n');
   }
 
-  async markAsPaid(id: string, actingUser: { role: string }) {
+  // Staff manually recording an in-person cash/card payment. Online payments
+  // from patients go through createPaymentOrder + verifyPayment instead, and
+  // never call this directly.
+  async markAsPaid(id: string) {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id },
       include: { appointment: true },
     });
     if (!invoice) throw new NotFoundException('Invoice not found');
+    if (invoice.status === 'PAID') return this.findOne(id);
 
-    // Staff collecting payment must wait until the visit has started/finished.
-    // A patient paying their own pending invoice is treated as an intentional
-    // advance payment and is exempt from this check.
     if (
       invoice.appointment &&
-      actingUser.role !== 'PATIENT' &&
       !BILLABLE_APPOINTMENT_STATUSES.includes(invoice.appointment.status)
     ) {
       throw new BadRequestException(
@@ -245,9 +253,104 @@ export class BillingService {
       );
     }
 
+    return this.finalizePayment(id);
+  }
+
+  // Step 1 of the online payment flow: open a Razorpay order for the
+  // invoice's total so the checkout widget can present UPI/card/net
+  // banking/wallet options. The invoice stays PENDING until verifyPayment
+  // confirms a signed payment against this order.
+  async createPaymentOrder(id: string) {
+    const invoice = await this.prisma.invoice.findUnique({ where: { id } });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    if (invoice.status !== 'PENDING') {
+      throw new BadRequestException('Invoice is not pending payment');
+    }
+
+    const order = await this.razorpay.client.orders.create({
+      amount: Math.round(Number(invoice.total) * 100),
+      currency: 'INR',
+      receipt: invoice.invoiceNo,
+      notes: { invoiceId: invoice.id },
+    });
+
+    await this.prisma.invoice.update({
+      where: { id },
+      data: { razorpayOrderId: order.id },
+    });
+
+    return {
+      razorpayOrderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+      invoiceNo: invoice.invoiceNo,
+    };
+  }
+
+  // Step 2: verify the signature Razorpay's checkout widget handed back
+  // before trusting that the payment actually happened. This is the only
+  // thing standing between "the browser said it paid" and marking the
+  // invoice PAID, so it must be done server-side against the key secret.
+  async verifyPayment(
+    id: string,
+    data: {
+      razorpayOrderId: string;
+      razorpayPaymentId: string;
+      razorpaySignature: string;
+      paymentMethod: PaymentMethod;
+    },
+  ) {
+    const invoice = await this.prisma.invoice.findUnique({ where: { id } });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    if (invoice.status === 'PAID') return this.findOne(id);
+    if (
+      !invoice.razorpayOrderId ||
+      invoice.razorpayOrderId !== data.razorpayOrderId
+    ) {
+      throw new BadRequestException(
+        'Payment order does not match this invoice — start the payment again',
+      );
+    }
+
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keySecret) {
+      throw new ServiceUnavailableException(
+        'Razorpay is not configured (missing RAZORPAY_KEY_SECRET)',
+      );
+    }
+    const expected = crypto
+      .createHmac('sha256', keySecret)
+      .update(`${data.razorpayOrderId}|${data.razorpayPaymentId}`)
+      .digest('hex');
+
+    const expectedBuf = Buffer.from(expected);
+    const actualBuf = Buffer.from(data.razorpaySignature);
+    const valid =
+      expectedBuf.length === actualBuf.length &&
+      crypto.timingSafeEqual(expectedBuf, actualBuf);
+    if (!valid) {
+      throw new UnauthorizedException('Payment verification failed');
+    }
+
+    return this.finalizePayment(id, {
+      paymentMethod: data.paymentMethod,
+      razorpayPaymentId: data.razorpayPaymentId,
+    });
+  }
+
+  private async finalizePayment(
+    id: string,
+    payment?: { paymentMethod?: PaymentMethod; razorpayPaymentId?: string },
+  ) {
     const updated = await this.prisma.invoice.update({
       where: { id },
-      data: { status: 'PAID', paidAt: new Date() },
+      data: {
+        status: 'PAID',
+        paidAt: new Date(),
+        paymentMethod: payment?.paymentMethod,
+        razorpayPaymentId: payment?.razorpayPaymentId,
+      },
       include: INVOICE_INCLUDE,
     });
 

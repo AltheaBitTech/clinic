@@ -170,4 +170,128 @@ export class TenantsService {
       pendingInvoices,
     };
   }
+
+  async getAnalytics(tenantId: string) {
+    const now = new Date();
+
+    const sevenDaysAgo = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 6,
+    );
+    const [recentAppointments, departments, appointmentsByDoctor, doctors] =
+      await Promise.all([
+        this.prisma.appointment.findMany({
+          where: { tenantId, scheduledAt: { gte: sevenDaysAgo } },
+          select: { scheduledAt: true, status: true },
+        }),
+        this.prisma.department.findMany({
+          where: { tenantId },
+          select: { id: true, name: true },
+        }),
+        this.prisma.appointment.groupBy({
+          by: ['doctorId'],
+          where: { tenantId },
+          _count: { doctorId: true },
+        }),
+        this.prisma.doctor.findMany({
+          where: { tenantId },
+          select: { id: true, departmentId: true },
+        }),
+      ]);
+
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const appointmentTrends = Array.from({ length: 7 }, (_, idx) => {
+      const offset = 6 - idx;
+      const dayStart = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() - offset,
+      );
+      const dayEnd = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() - offset + 1,
+      );
+      const dayAppointments = recentAppointments.filter(
+        (a) => a.scheduledAt >= dayStart && a.scheduledAt < dayEnd,
+      );
+      return {
+        name: dayLabels[dayStart.getDay()],
+        Completed: dayAppointments.filter((a) => a.status === 'COMPLETED')
+          .length,
+        Scheduled: dayAppointments.filter(
+          (a) => !['COMPLETED', 'CANCELLED'].includes(a.status),
+        ).length,
+      };
+    });
+
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const invoices = await this.prisma.invoice.findMany({
+      where: { tenantId, createdAt: { gte: sixMonthsAgo } },
+      select: { total: true, status: true, createdAt: true },
+    });
+
+    const monthLabels = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    const financialTrends = Array.from({ length: 6 }, (_, idx) => {
+      const offset = 5 - idx;
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+      const monthInvoices = invoices.filter(
+        (inv) =>
+          inv.createdAt.getFullYear() === monthDate.getFullYear() &&
+          inv.createdAt.getMonth() === monthDate.getMonth(),
+      );
+      return {
+        name: monthLabels[monthDate.getMonth()],
+        Collected: monthInvoices
+          .filter((inv) => inv.status === 'PAID')
+          .reduce((sum, inv) => sum + Number(inv.total), 0),
+        Unpaid: monthInvoices
+          .filter((inv) => inv.status === 'PENDING')
+          .reduce((sum, inv) => sum + Number(inv.total), 0),
+      };
+    });
+
+    const deptCounts = new Map<string, number>();
+    for (const entry of appointmentsByDoctor) {
+      const doctor = doctors.find((d) => d.id === entry.doctorId);
+      if (!doctor?.departmentId) continue;
+      deptCounts.set(
+        doctor.departmentId,
+        (deptCounts.get(doctor.departmentId) || 0) + entry._count.doctorId,
+      );
+    }
+    const totalDeptAppointments = Array.from(deptCounts.values()).reduce(
+      (a, b) => a + b,
+      0,
+    );
+    const deptColors = [
+      'var(--primary)', 'var(--success)', 'var(--warning)',
+      'var(--danger)', '#a855f7', '#0ea5e9',
+    ];
+    const departmentDistribution = departments
+      .map((dept, idx) => {
+        const count = deptCounts.get(dept.id) || 0;
+        return {
+          name: dept.name,
+          count,
+          value:
+            totalDeptAppointments > 0
+              ? Math.round((count / totalDeptAppointments) * 100)
+              : 0,
+          color: deptColors[idx % deptColors.length],
+        };
+      })
+      .filter((d) => d.count > 0)
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      appointmentTrends,
+      financialTrends,
+      departmentDistribution,
+    };
+  }
 }

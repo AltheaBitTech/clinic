@@ -102,6 +102,14 @@ enum PaymentStatus {
   CANCELLED
 }
 
+enum PaymentMethod {
+  UPI
+  CARD
+  NETBANKING
+  WALLET
+  OTHER
+}
+
 enum TimelineEventType {
   APPOINTMENT
   PRESCRIPTION
@@ -752,6 +760,9 @@ model Invoice {
   total         Decimal       @db.Decimal(10, 2)
   status        PaymentStatus @default(PENDING)
   paidAt        DateTime?
+  paymentMethod PaymentMethod?
+  razorpayOrderId   String?
+  razorpayPaymentId String?
   notes         String?
   pdfUrl        String?
   createdAt     DateTime      @default(now())

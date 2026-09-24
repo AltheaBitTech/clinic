@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { billingApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
-  Receipt, CheckCircle2, Loader2, DollarSign, Clock, Download, CreditCard,
+  Receipt, CheckCircle2, Loader2, DollarSign, Clock, Download,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { PayInvoiceButton } from '@/components/billing/PayInvoiceButton';
+import toast from 'react-hot-toast';
 
 export default function PatientBillingView() {
   const { user } = useAuth();
@@ -20,18 +21,6 @@ export default function PatientBillingView() {
     queryKey: ['invoices', 'mine', patientId],
     queryFn: () => billingApi.getInvoices({ patientId, limit: 100 }).then((r) => r.data),
     enabled: !!patientId,
-  });
-
-  const payInvoiceMutation = useMutation({
-    mutationFn: (id: string) => billingApi.markPaid(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['invoices', 'mine'] });
-      qc.invalidateQueries({ queryKey: ['dashboard', 'patient'] });
-      toast.success('Payment successful!');
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to process payment');
-    },
   });
 
   const handleDownload = async (inv: any) => {
@@ -143,14 +132,12 @@ export default function PatientBillingView() {
                   <span className="text-lg font-bold text-slate-800">{formatCurrency(inv.total)}</span>
                   <div className="flex items-center gap-2">
                     {inv.status === 'PENDING' && (
-                      <button
-                        onClick={() => payInvoiceMutation.mutate(inv.id)}
-                        disabled={payInvoiceMutation.isPending}
-                        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
-                      >
-                        {payInvoiceMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CreditCard className="w-3.5 h-3.5" />}
-                        Pay Now
-                      </button>
+                      <PayInvoiceButton
+                        invoiceId={inv.id}
+                        amount={Number(inv.total)}
+                        label="Pay Now"
+                        className="text-xs px-3 py-1.5"
+                      />
                     )}
                     <button
                       onClick={() => handleDownload(inv)}

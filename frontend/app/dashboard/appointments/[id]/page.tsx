@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { appointmentsApi, billingApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { PayInvoiceButton } from '@/components/billing/PayInvoiceButton';
 import {
   ArrowLeft, Calendar, Clock, User, Phone, Mail, FileText, Plus, Check,
   X, AlertCircle, Loader2, Sparkles, HeartPulse, Activity, CreditCard,
@@ -710,14 +711,11 @@ export default function AppointmentDetailPage() {
                         Record Cash/Card Payment
                       </button>
                     ) : isPatient ? (
-                      <button
-                        onClick={() => payInvoiceMutation.mutate(appt.invoice.id)}
-                        disabled={payInvoiceMutation.isPending}
-                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-1.5"
-                      >
-                        {payInvoiceMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                        Pay Invoice Online
-                      </button>
+                      <PayInvoiceButton
+                        invoiceId={appt.invoice.id}
+                        amount={Number(appt.invoice.total)}
+                        className="w-full"
+                      />
                     ) : null}
                   </div>
                 )}

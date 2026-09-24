@@ -89,6 +89,16 @@ export class TenantsController {
     return this.tenantsService.getStats(user.tenantId);
   }
 
+  @Get('my/analytics')
+  @Roles(UserRole.HOSPITAL_ADMIN)
+  @ApiOperation({
+    summary:
+      'Get appointment trends, financial trends, and department distribution for current tenant',
+  })
+  getMyAnalytics(@CurrentUser() user: any) {
+    return this.tenantsService.getAnalytics(user.tenantId);
+  }
+
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'Get tenant by ID [SuperAdmin]' })

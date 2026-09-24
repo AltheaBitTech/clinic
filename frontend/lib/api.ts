@@ -64,6 +64,7 @@ export const tenantsApi = {
   getPublic: (search?: string) => api.get('/tenants/public', { params: { search } }),
   getMy: () => api.get('/tenants/my'),
   getMyStats: () => api.get('/tenants/my/stats'),
+  getMyAnalytics: () => api.get('/tenants/my/analytics'),
   update: (id: string, data: any) => api.put(`/tenants/${id}`, data),
   invite: (id: string, data: any) => api.post(`/tenants/${id}/invite`, data),
   uploadLogo: (id: string, formData: FormData) => api.post(`/tenants/${id}/logo`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
@@ -159,6 +160,8 @@ export const billingApi = {
   getInvoices: (params?: any) => api.get('/billing/invoices', { params }),
   getOne: (id: string) => api.get(`/billing/invoices/${id}`),
   markPaid: (id: string) => api.put(`/billing/invoices/${id}/pay`),
+  createPaymentOrder: (id: string) => api.post(`/billing/invoices/${id}/create-payment-order`),
+  verifyPayment: (id: string, data: any) => api.post(`/billing/invoices/${id}/verify-payment`, data),
   downloadInvoicePdf: (id: string) => api.get(`/billing/invoices/${id}/pdf`, { responseType: 'blob' }),
   exportInvoices: (params?: any) =>
     api.get('/billing/invoices/export', { params, responseType: 'blob' }),
