@@ -64,7 +64,7 @@ export default function ReceptionistDashboard() {
         appointmentId: payload.appointmentId,
         patientId: payload.patientId,
         amount: payload.amount,
-        tax: Math.round(payload.amount * 0.18 * 100) / 100, // 18% tax
+        tax: 0,
         discount: 0,
         notes: 'Consultation fee generated from Front Desk Dashboard',
       }),

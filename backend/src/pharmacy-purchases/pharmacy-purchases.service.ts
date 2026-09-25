@@ -152,133 +152,169 @@ export class PharmacyPurchasesService {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      for (const receiveItem of dto.items) {
-        const item = order.items.find(
-          (i) => i.id === receiveItem.purchaseItemId,
+    const resolvedItems = dto.items.map((receiveItem) => {
+      const item = order.items.find((i) => i.id === receiveItem.purchaseItemId);
+      if (!item) {
+        throw new BadRequestException(
+          `Purchase item ${receiveItem.purchaseItemId} not found on this order`,
         );
-        if (!item) {
-          throw new BadRequestException(
-            `Purchase item ${receiveItem.purchaseItemId} not found on this order`,
-          );
-        }
-        const remaining = item.quantity - item.receivedQuantity;
-        if (receiveItem.receivedQuantity > remaining) {
-          throw new BadRequestException(
-            `Cannot receive more than the remaining ${remaining} units for item ${item.id}`,
-          );
-        }
-
-        let batch = await tx.medicineBatch.findUnique({
-          where: {
-            medicineId_batchNo: {
-              medicineId: item.medicineId,
-              batchNo: item.batchNo,
-            },
-          },
-        });
-
-        if (!batch) {
-          const medicine = await tx.pharmacyMedicine.findUniqueOrThrow({
-            where: { id: item.medicineId },
-          });
-          batch = await tx.medicineBatch.create({
-            data: {
-              medicineId: item.medicineId,
-              batchNo: item.batchNo,
-              expiryDate: item.expiryDate,
-              purchasePrice: item.rate,
-              mrp: item.mrp ?? medicine.mrp,
-              salePrice: medicine.salePrice,
-              quantity: 0,
-              supplierId: order.supplier.id,
-            },
-          });
-        }
-
-        await this.stockService.addStock(tx, {
-          pharmacyId,
-          medicineId: item.medicineId,
-          batchId: batch.id,
-          quantity: receiveItem.receivedQuantity,
-          type: StockMovementType.PURCHASE,
-          referenceType: 'PURCHASE_ORDER',
-          referenceId: order.id,
-          createdBy: userId,
-        });
-
-        await tx.purchaseItem.update({
-          where: { id: item.id },
-          data: {
-            receivedQuantity: { increment: receiveItem.receivedQuantity },
-          },
-        });
       }
-
-      const refreshedItems = await tx.purchaseItem.findMany({
-        where: { purchaseOrderId: order.id },
-      });
-      const fullyReceived = refreshedItems.every(
-        (i) => i.receivedQuantity >= i.quantity,
-      );
-      const partiallyReceived = refreshedItems.some(
-        (i) => i.receivedQuantity > 0,
-      );
-
-      const updated = await tx.purchaseOrder.update({
-        where: { id: order.id },
-        data: {
-          status: fullyReceived
-            ? PurchaseOrderStatus.RECEIVED
-            : partiallyReceived
-              ? PurchaseOrderStatus.PARTIALLY_RECEIVED
-              : order.status,
-          receivedAt: fullyReceived ? new Date() : order.receivedAt,
-        },
-        include: { items: true, supplier: true },
-      });
-
-      if (
-        updated.status !== order.status &&
-        (updated.status === PurchaseOrderStatus.RECEIVED ||
-          updated.status === PurchaseOrderStatus.PARTIALLY_RECEIVED)
-      ) {
-        const pharmacy = await tx.pharmacy.findUnique({
-          where: { id: pharmacyId },
-          select: { userId: true },
-        });
-        if (pharmacy?.userId) {
-          const fully = updated.status === PurchaseOrderStatus.RECEIVED;
-          await tx.notification.create({
-            data: {
-              userId: pharmacy.userId,
-              title: fully
-                ? `Purchase order received: ${order.orderNo}`
-                : `Purchase order partially received: ${order.orderNo}`,
-              body: `Order ${order.orderNo} from ${updated.supplier.name} was ${fully ? 'fully' : 'partially'} received.`,
-              channel: 'PUSH',
-              metadata: {
-                type: 'PURCHASE_ORDER_RECEIVED',
-                purchaseOrderId: order.id,
-              },
-            },
-          });
-        }
+      const remaining = item.quantity - item.receivedQuantity;
+      if (receiveItem.receivedQuantity > remaining) {
+        throw new BadRequestException(
+          `Cannot receive more than the remaining ${remaining} units for item ${item.id}`,
+        );
       }
-
-      await this.auditService.log(
-        pharmacyId,
-        userId,
-        'PURCHASE_ORDER_RECEIVED',
-        'PurchaseOrder',
-        order.id,
-        undefined,
-        { items: dto.items },
-        tx,
-      );
-
-      return updated;
+      return { receiveItem, item };
     });
+
+    const updated = await this.prisma.$transaction(
+      async (tx) => {
+        // Resolve (or create) the batch for each distinct medicine+batchNo
+        // up front, in parallel, instead of one DB round trip per line item
+        // in a sequential loop — on orders with many items that sequential
+        // pattern was what blew past the transaction's timeout.
+        const uniqueBatchTargets = new Map<
+          string,
+          (typeof resolvedItems)[number]['item']
+        >();
+        for (const { item } of resolvedItems) {
+          const key = `${item.medicineId}::${item.batchNo}`;
+          if (!uniqueBatchTargets.has(key)) uniqueBatchTargets.set(key, item);
+        }
+
+        const batchPairs = await Promise.all(
+          Array.from(uniqueBatchTargets.entries()).map(async ([key, item]) => {
+            let batch = await tx.medicineBatch.findUnique({
+              where: {
+                medicineId_batchNo: {
+                  medicineId: item.medicineId,
+                  batchNo: item.batchNo,
+                },
+              },
+            });
+
+            if (!batch) {
+              const medicine = await tx.pharmacyMedicine.findUniqueOrThrow({
+                where: { id: item.medicineId },
+              });
+              batch = await tx.medicineBatch.create({
+                data: {
+                  medicineId: item.medicineId,
+                  batchNo: item.batchNo,
+                  expiryDate: item.expiryDate,
+                  purchasePrice: item.rate,
+                  mrp: item.mrp ?? medicine.mrp,
+                  salePrice: medicine.salePrice,
+                  quantity: 0,
+                  supplierId: order.supplier.id,
+                },
+              });
+            }
+            return [key, batch] as const;
+          }),
+        );
+        const batchByKey = new Map(batchPairs);
+
+        await Promise.all(
+          resolvedItems.map(({ receiveItem, item }) => {
+            const batch = batchByKey.get(
+              `${item.medicineId}::${item.batchNo}`,
+            )!;
+            return Promise.all([
+              this.stockService.addStock(tx, {
+                pharmacyId,
+                medicineId: item.medicineId,
+                batchId: batch.id,
+                quantity: receiveItem.receivedQuantity,
+                type: StockMovementType.PURCHASE,
+                referenceType: 'PURCHASE_ORDER',
+                referenceId: order.id,
+                createdBy: userId,
+              }),
+              tx.purchaseItem.update({
+                where: { id: item.id },
+                data: {
+                  receivedQuantity: {
+                    increment: receiveItem.receivedQuantity,
+                  },
+                },
+              }),
+            ]);
+          }),
+        );
+
+        const refreshedItems = await tx.purchaseItem.findMany({
+          where: { purchaseOrderId: order.id },
+        });
+        const fullyReceived = refreshedItems.every(
+          (i) => i.receivedQuantity >= i.quantity,
+        );
+        const partiallyReceived = refreshedItems.some(
+          (i) => i.receivedQuantity > 0,
+        );
+
+        return tx.purchaseOrder.update({
+          where: { id: order.id },
+          data: {
+            status: fullyReceived
+              ? PurchaseOrderStatus.RECEIVED
+              : partiallyReceived
+                ? PurchaseOrderStatus.PARTIALLY_RECEIVED
+                : order.status,
+            receivedAt: fullyReceived ? new Date() : order.receivedAt,
+          },
+          include: { items: true, supplier: true },
+        });
+      },
+      // Safety net for large orders / slower DB conditions — Prisma's
+      // default interactive-transaction timeout is 5s, which is easy to
+      // exceed once a purchase order has more than a handful of line items.
+      { timeout: 20000, maxWait: 10000 },
+    );
+
+    // Notification + audit log are side effects, not part of the atomic
+    // stock/order write — run them after commit so they don't extend how
+    // long the transaction (and its row locks) stay open.
+    if (
+      updated.status !== order.status &&
+      (updated.status === PurchaseOrderStatus.RECEIVED ||
+        updated.status === PurchaseOrderStatus.PARTIALLY_RECEIVED)
+    ) {
+      const pharmacy = await this.prisma.pharmacy.findUnique({
+        where: { id: pharmacyId },
+        select: { userId: true },
+      });
+      if (pharmacy?.userId) {
+        const fully = updated.status === PurchaseOrderStatus.RECEIVED;
+        await this.prisma.notification.create({
+          data: {
+            userId: pharmacy.userId,
+            title: fully
+              ? `Purchase order received: ${order.orderNo}`
+              : `Purchase order partially received: ${order.orderNo}`,
+            body: `Order ${order.orderNo} from ${updated.supplier.name} was ${fully ? 'fully' : 'partially'} received.`,
+            channel: 'PUSH',
+            metadata: {
+              type: 'PURCHASE_ORDER_RECEIVED',
+              purchaseOrderId: order.id,
+            },
+          },
+        });
+      }
+    }
+
+    await this.auditService.log(
+      pharmacyId,
+      userId,
+      'PURCHASE_ORDER_RECEIVED',
+      'PurchaseOrder',
+      order.id,
+      undefined,
+      { items: dto.items },
+    );
+
+    return updated;
   }
 
   // ─── PDF / sharing ──────────────────────────────────────────────────────
@@ -374,7 +410,11 @@ export class PharmacyPurchasesService {
         doc.moveDown(0.5);
       };
       const sectionHeading = (title: string) => {
-        doc.fontSize(11).font('Helvetica-Bold').fillColor('#0e7490').text(title);
+        doc
+          .fontSize(11)
+          .font('Helvetica-Bold')
+          .fillColor('#0e7490')
+          .text(title);
         doc.fillColor('black');
         doc.moveDown(0.3);
       };
@@ -500,10 +540,7 @@ export class PharmacyPurchasesService {
 
       summaryRow('Item Total', money(order.subtotal));
       summaryRow('Less Prod Discount', `- ${money(order.discount)}`);
-      summaryRow(
-        'Less Cash Discount',
-        `- ${money(order.cashDiscount ?? 0)}`,
-      );
+      summaryRow('Less Cash Discount', `- ${money(order.cashDiscount ?? 0)}`);
       summaryRow('GST + CESS', money(order.tax));
       summaryRow('GST Invoice Amount', money(gstInvoiceAmount), true);
       summaryRow('Less Cr. Note', `- ${money(order.creditNote ?? 0)}`);

@@ -31,7 +31,7 @@ export class DashboardController {
   getDoctor(@CurrentUser() user: any) {
     return this.dashboardService.getDoctorDashboard(
       user.tenantId,
-      user.doctor?.id,
+      user.doctor?.id ?? 'none',
     );
   }
 

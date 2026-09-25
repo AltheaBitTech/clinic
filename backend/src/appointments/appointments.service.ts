@@ -584,24 +584,13 @@ export class AppointmentsService {
     });
   }
 
-  async getMissedFollowUps(tenantId: string) {
+  async getMissedFollowUps(tenantId: string, doctorId?: string) {
     return this.prisma.appointment.findMany({
       where: {
         tenantId,
+        ...(doctorId && { doctorId }),
         status: 'COMPLETED',
         followUpDate: { lt: new Date() },
-        NOT: {
-          patient: {
-            appointments: {
-              some: {
-                scheduledAt: {
-                  gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-                },
-                status: { in: ['SCHEDULED', 'CONFIRMED', 'COMPLETED'] },
-              },
-            },
-          },
-        },
       },
       include: {
         patient: {

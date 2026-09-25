@@ -42,6 +42,20 @@ const lineTax = (l: LineItem) => (lineAmount(l) * (Number(l.gstPercent) || 0)) /
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
+const isLineEmpty = (l: LineItem) => Object.values(l).every((v) => !v || !v.toString().trim());
+
+const missingFieldsForLine = (l: LineItem) => {
+  const missing: string[] = [];
+  if (!l.medicineId) missing.push('Product');
+  if (!l.batchNo.trim()) missing.push('Batch No.');
+  if (!l.expiryDate) missing.push('Expiry Date');
+  if (!l.quantity) missing.push('Qty');
+  if (!l.rate) missing.push('Rate');
+  return missing;
+};
+
+const isLineComplete = (l: LineItem) => missingFieldsForLine(l).length === 0;
+
 export default function NewPharmacyPurchaseOrderPage() {
   const router = useRouter();
   const qc = useQueryClient();
@@ -56,6 +70,7 @@ export default function NewPharmacyPurchaseOrderPage() {
   const [debitNote, setDebitNote] = useState('0');
   const [otherAdjustment, setOtherAdjustment] = useState('0');
   const [lines, setLines] = useState<LineItem[]>([{ ...emptyLine }]);
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   const { data: suppliers } = useQuery({
     queryKey: ['pharmacy-suppliers-all'],
@@ -109,17 +124,27 @@ export default function NewPharmacyPurchaseOrderPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supplierId) {
-      toast.error('Select a supplier');
+    setAttemptedSubmit(true);
+
+    const missingHeaderFields: string[] = [];
+    if (!supplierId) missingHeaderFields.push('Supplier');
+    if (!orderNo.trim()) missingHeaderFields.push('Order No.');
+    if (missingHeaderFields.length > 0) {
+      toast.error(`Required: ${missingHeaderFields.join(', ')}`);
       return;
     }
-    if (!orderNo.trim()) {
-      toast.error('Order number is required');
+
+    const incompleteRow = lines
+      .map((l, i) => ({ rowNumber: i + 1, missing: missingFieldsForLine(l) }))
+      .find(({ missing }, i) => missing.length > 0 && !isLineEmpty(lines[i]));
+    if (incompleteRow) {
+      toast.error(`Row ${incompleteRow.rowNumber} is missing: ${incompleteRow.missing.join(', ')}`);
       return;
     }
-    const items = lines.filter((l) => l.medicineId && l.batchNo && l.expiryDate && l.quantity && l.rate);
+
+    const items = lines.filter(isLineComplete);
     if (items.length === 0) {
-      toast.error('Add at least one complete line item');
+      toast.error('Add at least one item with Product, Batch No., Expiry Date, Qty and Rate');
       return;
     }
     createMutation.mutate({
@@ -175,12 +200,20 @@ export default function NewPharmacyPurchaseOrderPage() {
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 Supplier <span className="text-red-500">*</span>
               </label>
-              <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className="input" required>
+              <select
+                value={supplierId}
+                onChange={(e) => setSupplierId(e.target.value)}
+                className={`input ${attemptedSubmit && !supplierId ? 'border-red-400 ring-1 ring-red-300' : ''}`}
+                required
+              >
                 <option value="">Select supplier</option>
                 {(suppliers || []).map((s: any) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
+              {attemptedSubmit && !supplierId && (
+                <p className="text-xs text-red-500 mt-1">Supplier is required</p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
@@ -191,8 +224,11 @@ export default function NewPharmacyPurchaseOrderPage() {
                 required
                 value={orderNo}
                 onChange={(e) => setOrderNo(e.target.value)}
-                className="input"
+                className={`input ${attemptedSubmit && !orderNo.trim() ? 'border-red-400 ring-1 ring-red-300' : ''}`}
               />
+              {attemptedSubmit && !orderNo.trim() && (
+                <p className="text-xs text-red-500 mt-1">Order number is required</p>
+              )}
             </div>
           </div>
 
@@ -237,13 +273,17 @@ export default function NewPharmacyPurchaseOrderPage() {
             </button>
           </div>
           <div className="space-y-3">
-            {lines.map((line, idx) => (
+            {lines.map((line, idx) => {
+              const rowMissing = attemptedSubmit && !isLineEmpty(line) ? missingFieldsForLine(line) : [];
+              const errInput = (field: string) =>
+                rowMissing.includes(field) ? 'border-red-400 ring-1 ring-red-300' : '';
+              return (
               <div key={idx} className="bg-slate-50 rounded-xl p-3 space-y-2">
                 <div className="grid grid-cols-12 gap-2 items-center">
                   <select
                     value={line.medicineId}
                     onChange={(e) => selectMedicine(idx, e.target.value)}
-                    className="input text-xs py-1.5 col-span-3"
+                    className={`input text-xs py-1.5 col-span-3 ${errInput('Product')}`}
                   >
                     <option value="">Name of Product</option>
                     {(medicines || []).map((m: any) => (
@@ -255,13 +295,13 @@ export default function NewPharmacyPurchaseOrderPage() {
                     placeholder="Batch No."
                     value={line.batchNo}
                     onChange={(e) => updateLine(idx, 'batchNo', e.target.value)}
-                    className="input text-xs py-1.5 col-span-2"
+                    className={`input text-xs py-1.5 col-span-2 ${errInput('Batch No.')}`}
                   />
                   <input
                     type="date"
                     value={line.expiryDate}
                     onChange={(e) => updateLine(idx, 'expiryDate', e.target.value)}
-                    className="input text-xs py-1.5 col-span-2"
+                    className={`input text-xs py-1.5 col-span-2 ${errInput('Expiry Date')}`}
                   />
                   <input
                     type="number"
@@ -269,7 +309,7 @@ export default function NewPharmacyPurchaseOrderPage() {
                     placeholder="Qty"
                     value={line.quantity}
                     onChange={(e) => updateLine(idx, 'quantity', e.target.value)}
-                    className="input text-xs py-1.5 px-2 col-span-1 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className={`input text-xs py-1.5 px-2 col-span-1 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${errInput('Qty')}`}
                   />
                   <input
                     type="number"
@@ -286,7 +326,7 @@ export default function NewPharmacyPurchaseOrderPage() {
                     placeholder="Rate"
                     value={line.rate}
                     onChange={(e) => updateLine(idx, 'rate', e.target.value)}
-                    className="input text-xs py-1.5 col-span-2"
+                    className={`input text-xs py-1.5 col-span-2 ${errInput('Rate')}`}
                   />
                   <button
                     type="button"
@@ -342,8 +382,14 @@ export default function NewPharmacyPurchaseOrderPage() {
                     {formatCurrency(lineAmount(line))}
                   </div>
                 </div>
+                {rowMissing.length > 0 && (
+                  <p className="text-xs text-red-500 px-1">
+                    Row {idx + 1} missing: {rowMissing.join(', ')}
+                  </p>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

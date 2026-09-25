@@ -49,6 +49,18 @@ export default function PatientDetailPage() {
   const [editNotes, setEditNotes] = useState('');
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
 
+  // "Show recent, view more" expand state for long lists (better mobile UX)
+  const TIMELINE_PREVIEW_COUNT = 5;
+  const PRESCRIPTIONS_PREVIEW_COUNT = 3;
+  const APPOINTMENTS_PREVIEW_COUNT = 5;
+  const REPORTS_PREVIEW_COUNT = 4;
+  const FAMILY_PREVIEW_COUNT = 4;
+  const [showAllTimeline, setShowAllTimeline] = useState(false);
+  const [showAllPrescriptions, setShowAllPrescriptions] = useState(false);
+  const [showAllAppointments, setShowAllAppointments] = useState(false);
+  const [showAllReports, setShowAllReports] = useState(false);
+  const [showAllFamily, setShowAllFamily] = useState(false);
+
   // Queries
   const { data: patient, isLoading, error, refetch } = useQuery({
     queryKey: ['patient', id],
@@ -451,26 +463,37 @@ export default function PatientDetailPage() {
                   <p className="text-slate-400">No events registered in this patient's history</p>
                 </div>
               ) : (
-                <div className="relative pl-6 border-l border-slate-200 space-y-6 ml-3">
-                  {timeline.data.map((event: any) => (
-                    <div key={event.id} className="relative">
-                      {/* Timeline dot */}
-                      <span className={`absolute -left-10 top-0.5 w-7 h-7 rounded-lg flex items-center justify-center border shadow-xs ${getEventColorClass(event.eventType)}`}>
-                        {getEventIcon(event.eventType)}
-                      </span>
-                      
-                      <div>
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-1 mb-1">
-                          <h4 className="font-semibold text-slate-800 text-sm md:text-base">{event.title}</h4>
-                          <span className="text-xs text-slate-400 font-medium">{formatDate(event.occurredAt)}</span>
+                <>
+                  <div className="relative pl-6 border-l border-slate-200 space-y-6 ml-3">
+                    {(showAllTimeline ? timeline.data : timeline.data.slice(0, TIMELINE_PREVIEW_COUNT)).map((event: any) => (
+                      <div key={event.id} className="relative">
+                        {/* Timeline dot */}
+                        <span className={`absolute -left-10 top-0.5 w-7 h-7 rounded-lg flex items-center justify-center border shadow-xs ${getEventColorClass(event.eventType)}`}>
+                          {getEventIcon(event.eventType)}
+                        </span>
+
+                        <div>
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-1 mb-1">
+                            <h4 className="font-semibold text-slate-800 text-sm md:text-base">{event.title}</h4>
+                            <span className="text-xs text-slate-400 font-medium">{formatDate(event.occurredAt)}</span>
+                          </div>
+                          {event.description && (
+                            <p className="text-sm text-slate-600">{event.description}</p>
+                          )}
                         </div>
-                        {event.description && (
-                          <p className="text-sm text-slate-600">{event.description}</p>
-                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  {timeline.data.length > TIMELINE_PREVIEW_COUNT && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllTimeline((v) => !v)}
+                      className="w-full text-center text-xs font-semibold text-cyan-700 hover:text-cyan-800 py-2 rounded-lg hover:bg-cyan-50 transition-colors"
+                    >
+                      {showAllTimeline ? 'Show less' : `View more (${timeline.data.length - TIMELINE_PREVIEW_COUNT} more)`}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -487,28 +510,39 @@ export default function PatientDetailPage() {
                 {patient.prescriptions?.length === 0 ? (
                   <p className="text-sm text-slate-400 text-center py-4">No prescriptions found</p>
                 ) : (
-                  <div className="space-y-4">
-                    {patient.prescriptions?.map((p: any) => (
-                      <div key={p.id} className="p-4 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50 transition-colors">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-semibold text-slate-800">Prescription</h4>
-                            <p className="text-xs text-slate-400">{formatDate(p.createdAt)}</p>
+                  <>
+                    <div className="space-y-4">
+                      {(showAllPrescriptions ? patient.prescriptions : patient.prescriptions?.slice(0, PRESCRIPTIONS_PREVIEW_COUNT))?.map((p: any) => (
+                        <div key={p.id} className="p-4 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="font-semibold text-slate-800">Prescription</h4>
+                              <p className="text-xs text-slate-400">{formatDate(p.createdAt)}</p>
+                            </div>
+                            <span className="badge bg-cyan-50 text-cyan-700 text-xs font-semibold">
+                              {p.medicines?.length} Medicines
+                            </span>
                           </div>
-                          <span className="badge bg-cyan-50 text-cyan-700 text-xs font-semibold">
-                            {p.medicines?.length} Medicines
-                          </span>
+                          <ul className="text-sm space-y-1.5 text-slate-600 mt-3 list-disc pl-5">
+                            {p.medicines?.map((m: any, i: number) => (
+                              <li key={i}>
+                                <span className="font-semibold">{m.name}</span> — {m.dosage} ({m.duration})
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                        <ul className="text-sm space-y-1.5 text-slate-600 mt-3 list-disc pl-5">
-                          {p.medicines?.map((m: any, i: number) => (
-                            <li key={i}>
-                              <span className="font-semibold">{m.name}</span> — {m.dosage} ({m.duration})
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                    {patient.prescriptions?.length > PRESCRIPTIONS_PREVIEW_COUNT && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllPrescriptions((v) => !v)}
+                        className="w-full text-center text-xs font-semibold text-cyan-700 hover:text-cyan-800 py-2 mt-2 rounded-lg hover:bg-cyan-50 transition-colors"
+                      >
+                        {showAllPrescriptions ? 'Show less' : `View more (${patient.prescriptions.length - PRESCRIPTIONS_PREVIEW_COUNT} more)`}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -521,37 +555,48 @@ export default function PatientDetailPage() {
                 {patient.appointments?.length === 0 ? (
                   <p className="text-sm text-slate-400 text-center py-4">No appointments scheduled</p>
                 ) : (
-                  <div className="table-container">
-                    <table className="text-left w-100">
-                      <thead>
-                        <tr>
-                          <th>Doctor</th>
-                          <th>Type</th>
-                          <th>Scheduled</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {patient.appointments?.map((app: any) => (
-                          <tr key={app.id}>
-                            <td className="font-semibold text-slate-800">
-                              Dr. {app.doctor.user.firstName} {app.doctor.user.lastName}
-                            </td>
-                            <td><span className="badge bg-slate-100 text-slate-600">{app.type}</span></td>
-                            <td className="text-xs text-slate-500">{formatDate(app.scheduledAt)}</td>
-                            <td>
-                              <span className={`badge ${
-                                app.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700' :
-                                app.status === 'SCHEDULED' ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'
-                              }`}>
-                                {app.status}
-                              </span>
-                            </td>
+                  <>
+                    <div className="table-container">
+                      <table className="text-left w-100">
+                        <thead>
+                          <tr>
+                            <th>Doctor</th>
+                            <th>Type</th>
+                            <th>Scheduled</th>
+                            <th>Status</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {(showAllAppointments ? patient.appointments : patient.appointments?.slice(0, APPOINTMENTS_PREVIEW_COUNT))?.map((app: any) => (
+                            <tr key={app.id}>
+                              <td className="font-semibold text-slate-800">
+                                Dr. {app.doctor.user.firstName} {app.doctor.user.lastName}
+                              </td>
+                              <td><span className="badge bg-slate-100 text-slate-600">{app.type}</span></td>
+                              <td className="text-xs text-slate-500">{formatDate(app.scheduledAt)}</td>
+                              <td>
+                                <span className={`badge ${
+                                  app.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700' :
+                                  app.status === 'SCHEDULED' ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'
+                                }`}>
+                                  {app.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {patient.appointments?.length > APPOINTMENTS_PREVIEW_COUNT && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllAppointments((v) => !v)}
+                        className="w-full text-center text-xs font-semibold text-cyan-700 hover:text-cyan-800 py-2 mt-2 rounded-lg hover:bg-cyan-50 transition-colors"
+                      >
+                        {showAllAppointments ? 'Show less' : `View more (${patient.appointments.length - APPOINTMENTS_PREVIEW_COUNT} more)`}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -564,17 +609,28 @@ export default function PatientDetailPage() {
                 {patient.reports?.length === 0 ? (
                   <p className="text-sm text-slate-400 text-center py-4">No documents or reports uploaded</p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {patient.reports?.map((rep: any) => (
-                      <div key={rep.id} className="p-4 rounded-xl border border-slate-100 flex items-center gap-3 bg-slate-50">
-                        <FileText className="w-8 h-8 text-sky-500 shrink-0" />
-                        <div className="min-w-0">
-                          <h4 className="font-semibold text-slate-800 truncate text-sm">{rep.name}</h4>
-                          <p className="text-xs text-slate-400">{formatDate(rep.createdAt)}</p>
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {(showAllReports ? patient.reports : patient.reports?.slice(0, REPORTS_PREVIEW_COUNT))?.map((rep: any) => (
+                        <div key={rep.id} className="p-4 rounded-xl border border-slate-100 flex items-center gap-3 bg-slate-50">
+                          <FileText className="w-8 h-8 text-sky-500 shrink-0" />
+                          <div className="min-w-0">
+                            <h4 className="font-semibold text-slate-800 truncate text-sm">{rep.name}</h4>
+                            <p className="text-xs text-slate-400">{formatDate(rep.createdAt)}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                    {patient.reports?.length > REPORTS_PREVIEW_COUNT && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllReports((v) => !v)}
+                        className="w-full text-center text-xs font-semibold text-cyan-700 hover:text-cyan-800 py-2 mt-2 rounded-lg hover:bg-cyan-50 transition-colors"
+                      >
+                        {showAllReports ? 'Show less' : `View more (${patient.reports.length - REPORTS_PREVIEW_COUNT} more)`}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -600,35 +656,46 @@ export default function PatientDetailPage() {
                   <p className="text-slate-400">No linked family members found</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {patient.familyMembers?.map((fm: any) => (
-                    <div key={fm.id} className="p-4 rounded-xl border border-slate-100 shadow-xs space-y-3 relative bg-slate-50">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-cyan-50 border border-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-sm">
-                          {getInitials(fm.name, '')}
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {(showAllFamily ? patient.familyMembers : patient.familyMembers?.slice(0, FAMILY_PREVIEW_COUNT))?.map((fm: any) => (
+                      <div key={fm.id} className="p-4 rounded-xl border border-slate-100 shadow-xs space-y-3 relative bg-slate-50">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-cyan-50 border border-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-sm">
+                            {getInitials(fm.name, '')}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-slate-800 text-sm">{fm.name}</h4>
+                            <span className="badge bg-cyan-50 text-cyan-700 font-medium text-[10px] uppercase">{fm.relation}</span>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-slate-800 text-sm">{fm.name}</h4>
-                          <span className="badge bg-cyan-50 text-cyan-700 font-medium text-[10px] uppercase">{fm.relation}</span>
-                        </div>
+                        <ul className="text-xs space-y-1 text-slate-500 border-t border-slate-200/50 pt-2">
+                          <li><span className="text-slate-400">Gender:</span> {fm.gender || 'N/A'}</li>
+                          <li><span className="text-slate-400">Age:</span> {calculateAge(fm.dateOfBirth)}</li>
+                          <li><span className="text-slate-400">Blood Group:</span> {fm.bloodGroup || 'N/A'}</li>
+                          {fm.phone && <li><span className="text-slate-400">Phone:</span> {fm.phone}</li>}
+                          {fm.allergies?.length > 0 && (
+                            <li className="flex flex-wrap gap-1 mt-1.5">
+                              <span className="text-slate-400 mr-1 self-center">Allergies:</span>
+                              {fm.allergies.map((al: string, idx: number) => (
+                                <span key={idx} className="badge bg-red-50 text-red-600 px-1 py-0">{al}</span>
+                              ))}
+                            </li>
+                          )}
+                        </ul>
                       </div>
-                      <ul className="text-xs space-y-1 text-slate-500 border-t border-slate-200/50 pt-2">
-                        <li><span className="text-slate-400">Gender:</span> {fm.gender || 'N/A'}</li>
-                        <li><span className="text-slate-400">Age:</span> {calculateAge(fm.dateOfBirth)}</li>
-                        <li><span className="text-slate-400">Blood Group:</span> {fm.bloodGroup || 'N/A'}</li>
-                        {fm.phone && <li><span className="text-slate-400">Phone:</span> {fm.phone}</li>}
-                        {fm.allergies?.length > 0 && (
-                          <li className="flex flex-wrap gap-1 mt-1.5">
-                            <span className="text-slate-400 mr-1 self-center">Allergies:</span>
-                            {fm.allergies.map((al: string, idx: number) => (
-                              <span key={idx} className="badge bg-red-50 text-red-600 px-1 py-0">{al}</span>
-                            ))}
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  {patient.familyMembers?.length > FAMILY_PREVIEW_COUNT && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllFamily((v) => !v)}
+                      className="w-full text-center text-xs font-semibold text-cyan-700 hover:text-cyan-800 py-2 rounded-lg hover:bg-cyan-50 transition-colors"
+                    >
+                      {showAllFamily ? 'Show less' : `View more (${patient.familyMembers.length - FAMILY_PREVIEW_COUNT} more)`}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}

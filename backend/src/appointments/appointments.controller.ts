@@ -57,7 +57,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: "Get today's appointments" })
   getToday(@CurrentUser() user: any) {
     const doctorId =
-      user.role === UserRole.DOCTOR ? user.doctor?.id : undefined;
+      user.role === UserRole.DOCTOR ? (user.doctor?.id ?? 'none') : undefined;
     return this.appointmentsService.getTodayAppointments(
       user.tenantId,
       doctorId,
@@ -68,7 +68,12 @@ export class AppointmentsController {
   @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST)
   @ApiOperation({ summary: 'Get missed follow-up appointments' })
   getMissedFollowUps(@CurrentUser() user: any) {
-    return this.appointmentsService.getMissedFollowUps(user.tenantId);
+    const doctorId =
+      user.role === UserRole.DOCTOR ? (user.doctor?.id ?? 'none') : undefined;
+    return this.appointmentsService.getMissedFollowUps(
+      user.tenantId,
+      doctorId,
+    );
   }
 
   @Post(':id/notify-followup')

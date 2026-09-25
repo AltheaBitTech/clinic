@@ -254,7 +254,7 @@ function NewPrescriptionContent() {
       const updated = [...ointments];
       updated[index] = {
         ...updated[index],
-        name: item.name,
+        name: item.name.replace(/[^A-Za-z\s'-]/g, '').trim(),
         dosage: item.dosage || updated[index].dosage,
         frequency: item.frequency || updated[index].frequency,
         timing: item.timing || updated[index].timing,
