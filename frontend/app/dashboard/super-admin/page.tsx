@@ -8,7 +8,8 @@ import { useAuth } from '@/lib/auth';
 import {
   Building2, Users, Calendar, Check, X,
   Clock, Copy, ExternalLink, MapPin, Mail, Phone,
-  User, ShieldAlert, CheckCircle2, UserCheck, Search, Loader2, Gift
+  User, ShieldAlert, CheckCircle2, UserCheck, Search, Loader2, Gift,
+  Pill, FlaskConical
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -194,7 +195,7 @@ export default function SuperAdminDashboard() {
     return (
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[...Array(4)].map((_, i) => (
+          {[...Array(7)].map((_, i) => (
             <div key={i} className="card animate-pulse">
               <div className="w-11 h-11 bg-slate-200 rounded-xl mb-4" />
               <div className="h-8 bg-slate-200 rounded mb-2 w-24" />
@@ -221,9 +222,11 @@ export default function SuperAdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Total Hospitals" value={stats?.totalTenants || 0} icon={Building2} color="bg-cyan-500" />
-        <StatCard label="Platform Users" value={stats?.totalUsers || 0} icon={Users} color="bg-emerald-500" href="/dashboard/super-admin/users" />
+        <StatCard label="Total Hospitals" value={stats?.totalHospitals || 0} icon={Building2} color="bg-cyan-500" />
+        <StatCard label="Total Pharmacies" value={stats?.totalPharmacies || 0} icon={Pill} color="bg-teal-500" />
+        <StatCard label="Total Labs" value={stats?.totalLabs || 0} icon={FlaskConical} color="bg-violet-500" />
         <StatCard label="Total Patients" value={stats?.totalPatients || 0} icon={UserCheck} color="bg-purple-500" />
+        <StatCard label="Platform Users" value={stats?.totalUsers || 0} icon={Users} color="bg-emerald-500" href="/dashboard/super-admin/users" />
         <StatCard label="Total Appointments" value={stats?.totalAppointments || 0} icon={Calendar} color="bg-amber-500" />
         <StatCard label="Pending Referrals" value={stats?.pendingReferralCount || 0} icon={Gift} color="bg-purple-500" href="/dashboard/super-admin/referrals" />
       </div>

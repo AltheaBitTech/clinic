@@ -8,12 +8,18 @@ export class DashboardService {
   async getSuperAdminDashboard() {
     const [
       totalTenants,
+      totalHospitals,
+      totalPharmacies,
+      totalLabs,
       totalUsers,
       totalPatients,
       totalAppointments,
       pendingReferralCount,
     ] = await Promise.all([
       this.prisma.tenant.count(),
+      this.prisma.tenant.count({ where: { type: 'HOSPITAL' } }),
+      this.prisma.tenant.count({ where: { type: 'PHARMACY' } }),
+      this.prisma.tenant.count({ where: { type: 'PATHOLOGY' } }),
       this.prisma.user.count(),
       this.prisma.patient.count(),
       this.prisma.appointment.count(),
@@ -34,6 +40,9 @@ export class DashboardService {
 
     return {
       totalTenants,
+      totalHospitals,
+      totalPharmacies,
+      totalLabs,
       totalUsers,
       totalPatients,
       totalAppointments,
