@@ -150,35 +150,40 @@ export default function PathologyPortalPage() {
 
       {!isEditing && (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
-            <SummaryCard icon={ClipboardList} label="Today's Orders" value={summary?.todaysOrdersCount ?? '—'} color="cyan" />
-            <SummaryCard icon={Truck} label="Samples Pending Collection" value={summary?.samplesPendingCollection ?? '—'} color="amber" />
-            <SummaryCard icon={Beaker} label="Samples Received" value={summary?.samplesReceived ?? '—'} color="cyan" />
-            <SummaryCard icon={FlaskConical} label="Processing" value={summary?.processing ?? '—'} color="amber" />
-            <SummaryCard icon={ClipboardList} label="Results Pending" value={summary?.pendingResults ?? '—'} color="amber" />
-            <SummaryCard icon={ShieldCheck} label="Pending Verification" value={summary?.pendingVerification ?? '—'} color="red" />
-            <SummaryCard icon={Check} label="Reports Finalized Today" value={summary?.reportsFinalizedToday ?? '—'} color="emerald" />
-            <SummaryCard icon={PackageCheck} label="Delivered Today" value={summary?.reportsDeliveredToday ?? '—'} color="emerald" />
-            <SummaryCard icon={AlertTriangle} label="Critical (Unacknowledged)" value={summary?.criticalUnacknowledged ?? '—'} color="red" />
-            <SummaryCard icon={XCircle} label="Rejected Samples" value={summary?.rejectedSamples ?? '—'} color="red" />
-            <SummaryCard icon={RotateCcw} label="Recollection Requested" value={summary?.recollectionRequested ?? '—'} color="amber" />
+          <SummaryGroup title="Orders & Samples">
+            <SummaryCard icon={ClipboardList} label="Today's Orders" value={summary?.todaysOrdersCount ?? '—'} color="cyan" href="/dashboard/pathology-portal/orders" />
+            <SummaryCard icon={Truck} label="Samples Pending Collection" value={summary?.samplesPendingCollection ?? '—'} color="amber" href="/dashboard/pathology-portal/orders" />
+            <SummaryCard icon={Beaker} label="Samples Received" value={summary?.samplesReceived ?? '—'} color="cyan" href="/dashboard/pathology-portal/orders" />
+            <SummaryCard icon={FlaskConical} label="Processing" value={summary?.processing ?? '—'} color="amber" href="/dashboard/pathology-portal/orders" />
+            <SummaryCard icon={XCircle} label="Rejected Samples" value={summary?.rejectedSamples ?? '—'} color="red" href="/dashboard/pathology-portal/orders" />
+            <SummaryCard icon={RotateCcw} label="Recollection Requested" value={summary?.recollectionRequested ?? '—'} color="amber" href="/dashboard/pathology-portal/orders" />
+          </SummaryGroup>
+
+          <SummaryGroup title="Reports & Verification">
+            <SummaryCard icon={ClipboardList} label="Results Pending" value={summary?.pendingResults ?? '—'} color="amber" href="/dashboard/pathology-portal/orders" />
+            <SummaryCard icon={ShieldCheck} label="Pending Verification" value={summary?.pendingVerification ?? '—'} color="red" href="/dashboard/pathology-portal/orders" />
+            <SummaryCard icon={AlertTriangle} label="Critical" value={summary?.criticalUnacknowledged ?? '—'} color="red" href="/dashboard/pathology-portal/orders" />
+            <SummaryCard icon={Check} label="Reports Finalized Today" value={summary?.reportsFinalizedToday ?? '—'} color="emerald" href="/dashboard/pathology-portal/reports" />
+            <SummaryCard icon={PackageCheck} label="Delivered Today" value={summary?.reportsDeliveredToday ?? '—'} color="emerald" href="/dashboard/pathology-portal/orders" />
             <SummaryCard
               icon={TimerReset}
               label="Avg. Turnaround (TAT)"
               value={summary?.averageTurnaroundHours != null ? `${summary.averageTurnaroundHours}h` : '—'}
               color="cyan"
+              href="/dashboard/pathology-portal/reports"
             />
-          </div>
+          </SummaryGroup>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+          <SummaryGroup title="Revenue & Network" className="mb-6">
             <SummaryCard
               icon={IndianRupee}
               label="Today's Revenue"
               value={summary ? `₹${Number(summary.todaysRevenue).toFixed(0)}` : '—'}
               color="emerald"
+              href="/dashboard/pathology-portal/reports"
             />
-            <SummaryCard icon={Share2} label="Active Hospital Links" value={summary?.activeHospitalLinks ?? '—'} color="cyan" />
-          </div>
+            <SummaryCard icon={Share2} label="Active Hospital Links" value={summary?.activeHospitalLinks ?? '—'} color="cyan" href="/dashboard/pathology-portal/links" />
+          </SummaryGroup>
 
           {summary?.pendingWork?.length > 0 && (
             <div className="card mb-6">
@@ -520,16 +525,35 @@ export default function PathologyPortalPage() {
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
+function SummaryGroup({
+  title,
+  children,
+  className = '',
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`mb-5 ${className}`}>
+      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">{title}</h3>
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">{children}</div>
+    </div>
+  );
+}
+
 function SummaryCard({
   icon: Icon,
   label,
   value,
   color,
+  href,
 }: {
   icon: React.ElementType;
   label: string;
   value: string | number;
   color: 'amber' | 'red' | 'cyan' | 'emerald';
+  href: string;
 }) {
   const colorStyles: Record<string, string> = {
     amber: 'bg-amber-50 text-amber-600',
@@ -538,15 +562,19 @@ function SummaryCard({
     emerald: 'bg-emerald-50 text-emerald-600',
   };
   return (
-    <div className="card flex items-center gap-3">
+    <Link
+      href={href}
+      title={label}
+      className="card !p-4 flex items-center gap-3 hover:border-cyan-200 hover:shadow-md transition-all"
+    >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${colorStyles[color]}`}>
         <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0">
         <p className="text-lg font-bold text-slate-800 leading-tight">{value}</p>
-        <p className="text-[11px] text-slate-400 truncate">{label}</p>
+        <p className="text-xs font-medium text-slate-600 leading-snug">{label}</p>
       </div>
-    </div>
+    </Link>
   );
 }
 

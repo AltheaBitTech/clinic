@@ -10,9 +10,11 @@ import {
   CalendarClock, FlaskConical, ShieldCheck, PackageCheck, Ban, FileDown,
   Plus, Trash2, ClipboardCheck, PackageOpen, XCircle, RotateCcw,
   ClipboardList, AlertTriangle, BellRing, CheckCheck, FileEdit, Barcode,
+  MessageCircle,
 } from 'lucide-react';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
 
@@ -30,6 +32,13 @@ const statusStyles: Record<string, string> = {
   VERIFIED: 'bg-cyan-50 text-cyan-700',
   REPORT_DELIVERED: 'bg-emerald-50 text-emerald-700',
   CANCELLED: 'bg-slate-200 text-slate-600',
+};
+
+const paymentStatusStyles: Record<string, string> = {
+  PENDING: 'bg-amber-50 text-amber-700',
+  PAID: 'bg-emerald-50 text-emerald-700',
+  REFUNDED: 'bg-slate-100 text-slate-600',
+  CANCELLED: 'bg-slate-200 text-slate-500',
 };
 
 const itemStatusStyles: Record<string, string> = {
@@ -69,6 +78,8 @@ export default function PathologyOrderDetailPage() {
   const [rejectionNotes, setRejectionNotes] = useState('');
   const [showAmendForm, setShowAmendForm] = useState(false);
   const [amendReason, setAmendReason] = useState('');
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['pathology-order', id],
@@ -126,6 +137,16 @@ export default function PathologyOrderDetailPage() {
     onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to update'),
   });
 
+  const paymentStatusMutation = useMutation({
+    mutationFn: (paymentStatus: 'PENDING' | 'PAID') =>
+      pathologyOrdersApi.updatePaymentStatus(id, { paymentStatus }),
+    onSuccess: (_res, paymentStatus) => {
+      toast.success(paymentStatus === 'PAID' ? 'Marked as paid' : 'Marked as pending');
+      invalidate();
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to update payment status'),
+  });
+
   const cancelMutation = useMutation({
     mutationFn: () => pathologyOrdersApi.cancel(id, { cancelReason: cancelReason || undefined }),
     onSuccess: () => {
@@ -174,6 +195,33 @@ export default function PathologyOrderDetailPage() {
     onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to amend'),
   });
 
+  const emailReportMutation = useMutation({
+    mutationFn: (email: string) =>
+      pathologyResultsApi.emailReport(id, {
+        email: email || undefined,
+        reportUrl: `${BASE_URL}${order?.report?.fileUrl}`,
+      }),
+    onSuccess: (res) => {
+      toast.success(`Report emailed to ${res.data.recipientEmail}`);
+      setIsEmailDialogOpen(false);
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to email report'),
+  });
+
+  const openEmailDialog = () => {
+    setEmailInput(order?.patient?.email || '');
+    setIsEmailDialogOpen(true);
+  };
+
+  const handleWhatsAppShare = () => {
+    if (!order?.report?.fileUrl) return;
+    const link = `${BASE_URL}${order.report.fileUrl}`;
+    const message = `Lab Report ${order.orderNo} — view/download: ${link}`;
+    const phoneDigits = (order.patient?.phone || '').replace(/\D/g, '');
+    const phone = phoneDigits ? (phoneDigits.length === 10 ? `91${phoneDigits}` : phoneDigits) : '';
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   if (isLoading) {
     return (
       <div className="p-4 sm:p-6 lg:p-8 flex items-center justify-center py-24">
@@ -208,7 +256,8 @@ export default function PathologyOrderDetailPage() {
     submitForVerificationMutation.isPending ||
     verifyMutation.isPending ||
     deliverMutation.isPending ||
-    amendMutation.isPending;
+    amendMutation.isPending ||
+    paymentStatusMutation.isPending;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-4xl mx-auto">
@@ -274,7 +323,25 @@ export default function PathologyOrderDetailPage() {
             <div className="flex justify-between"><span className="text-slate-500">Discount</span><span className="font-medium text-slate-700">₹{Number(order.discount).toFixed(2)}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">Tax</span><span className="font-medium text-slate-700">₹{Number(order.tax).toFixed(2)}</span></div>
             <div className="flex justify-between border-t border-slate-100 pt-1.5 mt-1.5"><span className="font-semibold text-slate-700">Total</span><span className="font-bold text-slate-900">₹{Number(order.total).toFixed(2)}</span></div>
-            <div className="flex justify-between pt-1"><span className="text-slate-500">Payment</span><span className="badge text-[10px] font-bold bg-slate-100 text-slate-600">{order.paymentStatus}</span></div>
+            <div className="flex justify-between items-center pt-1">
+              <span className="text-slate-500">Payment</span>
+              <div className="flex items-center gap-2">
+                <span className={`badge text-[10px] font-bold ${paymentStatusStyles[order.paymentStatus] || 'bg-slate-100 text-slate-600'}`}>
+                  {order.paymentStatus}
+                </span>
+                {(order.paymentStatus === 'PENDING' || order.paymentStatus === 'PAID') && status !== 'CANCELLED' && (
+                  <button
+                    onClick={() =>
+                      paymentStatusMutation.mutate(order.paymentStatus === 'PAID' ? 'PENDING' : 'PAID')
+                    }
+                    disabled={paymentStatusMutation.isPending}
+                    className="text-[11px] font-semibold text-cyan-600 hover:text-cyan-700 disabled:opacity-60"
+                  >
+                    {order.paymentStatus === 'PAID' ? 'Mark Pending' : 'Mark Paid'}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -369,16 +436,64 @@ export default function PathologyOrderDetailPage() {
               {order.report.deliveredAt ? ` · Delivered ${formatDateTime(order.report.deliveredAt)}` : ''}
             </p>
           </div>
-          <a
-            href={`${BASE_URL}${order.report.fileUrl}`}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-secondary flex items-center gap-2 text-sm"
-          >
-            <FileDown className="w-4 h-4" /> Download
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={`${BASE_URL}${order.report.fileUrl}`}
+              target="_blank"
+              rel="noreferrer"
+              title="Download report"
+              aria-label="Download report"
+              className="btn-secondary flex items-center gap-2 text-sm"
+            >
+              <FileDown className="w-4 h-4" /> Download
+            </a>
+            <button
+              onClick={openEmailDialog}
+              title="Send report via email"
+              aria-label="Send report via email"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-cyan-600 hover:bg-cyan-50 transition-colors border border-slate-200"
+            >
+              <Mail className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleWhatsAppShare}
+              title="Send report via WhatsApp"
+              aria-label="Send report via WhatsApp"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors border border-slate-200"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
+
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogTitle>
+            <Mail className="w-4 h-4 text-cyan-600" /> Email Lab Report
+          </DialogTitle>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Recipient email</label>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="patient@example.com"
+                className="input text-sm w-full"
+              />
+            </div>
+            <button
+              onClick={() => emailReportMutation.mutate(emailInput)}
+              disabled={emailReportMutation.isPending || !emailInput}
+              className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
+            >
+              {emailReportMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+              {emailReportMutation.isPending ? 'Sending...' : 'Send Email'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Items */}
       <div className="card mb-6">
@@ -631,7 +746,7 @@ function CollectSampleCard({ orderId, onDone }: { orderId: string; onDone: () =>
 /* ── Schedule collection card ───────────────────────────────────────────── */
 
 function ScheduleCollectionCard({ orderId, order, onDone }: { orderId: string; order: any; onDone: () => void }) {
-  const [collectionType, setCollectionType] = useState(order.collectionType || 'LAB_VISIT');
+  const [collectionType, setCollectionType] = useState(order.collectionType || 'WALK_IN');
   const [scheduledAt, setScheduledAt] = useState(order.scheduledAt ? order.scheduledAt.slice(0, 16) : '');
   const [collectionAddress, setCollectionAddress] = useState(order.collectionAddress || '');
   const [collectorId, setCollectorId] = useState(order.collector?.id || '');
@@ -663,8 +778,8 @@ function ScheduleCollectionCard({ orderId, order, onDone }: { orderId: string; o
         <div>
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Collection Type</label>
           <select value={collectionType} onChange={(e) => setCollectionType(e.target.value)} className="input text-sm">
-            <option value="LAB_VISIT">Lab Visit</option>
-            <option value="HOME_COLLECTION">Home Collection</option>
+            <option value="WALK_IN">Walk-in</option>
+            <option value="HOME">Home Collection</option>
           </select>
         </div>
         <div>
@@ -677,7 +792,7 @@ function ScheduleCollectionCard({ orderId, order, onDone }: { orderId: string; o
           />
         </div>
       </div>
-      {collectionType === 'HOME_COLLECTION' && (
+      {collectionType === 'HOME' && (
         <div>
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Collection Address</label>
           <input

@@ -252,15 +252,15 @@ export default function ReportsPage() {
                 <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-xl">
                   {TYPE_ICONS[report.type] || '📄'}
                 </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                <div className="flex items-center gap-2">
                   <a href={`${BASE_URL}${report.fileUrl}`} target="_blank" rel="noreferrer"
                     aria-label={`Download ${report.title}`}
-                    className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                    className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
                     <Download className="w-4 h-4 text-slate-500" />
                   </a>
                   <button onClick={() => handleDelete(report.id, report.title)}
                     aria-label={`Delete ${report.title}`}
-                    className="p-2 rounded-lg hover:bg-red-50 transition-colors">
+                    className="p-2 rounded-lg bg-red-50/60 hover:bg-red-50 transition-colors">
                     <Trash2 className="w-4 h-4 text-red-400" />
                   </button>
                 </div>

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { pathologyCatalogApi, pathologyMasterTestsApi } from '@/lib/api';
+import Link from 'next/link';
+import { pathologyCatalogApi } from '@/lib/api';
 import { Microscope, Plus, Search, Loader2, Sparkles, Pencil, Trash2, ListPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -82,23 +83,10 @@ export default function PathologyTestCatalogPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<TestForm>(emptyForm);
-  const [masterSearch, setMasterSearch] = useState('');
-  const [masterSuggestions, setMasterSuggestions] = useState<any[]>([]);
-  const [isMasterSuggestionsOpen, setIsMasterSuggestionsOpen] = useState(false);
 
   const { data: tests, isLoading } = useQuery({
     queryKey: ['pathology-tests', searchQuery],
     queryFn: () => pathologyCatalogApi.getAll(searchQuery || undefined).then((r) => r.data),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (payload: any) => pathologyCatalogApi.create(payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['pathology-tests'] });
-      toast.success('Test added to catalog');
-      closeModal();
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to add test'),
   });
 
   const updateMutation = useMutation({
@@ -110,12 +98,6 @@ export default function PathologyTestCatalogPage() {
     },
     onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to update test'),
   });
-
-  const openCreateModal = () => {
-    setEditingId(null);
-    setForm(emptyForm);
-    setIsModalOpen(true);
-  };
 
   const openEditModal = (test: any) => {
     setEditingId(test.id);
@@ -156,54 +138,6 @@ export default function PathologyTestCatalogPage() {
     setIsModalOpen(false);
     setEditingId(null);
     setForm(emptyForm);
-    setMasterSearch('');
-    setMasterSuggestions([]);
-    setIsMasterSuggestionsOpen(false);
-  };
-
-  const fetchMasterSuggestions = async (query: string) => {
-    try {
-      const response = await pathologyMasterTestsApi.getAll({ search: query || undefined, limit: 8 });
-      const suggestions = Array.isArray(response.data) ? response.data : response.data?.data ?? [];
-      setMasterSuggestions(suggestions);
-      setIsMasterSuggestionsOpen(suggestions.length > 0);
-    } catch (error) {
-      console.error('Failed to fetch master test suggestions:', error);
-    }
-  };
-
-  const selectMasterTest = (item: any) => {
-    setMasterSearch(item.name);
-    setIsMasterSuggestionsOpen(false);
-    setForm((prev) => ({
-      ...prev,
-      name: item.name || '',
-      code: item.code || '',
-      category: item.category || '',
-      department: item.department || '',
-      sampleType: item.sampleType || 'BLOOD',
-      container: item.container || '',
-      method: item.method || '',
-      turnaroundHours: item.turnaroundHours != null ? String(item.turnaroundHours) : '',
-      fastingRequired: !!item.fastingRequired,
-      homeCollectionSupported: item.homeCollectionSupported !== false,
-      masterTestId: item.id,
-      parameters: (item.parameters || [])
-        .slice()
-        .sort((a: any, b: any) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
-        .map((p: any) => ({
-          name: p.name || '',
-          unit: p.unit || '',
-          resultType: p.resultType || 'NUMERIC',
-          options: (p.options || []).join(', '),
-          refRangeLow: p.refRangeLow != null ? String(p.refRangeLow) : '',
-          refRangeHigh: p.refRangeHigh != null ? String(p.refRangeHigh) : '',
-          refRangeText: p.refRangeText || '',
-          criticalRangeLow: p.criticalRangeLow != null ? String(p.criticalRangeLow) : '',
-          criticalRangeHigh: p.criticalRangeHigh != null ? String(p.criticalRangeHigh) : '',
-          criticalRangeText: p.criticalRangeText || '',
-        })),
-    }));
   };
 
   const addParameterRow = () => {
@@ -232,6 +166,7 @@ export default function PathologyTestCatalogPage() {
       toast.error('Every parameter needs a name');
       return;
     }
+    if (!editingId) return;
     const payload: any = {
       name: form.name.trim(),
       code: form.code || undefined,
@@ -244,6 +179,7 @@ export default function PathologyTestCatalogPage() {
       turnaroundHours: form.turnaroundHours ? Number(form.turnaroundHours) : undefined,
       fastingRequired: form.fastingRequired,
       homeCollectionSupported: form.homeCollectionSupported,
+      isActive: form.isActive,
       parameters: form.parameters.map((p, i) => ({
         name: p.name.trim(),
         unit: p.unit || undefined,
@@ -260,16 +196,8 @@ export default function PathologyTestCatalogPage() {
         displayOrder: i,
       })),
     };
-    if (editingId) {
-      payload.isActive = form.isActive;
-      updateMutation.mutate({ id: editingId, data: payload });
-    } else {
-      payload.masterTestId = form.masterTestId || undefined;
-      createMutation.mutate(payload);
-    }
+    updateMutation.mutate({ id: editingId, data: payload });
   };
-
-  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in max-w-6xl mx-auto">
@@ -281,9 +209,12 @@ export default function PathologyTestCatalogPage() {
           </h1>
           <p className="page-subtitle">Lab tests your facility offers, with reference parameters.</p>
         </div>
-        <button onClick={openCreateModal} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
+        <Link
+          href="/dashboard/pathology-portal/tests/new"
+          className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+        >
           <Plus className="w-4 h-4" /> Add Test
-        </button>
+        </Link>
       </div>
 
       <div className="card mb-6">
@@ -365,51 +296,10 @@ export default function PathologyTestCatalogPage() {
           <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
               <Sparkles className="w-5 h-5 text-cyan-600" />
-              {editingId ? 'Edit Test' : 'Add Test to Catalog'}
+              Edit Test
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {!editingId && (
-                <div className="relative">
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Import from master test list
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                    <input
-                      type="text"
-                      value={masterSearch}
-                      onFocus={() => fetchMasterSuggestions(masterSearch)}
-                      onChange={(e) => {
-                        setMasterSearch(e.target.value);
-                        fetchMasterSuggestions(e.target.value);
-                      }}
-                      placeholder="Search common tests (CBC, LFT, Lipid Profile...)"
-                      className="input text-sm pl-8"
-                    />
-                  </div>
-                  {isMasterSuggestionsOpen && masterSuggestions.length > 0 && (
-                    <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto divide-y divide-slate-50">
-                      {masterSuggestions.map((item: any) => (
-                        <div
-                          key={item.id}
-                          onClick={() => selectMasterTest(item)}
-                          className="p-2.5 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center"
-                        >
-                          <span>{item.name}</span>
-                          {item.category && (
-                            <span className="text-[10px] text-cyan-600 bg-cyan-50 px-1.5 py-0.5 rounded">{item.category}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {isMasterSuggestionsOpen && (
-                    <div className="fixed inset-0 z-10" onClick={() => setIsMasterSuggestionsOpen(false)} />
-                  )}
-                </div>
-              )}
-
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
                   Test Name <span className="text-red-500">*</span>
@@ -542,17 +432,15 @@ export default function PathologyTestCatalogPage() {
                   />
                   Home collection supported
                 </label>
-                {editingId && (
-                  <label className="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.isActive}
-                      onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                      className="rounded border-slate-300"
-                    />
-                    Active
-                  </label>
-                )}
+                <label className="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                    className="rounded border-slate-300"
+                  />
+                  Active
+                </label>
               </div>
 
               <div className="pt-2 border-t border-slate-100">
@@ -679,8 +567,8 @@ export default function PathologyTestCatalogPage() {
                 <button type="button" onClick={closeModal} className="btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSaving} className="btn-primary">
-                  {isSaving ? 'Saving...' : editingId ? 'Save Changes' : 'Add to Catalog'}
+                <button type="submit" disabled={updateMutation.isPending} className="btn-primary">
+                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

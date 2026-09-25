@@ -16,6 +16,7 @@ import {
   CreateLabOrderWalkInDto,
   RejectSampleDto,
   ScheduleCollectionDto,
+  UpdatePaymentStatusDto,
 } from './dto/lab-order.dto';
 import {
   CreateLabCollectorDto,
@@ -201,6 +202,18 @@ export class PathologyOrdersController {
   async startProcessing(@CurrentUser() user: any, @Param('id') id: string) {
     const lab = await this.pathologyLabsService.getMine(user.id);
     return this.ordersService.startProcessing(id, lab.id, user.id);
+  }
+
+  @Put(':id/payment-status')
+  @Roles(UserRole.PATHOLOGY)
+  @ApiOperation({ summary: 'Mark an order as paid, pending, or refunded' })
+  async updatePaymentStatus(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: UpdatePaymentStatusDto,
+  ) {
+    const lab = await this.pathologyLabsService.getMine(user.id);
+    return this.ordersService.updatePaymentStatus(id, lab.id, user.id, dto);
   }
 
   @Put(':id/cancel')

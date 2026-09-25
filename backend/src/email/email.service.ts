@@ -74,6 +74,14 @@ export type ReportAvailableEmail = {
   reportId?: string;
 };
 
+export type LabReportLinkEmail = {
+  recipientEmail: string;
+  patientName: string;
+  orderNo: string;
+  reportUrl: string;
+  labName?: string;
+};
+
 export type InvoiceCreatedEmail = {
   recipientEmail: string;
   patientName: string;
@@ -113,6 +121,13 @@ export type TenantRequestRejectedEmail = {
   recipientEmail: string;
   applicantName: string;
   hospitalName: string;
+};
+
+export type TenantRequestReceivedEmail = {
+  recipientEmail: string;
+  applicantName: string;
+  hospitalName: string;
+  type: string;
 };
 
 export type StaffInviteEmail = {
@@ -580,6 +595,31 @@ Sign in to your Arogyix account to view it.`,
     });
   }
 
+  async sendLabReportLink(params: LabReportLinkEmail): Promise<void> {
+    const patientName = this.toSafePlainText(params.patientName) || 'Patient';
+    const orderNo = this.toSafePlainText(params.orderNo);
+    const labName = this.toSafePlainText(params.labName) || 'your lab';
+    const reportUrl = params.reportUrl;
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: `Your Lab Report — ${orderNo}`,
+      context: `lab report link email (orderNo=${orderNo})`,
+      html: `<p>Hello ${this.escapeHtml(patientName)},</p>
+<p>Your lab report from <strong>${this.escapeHtml(labName)}</strong> is ready.</p>
+<p><a href="${this.escapeHtml(reportUrl)}" style="display:inline-block;padding:10px 20px;background:#0891b2;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">View / Download Report</a></p>
+<p>Order: ${this.escapeHtml(orderNo)}</p>`,
+      text: `Hello ${patientName},
+
+Your lab report from ${labName} is ready.
+
+View/download: ${reportUrl}
+
+Order: ${orderNo}`,
+      throwOnFailure: true,
+    });
+  }
+
   async sendInvoiceCreated(params: InvoiceCreatedEmail): Promise<void> {
     const invoiceId = params.invoiceId ?? 'unknown';
     const patientName = this.toSafePlainText(params.patientName) || 'Patient';
@@ -755,6 +795,29 @@ Name: ${hospitalName}
 Applicant: ${applicantName}
 
 Sign in to the super admin dashboard to approve or reject it.`,
+    });
+  }
+
+  async sendTenantRequestReceived(
+    params: TenantRequestReceivedEmail,
+  ): Promise<void> {
+    const applicantName = this.toSafePlainText(params.applicantName) || 'there';
+    const hospitalName = this.toSafePlainText(params.hospitalName);
+    const typeKey = String(params.type || '').toUpperCase();
+    const typeLabel = ROLE_LABELS[typeKey] || 'organization';
+
+    await this.dispatch({
+      recipientEmail: params.recipientEmail,
+      subject: 'Your Arogyix Registration Request Is Under Review',
+      context: `tenant request received (hospital=${hospitalName})`,
+      html: `<p>Hello ${this.escapeHtml(applicantName)},</p>
+<p>Thanks for registering <strong>${this.escapeHtml(hospitalName)}</strong> as a ${this.escapeHtml(typeLabel)} on Arogyix. Your application has been received and is currently under review by our team.</p>
+<p>We'll email you as soon as a decision has been made.</p>`,
+      text: `Hello ${applicantName},
+
+Thanks for registering ${hospitalName} as a ${typeLabel} on Arogyix. Your application has been received and is currently under review by our team.
+
+We'll email you as soon as a decision has been made.`,
     });
   }
 

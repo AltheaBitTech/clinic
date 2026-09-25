@@ -369,6 +369,8 @@ export const pathologyOrdersApi = {
     api.put(`/pathology-orders/${id}/reject-sample`, data),
   requestRecollection: (id: string) => api.put(`/pathology-orders/${id}/request-recollection`),
   startProcessing: (id: string) => api.put(`/pathology-orders/${id}/start-processing`),
+  updatePaymentStatus: (id: string, data: { paymentStatus: 'PENDING' | 'PAID' | 'REFUNDED' | 'CANCELLED' }) =>
+    api.put(`/pathology-orders/${id}/payment-status`, data),
   cancel: (id: string, data?: { cancelReason?: string }) =>
     api.put(`/pathology-orders/${id}/cancel`, data),
 };
@@ -392,6 +394,8 @@ export const pathologyResultsApi = {
   deliver: (orderId: string) => api.put(`/pathology-orders/${orderId}/deliver`),
   amend: (orderId: string, data: { reason: string }) =>
     api.put(`/pathology-orders/${orderId}/amend`, data),
+  emailReport: (orderId: string, data: { email?: string; reportUrl: string }) =>
+    api.post(`/pathology-orders/${orderId}/email-report`, data),
 };
 
 export const pathologyDashboardApi = {

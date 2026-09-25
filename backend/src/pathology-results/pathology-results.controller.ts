@@ -8,6 +8,7 @@ import {
   AcknowledgeCriticalDto,
   AmendReportDto,
   EnterLabResultsDto,
+  SendLabReportEmailDto,
 } from './dto/lab-result.dto';
 import { PathologyResultsService } from './pathology-results.service';
 
@@ -78,6 +79,17 @@ export class PathologyResultsController {
   async deliver(@CurrentUser() user: any, @Param('id') id: string) {
     const lab = await this.pathologyLabsService.getMine(user.id);
     return this.resultsService.deliver(id, lab.id, user.id);
+  }
+
+  @Post(':id/email-report')
+  @ApiOperation({ summary: "Email the report's shareable link to the patient" })
+  async emailReport(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: SendLabReportEmailDto,
+  ) {
+    const lab = await this.pathologyLabsService.getMine(user.id);
+    return this.resultsService.emailReport(id, lab.id, user.id, dto);
   }
 
   @Put(':id/amend')

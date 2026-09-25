@@ -4,6 +4,7 @@ import { ResultFlag, ResultValueType } from '@prisma/client';
 import {
   IsArray,
   IsBoolean,
+  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -78,6 +79,24 @@ export class AmendReportDto {
   @IsString()
   @IsNotEmpty()
   reason: string;
+}
+
+export class SendLabReportEmailDto {
+  @ApiPropertyOptional({
+    example: 'patient@example.com',
+    description: 'Overrides the patient email on file',
+  })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @ApiProperty({
+    description:
+      'Publicly reachable link to the report PDF, as shown to the patient',
+  })
+  @IsString()
+  @IsNotEmpty()
+  reportUrl: string;
 }
 
 export class AcknowledgeCriticalDto {

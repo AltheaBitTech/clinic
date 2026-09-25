@@ -1,5 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CollectionType, SampleRejectionReason } from '@prisma/client';
+import {
+  CollectionType,
+  PaymentStatus,
+  SampleRejectionReason,
+} from '@prisma/client';
 import {
   IsArray,
   IsDateString,
@@ -213,6 +217,13 @@ export class CollectSampleDto {
   @IsString()
   @IsOptional()
   notes?: string;
+}
+
+export class UpdatePaymentStatusDto {
+  @ApiProperty({ enum: PaymentStatus })
+  @IsEnum(PaymentStatus)
+  @IsNotEmpty()
+  paymentStatus: PaymentStatus;
 }
 
 export class RejectSampleDto {

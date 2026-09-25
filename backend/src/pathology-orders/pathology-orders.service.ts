@@ -15,6 +15,7 @@ import {
   CreateLabOrderWalkInDto,
   RejectSampleDto,
   ScheduleCollectionDto,
+  UpdatePaymentStatusDto,
 } from './dto/lab-order.dto';
 import {
   CreateLabCollectorDto,
@@ -466,6 +467,33 @@ export class PathologyOrdersService {
     await this.auditService.log(labId, userId, 'CANCEL', 'LabOrder', id, {
       status: order.status,
     }, { status: LabOrderStatus.CANCELLED });
+    return updated;
+  }
+
+  async updatePaymentStatus(
+    id: string,
+    labId: string,
+    userId: string,
+    dto: UpdatePaymentStatusDto,
+  ) {
+    const order = await this.findOneForLab(id, labId);
+    if (order.paymentStatus === dto.paymentStatus) {
+      return order;
+    }
+    const updated = await this.prisma.labOrder.update({
+      where: { id },
+      data: { paymentStatus: dto.paymentStatus },
+      include: ORDER_INCLUDE,
+    });
+    await this.auditService.log(
+      labId,
+      userId,
+      'UPDATE_PAYMENT_STATUS',
+      'LabOrder',
+      id,
+      { paymentStatus: order.paymentStatus },
+      { paymentStatus: dto.paymentStatus },
+    );
     return updated;
   }
 

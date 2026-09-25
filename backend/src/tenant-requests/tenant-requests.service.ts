@@ -132,6 +132,20 @@ export class TenantRequestsService {
       );
     }
 
+    try {
+      await this.emailService.sendTenantRequestReceived({
+        recipientEmail: dto.email,
+        applicantName: `${dto.firstName} ${dto.lastName}`.trim(),
+        hospitalName: dto.name,
+        type,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Tenant request received email failed (requestId=${request.id}, error=${message})`,
+      );
+    }
+
     return request;
   }
 

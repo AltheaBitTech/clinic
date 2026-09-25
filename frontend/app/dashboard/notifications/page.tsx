@@ -39,7 +39,7 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      <div className="space-y-2 max-w-2xl">
+      <div className="space-y-2">
         {isLoading ? (
           [...Array(5)].map((_, i) => (
             <div key={i} className="card animate-pulse flex items-start gap-4">

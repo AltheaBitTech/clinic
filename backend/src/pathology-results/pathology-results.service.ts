@@ -23,6 +23,7 @@ import {
   AcknowledgeCriticalDto,
   AmendReportDto,
   EnterLabResultsDto,
+  SendLabReportEmailDto,
 } from './dto/lab-result.dto';
 
 @Injectable()
@@ -416,6 +417,52 @@ export class PathologyResultsService {
       { reason: dto.reason },
     );
     return updatedOrder;
+  }
+
+  async emailReport(
+    orderId: string,
+    labId: string,
+    userId: string,
+    dto: SendLabReportEmailDto,
+  ): Promise<{ sent: true; recipientEmail: string }> {
+    const order = await this.prisma.labOrder.findFirst({
+      where: { id: orderId, labId },
+      include: { report: true, patient: true, lab: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (!order.report?.fileUrl) {
+      throw new BadRequestException('Report has not been generated yet');
+    }
+    if (!dto.reportUrl.endsWith(order.report.fileUrl)) {
+      throw new BadRequestException('Report link does not match this order');
+    }
+
+    const recipientEmail = dto.email || order.patient?.email;
+    if (!recipientEmail) {
+      throw new BadRequestException(
+        'Patient has no email on file — provide one to send to',
+      );
+    }
+
+    await this.emailService.sendLabReportLink({
+      recipientEmail,
+      patientName: order.patient?.name || 'Patient',
+      orderNo: order.orderNo,
+      reportUrl: dto.reportUrl,
+      labName: order.lab.name,
+    });
+
+    await this.auditService.log(
+      labId,
+      userId,
+      'EMAIL_REPORT',
+      'LabOrder',
+      orderId,
+      undefined,
+      { recipientEmail },
+    );
+
+    return { sent: true, recipientEmail };
   }
 
   private async deliverToHospitalPatient(
