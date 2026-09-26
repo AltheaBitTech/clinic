@@ -12,6 +12,7 @@ import { PharmaciesService } from '../pharmacies/pharmacies.service';
 import {
   CreatePharmacyPrescriptionDto,
   DispensePrescriptionDto,
+  VerifyPrescriptionDto,
 } from './dto/pharmacy-prescription.dto';
 import { PharmacyPrescriptionsService } from './pharmacy-prescriptions.service';
 
@@ -60,10 +61,17 @@ export class PharmacyPrescriptionsController {
   }
 
   @Post(':id/verify')
-  @ApiOperation({ summary: 'Verify a pending prescription' })
-  async verify(@CurrentUser() user: any, @Param('id') id: string) {
+  @ApiOperation({
+    summary:
+      'Verify a pending prescription, optionally correcting item catalog mapping/quantity first',
+  })
+  async verify(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: VerifyPrescriptionDto,
+  ) {
     const pharmacy = await this.pharmaciesService.getMine(user.id);
-    return this.prescriptionsService.verify(id, pharmacy.id, user.id);
+    return this.prescriptionsService.verify(id, pharmacy.id, user.id, dto);
   }
 
   @Post(':id/dispense')

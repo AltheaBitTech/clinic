@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { PharmacyPrescriptionsService } from '../pharmacy-prescriptions/pharmacy-prescriptions.service';
 import { CreatePrescriptionDto } from './dto/prescription.dto';
 import { UserRole } from '@prisma/client';
 import * as fs from 'fs';
@@ -25,6 +26,7 @@ export class PrescriptionsService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private pharmacyPrescriptionsService: PharmacyPrescriptionsService,
   ) {}
 
   async create(dto: CreatePrescriptionDto, user: RequestUser) {
@@ -64,11 +66,22 @@ export class PrescriptionsService {
       throw new NotFoundException('Patient not found in this hospital');
     }
 
+    if (dto.pharmacyId) {
+      const pharmacy = await this.prisma.pharmacy.findFirst({
+        where: { id: dto.pharmacyId, tenantId: user.tenantId, isActive: true },
+        select: { id: true },
+      });
+      if (!pharmacy) {
+        throw new NotFoundException('Pharmacy not found in this hospital');
+      }
+    }
+
     const prescription = await this.prisma.prescription.create({
       data: {
         patientId: dto.patientId,
         doctorId,
         appointmentId: dto.appointmentId,
+        pharmacyId: dto.pharmacyId,
         diagnosis: dto.diagnosis,
         notes: dto.notes,
         validUntil: dto.validUntil ? new Date(dto.validUntil) : undefined,
@@ -79,7 +92,8 @@ export class PrescriptionsService {
             dosage: m.dosage,
             frequency: m.frequency,
             duration: m.duration,
-            timing: m.timing || (m.type === 'OINTMENT' ? 'AFTER_BATH' : 'AFTER_FOOD'),
+            timing:
+              m.timing || (m.type === 'OINTMENT' ? 'AFTER_BATH' : 'AFTER_FOOD'),
             instructions: m.instructions,
             reminderTimes: m.reminderTimes || [],
           })),
@@ -89,7 +103,14 @@ export class PrescriptionsService {
         medicines: true,
         patient: {
           include: {
-            user: { select: { firstName: true, lastName: true, email: true } },
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+              },
+            },
           },
         },
         doctor: {
@@ -127,6 +148,23 @@ export class PrescriptionsService {
     // Create medicine reminders
     await this.createReminders(prescription);
 
+    if (dto.pharmacyId) {
+      try {
+        await this.pharmacyPrescriptionsService.createFromHospitalPrescription(
+          dto.pharmacyId,
+          prescription,
+          prescription.medicines,
+          prescription.patient,
+        );
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'unknown error';
+        this.logger.error(
+          `Pharmacy routing failed (prescriptionId=${prescription.id}, pharmacyId=${dto.pharmacyId}, error=${message})`,
+        );
+      }
+    }
+
     try {
       const patientUser = prescription.patient.user;
       await this.emailService.sendPrescriptionAvailable({
@@ -146,6 +184,26 @@ export class PrescriptionsService {
     }
 
     return { ...prescription, pdfUrl: pdfPath };
+  }
+
+  async getPharmacyStatus(prescriptionId: string, pharmacyId: string | null) {
+    if (!pharmacyId) return null;
+
+    const [pharmacy, pharmacyPrescription] = await Promise.all([
+      this.prisma.pharmacy.findUnique({
+        where: { id: pharmacyId },
+        select: { name: true },
+      }),
+      this.prisma.pharmacyPrescription.findUnique({
+        where: { arogyixPrescriptionId: prescriptionId },
+        select: { status: true },
+      }),
+    ]);
+
+    return {
+      pharmacyName: pharmacy?.name ?? null,
+      status: pharmacyPrescription?.status ?? null,
+    };
   }
 
   async getPatientIdForUser(userId: string): Promise<string | null> {
@@ -177,6 +235,7 @@ export class PrescriptionsService {
           doctor: {
             include: { user: { select: { firstName: true, lastName: true } } },
           },
+          pharmacy: { select: { name: true } },
         },
       }),
       this.prisma.prescription.count({ where }),

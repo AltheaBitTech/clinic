@@ -630,6 +630,7 @@ model Prescription {
   appointmentId String?
   patientId     String
   doctorId      String
+  pharmacyId    String?
   diagnosis     String?
   notes         String?
   pdfUrl        String?
@@ -640,6 +641,7 @@ model Prescription {
   appointment Appointment?       @relation(fields: [appointmentId], references: [id])
   patient     Patient            @relation(fields: [patientId], references: [id])
   doctor      Doctor             @relation(fields: [doctorId], references: [id])
+  pharmacy    Pharmacy?          @relation(fields: [pharmacyId], references: [id])
   medicines   Medicine[]
   reminders   MedicineReminder[]
 
@@ -1003,15 +1005,16 @@ model Pharmacy {
   tenant Tenant @relation(fields: [tenantId], references: [id])
   user   User?  @relation(fields: [userId], references: [id])
 
-  medicines      PharmacyMedicine[]
-  suppliers      Supplier[]
-  purchaseOrders PurchaseOrder[]
-  patients       PharmacyPatient[]
-  prescriptions  PharmacyPrescription[]
-  sales          Sale[]
-  returns        Return[]
-  stockMovements StockMovement[]
-  auditLogs      AuditLog[]
+  medicines           PharmacyMedicine[]
+  suppliers           Supplier[]
+  purchaseOrders      PurchaseOrder[]
+  patients            PharmacyPatient[]
+  prescriptions       PharmacyPrescription[]
+  sales               Sale[]
+  returns             Return[]
+  stockMovements      StockMovement[]
+  auditLogs           AuditLog[]
+  routedPrescriptions Prescription[]
 
   @@map("pharmacies")
 }
@@ -1184,6 +1187,7 @@ model PharmacyPatient {
   prescriptions PharmacyPrescription[]
   sales         Sale[]
 
+  @@unique([pharmacyId, arogyixPatientId])
   @@map("pharmacy_patients")
 }
 

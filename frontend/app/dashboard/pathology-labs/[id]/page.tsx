@@ -206,7 +206,7 @@ export default function PathologyLabDetailPage() {
       <div className="flex flex-wrap gap-3">
         {status === 'ACTIVE' && (
           <Link
-            href={`/dashboard/pathology-orders?labId=${lab.id}`}
+            href={`/dashboard/pathology-orders/new?labId=${lab.id}`}
             className="btn-primary flex items-center gap-2 text-sm"
           >
             <ClipboardList className="w-4 h-4" /> Place Order

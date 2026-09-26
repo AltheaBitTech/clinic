@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { prescriptionsApi } from '@/lib/api';
-import { ClipboardList, Plus, FileText, Pill, ChevronRight, Stethoscope, ChevronLeft, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ClipboardList, Plus, FileText, Pill, ChevronRight, Stethoscope, ChevronLeft, AlertTriangle, RefreshCw, Store } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -91,6 +91,11 @@ export default function PrescriptionsPage() {
                         : <>Dr. {rx.doctor?.user?.firstName} {rx.doctor?.user?.lastName} · {formatDate(rx.createdAt)}</>}
                     </p>
                     {rx.diagnosis && <p className="text-xs text-slate-400 mt-1 italic">{rx.diagnosis}</p>}
+                    {rx.pharmacy && (
+                      <p className="text-xs text-emerald-600 mt-1.5 flex items-center gap-1">
+                        <Store className="w-3.5 h-3.5" /> Sent to {rx.pharmacy.name}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {rx.pdfUrl && (

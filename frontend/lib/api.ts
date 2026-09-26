@@ -119,6 +119,7 @@ export const prescriptionsApi = {
   create: (data: any) => api.post('/prescriptions', data),
   getAll: (params?: any) => api.get('/prescriptions', { params }),
   getOne: (id: string) => api.get(`/prescriptions/${id}`),
+  getPharmacyStatus: (id: string) => api.get(`/prescriptions/${id}/pharmacy-status`),
 };
 
 export const reportsApi = {
@@ -288,7 +289,7 @@ export const pharmacyPrescriptionsApi = {
   create: (data: any) => api.post('/pharmacy/prescriptions', data),
   getAll: (params?: any) => api.get('/pharmacy/prescriptions', { params }),
   getOne: (id: string) => api.get(`/pharmacy/prescriptions/${id}`),
-  verify: (id: string) => api.post(`/pharmacy/prescriptions/${id}/verify`),
+  verify: (id: string, data?: any) => api.post(`/pharmacy/prescriptions/${id}/verify`, data),
   dispense: (id: string, data: any) => api.post(`/pharmacy/prescriptions/${id}/dispense`, data),
 };
 

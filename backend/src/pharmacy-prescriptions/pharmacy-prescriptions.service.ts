@@ -15,7 +15,34 @@ import { NotificationsService } from '../notifications/notifications.service';
 import {
   CreatePharmacyPrescriptionDto,
   DispensePrescriptionDto,
+  VerifyPrescriptionDto,
 } from './dto/pharmacy-prescription.dto';
+
+interface HospitalPrescriptionForRouting {
+  id: string;
+  doctorId: string;
+  appointmentId: string | null;
+  diagnosis: string | null;
+  notes: string | null;
+}
+
+interface HospitalMedicineForRouting {
+  name: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instructions: string | null;
+}
+
+interface HospitalPatientForRouting {
+  id: string;
+  user: {
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+    email: string;
+  };
+}
 
 @Injectable()
 export class PharmacyPrescriptionsService {
@@ -59,6 +86,75 @@ export class PharmacyPrescriptionsService {
     return prescription;
   }
 
+  async createFromHospitalPrescription(
+    pharmacyId: string,
+    prescription: HospitalPrescriptionForRouting,
+    medicines: HospitalMedicineForRouting[],
+    patient: HospitalPatientForRouting,
+  ) {
+    const pharmacyPrescription = await this.prisma.$transaction(async (tx) => {
+      const pharmacyPatient = await tx.pharmacyPatient.upsert({
+        where: {
+          pharmacyId_arogyixPatientId: {
+            pharmacyId,
+            arogyixPatientId: patient.id,
+          },
+        },
+        update: {},
+        create: {
+          pharmacyId,
+          arogyixPatientId: patient.id,
+          name: `${patient.user.firstName} ${patient.user.lastName}`.trim(),
+          phone: patient.user.phone,
+          email: patient.user.email,
+        },
+      });
+
+      return tx.pharmacyPrescription.create({
+        data: {
+          pharmacyId,
+          patientId: pharmacyPatient.id,
+          doctorId: prescription.doctorId,
+          appointmentId: prescription.appointmentId ?? undefined,
+          arogyixPrescriptionId: prescription.id,
+          diagnosis: prescription.diagnosis ?? undefined,
+          advice: prescription.notes ?? undefined,
+          items: {
+            create: medicines.map((m) => ({
+              medicineName: m.name,
+              dosage: m.dosage,
+              frequency: m.frequency,
+              duration: m.duration,
+              instructions: m.instructions ?? undefined,
+              quantity: 1,
+            })),
+          },
+        },
+        include: { items: true, patient: true },
+      });
+    });
+
+    const pharmacy = await this.prisma.pharmacy.findUnique({
+      where: { id: pharmacyId },
+      select: { userId: true },
+    });
+    if (pharmacy?.userId) {
+      await this.notificationsService.create(
+        pharmacy.userId,
+        'New prescription received',
+        `A prescription for ${pharmacyPrescription.patient.name} was sent by a hospital and is pending verification.`,
+        'PUSH',
+        undefined,
+        {
+          type: 'PHARMACY_PRESCRIPTION_ROUTED',
+          pharmacyPrescriptionId: pharmacyPrescription.id,
+        },
+      );
+    }
+
+    return pharmacyPrescription;
+  }
+
   async findAll(pharmacyId: string, status?: PharmacyPrescriptionStatus) {
     return this.prisma.pharmacyPrescription.findMany({
       where: { pharmacyId, ...(status ? { status } : {}) },
@@ -80,17 +176,52 @@ export class PharmacyPrescriptionsService {
     return prescription;
   }
 
-  async verify(id: string, pharmacyId: string, userId: string) {
+  async verify(
+    id: string,
+    pharmacyId: string,
+    userId: string,
+    dto?: VerifyPrescriptionDto,
+  ) {
     const prescription = await this.findOne(id, pharmacyId);
     if (prescription.status !== PharmacyPrescriptionStatus.PENDING) {
       throw new BadRequestException(
         'Only pending prescriptions can be verified',
       );
     }
-    const updated = await this.prisma.pharmacyPrescription.update({
-      where: { id },
-      data: { status: PharmacyPrescriptionStatus.VERIFIED },
+
+    if (dto?.items?.length) {
+      for (const correction of dto.items) {
+        const item = prescription.items.find((i) => i.id === correction.id);
+        if (!item) {
+          throw new BadRequestException(
+            `Prescription item ${correction.id} not found`,
+          );
+        }
+      }
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      if (dto?.items?.length) {
+        for (const correction of dto.items) {
+          await tx.prescriptionItem.update({
+            where: { id: correction.id },
+            data: {
+              ...(correction.medicineId !== undefined && {
+                medicineId: correction.medicineId,
+              }),
+              ...(correction.quantity !== undefined && {
+                quantity: correction.quantity,
+              }),
+            },
+          });
+        }
+      }
+      return tx.pharmacyPrescription.update({
+        where: { id },
+        data: { status: PharmacyPrescriptionStatus.VERIFIED },
+      });
     });
+
     await this.auditService.log(
       pharmacyId,
       userId,

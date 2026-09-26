@@ -29,9 +29,12 @@ function IsValidMedicineName(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate(value: unknown, args: ValidationArguments) {
-          if (typeof value !== 'string' || value.trim().length === 0) return false;
+          if (typeof value !== 'string' || value.trim().length === 0)
+            return false;
           const isOintment = (args.object as any).type === 'OINTMENT';
-          return isOintment ? ALPHA_ONLY.test(value) : NOT_PURELY_NUMERIC.test(value);
+          return isOintment
+            ? ALPHA_ONLY.test(value)
+            : NOT_PURELY_NUMERIC.test(value);
         },
         defaultMessage(args: ValidationArguments) {
           const isOintment = (args.object as any).type === 'OINTMENT';
@@ -60,7 +63,9 @@ export class MedicineItemDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  @Matches(NOT_PURELY_NUMERIC, { message: 'duration must not be purely numeric' })
+  @Matches(NOT_PURELY_NUMERIC, {
+    message: 'duration must not be purely numeric',
+  })
   duration: string;
 
   @ApiPropertyOptional() @IsOptional() @IsString() timing?: string;
@@ -68,7 +73,9 @@ export class MedicineItemDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Matches(NOT_PURELY_NUMERIC, { message: 'instructions must not be purely numeric' })
+  @Matches(NOT_PURELY_NUMERIC, {
+    message: 'instructions must not be purely numeric',
+  })
   instructions?: string;
 
   @ApiPropertyOptional({ type: [String] })
@@ -81,10 +88,19 @@ export class CreatePrescriptionDto {
   @ApiProperty() @IsString() patientId: string;
   @ApiPropertyOptional() @IsOptional() @IsString() doctorId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() appointmentId?: string;
+  @ApiPropertyOptional({
+    description:
+      'Pharmacy (in this hospital) to auto-route this prescription to',
+  })
+  @IsOptional()
+  @IsString()
+  pharmacyId?: string;
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Matches(NOT_PURELY_NUMERIC, { message: 'diagnosis must not be purely numeric' })
+  @Matches(NOT_PURELY_NUMERIC, {
+    message: 'diagnosis must not be purely numeric',
+  })
   diagnosis?: string;
   @ApiPropertyOptional()
   @IsOptional()

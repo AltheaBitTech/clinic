@@ -99,6 +99,41 @@ export class CreatePharmacyPrescriptionDto {
   items: PrescriptionItemDto[];
 }
 
+export class VerifyPrescriptionItemDto {
+  @ApiProperty({ example: 'clx123prescriptionitem' })
+  @IsString()
+  @IsNotEmpty()
+  id: string;
+
+  @ApiPropertyOptional({
+    example: 'clx123medicine',
+    description:
+      'Catalog medicine to map this item to before it can be dispensed',
+  })
+  @IsString()
+  @IsOptional()
+  medicineId?: string;
+
+  @ApiPropertyOptional({ example: 10 })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  quantity?: number;
+}
+
+export class VerifyPrescriptionDto {
+  @ApiPropertyOptional({
+    type: [VerifyPrescriptionItemDto],
+    description:
+      'Corrections to apply to items (e.g. catalog mapping, quantity) before verifying',
+  })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => VerifyPrescriptionItemDto)
+  items?: VerifyPrescriptionItemDto[];
+}
+
 export class DispenseItemDto {
   @ApiProperty({ example: 'clx123prescriptionitem' })
   @IsString()

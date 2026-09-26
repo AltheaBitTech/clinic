@@ -82,4 +82,27 @@ export class PrescriptionsController {
     }
     return prescription;
   }
+
+  @Get(':id/pharmacy-status')
+  @ApiOperation({
+    summary: 'Get pharmacy fulfillment status for a routed prescription',
+  })
+  async getPharmacyStatus(@CurrentUser() user: any, @Param('id') id: string) {
+    const prescription = await this.prescriptionsService.findOne(
+      id,
+      user.tenantId,
+    );
+    if (
+      user.role === UserRole.PATIENT &&
+      prescription.patient.userId !== user.id
+    ) {
+      throw new ForbiddenException(
+        'You are not authorized to view this prescription',
+      );
+    }
+    return this.prescriptionsService.getPharmacyStatus(
+      id,
+      prescription.pharmacyId,
+    );
+  }
 }

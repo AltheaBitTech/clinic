@@ -5,11 +5,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { doctorsApi, patientsApi, prescriptionsApi, medicalCatalogApi } from '@/lib/api';
+import { doctorsApi, patientsApi, prescriptionsApi, medicalCatalogApi, pharmaciesApi } from '@/lib/api';
 import { getInitials, getNameError } from '@/lib/utils';
 import {
   Plus, Search, ArrowLeft, AlertCircle, CheckCircle2,
-  Stethoscope, Loader2, FileText, ChevronDown, Sparkles, Trash2, Pill, Clock, PlusCircle, User
+  Stethoscope, Loader2, FileText, ChevronDown, Sparkles, Trash2, Pill, Clock, PlusCircle, User, Store
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -34,7 +34,8 @@ function NewPrescriptionContent() {
   const [diagnosis, setDiagnosis] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [notes, setNotes] = useState('');
-  
+  const [selectedPharmacyId, setSelectedPharmacyId] = useState('');
+
   // Dynamic medicines state
   const [medicines, setMedicines] = useState<any[]>([
     {
@@ -119,6 +120,13 @@ function NewPrescriptionContent() {
     queryKey: ['patients-search', patientSearch],
     queryFn: () => patientsApi.getAll({ search: patientSearch, limit: 10 }).then((r) => r.data),
   });
+
+  // Query this hospital's onboarded pharmacies (for optional auto-routing)
+  const { data: pharmaciesData } = useQuery({
+    queryKey: ['pharmacies-for-prescription'],
+    queryFn: () => pharmaciesApi.getAll().then((r) => r.data),
+  });
+  const activePharmacies: any[] = pharmaciesData || [];
 
   // Filter doctors based on search (Admin use cases)
   const filteredDoctors = doctorsData?.data?.filter((doc: any) => {
@@ -447,10 +455,17 @@ function NewPrescriptionContent() {
         notes: notes || undefined,
         validUntil: validUntil ? new Date(validUntil).toISOString() : undefined,
         medicines: mergedItems,
+        pharmacyId: selectedPharmacyId || undefined,
       };
 
       await prescriptionsApi.create(payload);
-      toast.success('Prescription created successfully!', { id: loadingToast });
+      const routedPharmacy = activePharmacies.find((p) => p.id === selectedPharmacyId);
+      toast.success(
+        routedPharmacy
+          ? `Prescription created and sent to ${routedPharmacy.name}!`
+          : 'Prescription created successfully!',
+        { id: loadingToast },
+      );
       router.push('/dashboard/prescriptions');
     } catch (error: any) {
       const errMsg = error.response?.data?.message || 'Failed to create prescription';
@@ -1245,6 +1260,31 @@ function NewPrescriptionContent() {
                 className="input min-h-[100px] resize-y"
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                Send to Pharmacy (Optional)
+              </label>
+              <div className="relative">
+                <Store className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <select
+                  value={selectedPharmacyId}
+                  onChange={(e) => setSelectedPharmacyId(e.target.value)}
+                  className="input pl-10 appearance-none pr-10"
+                >
+                  <option value="">Don&apos;t send to a pharmacy</option>
+                  {activePharmacies.map((pharmacy) => (
+                    <option key={pharmacy.id} value={pharmacy.id}>
+                      {pharmacy.name}{pharmacy.city ? ` — ${pharmacy.city}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+              <p className="text-xs text-slate-400 mt-1.5">
+                The selected pharmacy will receive this prescription automatically for verification and dispensing.
+              </p>
+            </div>
           </div>
         </form>
 
@@ -1324,6 +1364,21 @@ function NewPrescriptionContent() {
                   </div>
                 </div>
               </div>
+
+              {/* Pharmacy Routing */}
+              {selectedPharmacyId && (
+                <div>
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pharmacy</span>
+                  <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <Store className="w-4 h-4" />
+                    </div>
+                    <p className="font-semibold text-slate-800 text-sm truncate">
+                      {activePharmacies.find((p) => p.id === selectedPharmacyId)?.name || 'Selected pharmacy'}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Submit Button */}
