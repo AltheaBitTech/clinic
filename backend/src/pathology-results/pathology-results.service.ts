@@ -163,6 +163,7 @@ export class PathologyResultsService {
   async notifyCritical(resultValueId: string, labId: string, userId: string) {
     const result = await this.prisma.labResultValue.findFirst({
       where: { id: resultValueId, orderItem: { order: { labId } } },
+      include: { orderItem: { include: { order: true } } },
     });
     if (!result) throw new NotFoundException('Result value not found');
     if (!result.isCritical) {
@@ -183,6 +184,26 @@ export class PathologyResultsService {
       'LabResultValue',
       resultValueId,
     );
+
+    const order = result.orderItem.order;
+    if (order.hospitalTenantId && order.orderedByUserId) {
+      try {
+        await this.notificationsService.create(
+          order.orderedByUserId,
+          'Critical lab result flagged',
+          `A critical result (${result.parameterNameSnapshot}) was flagged for order ${order.orderNo}.`,
+          'PUSH',
+          undefined,
+          { type: 'LAB_RESULT_CRITICAL', labOrderId: order.id, resultValueId },
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'unknown error';
+        this.logger.error(
+          `Critical result notification failed (orderId=${order.id}, error=${message})`,
+        );
+      }
+    }
+
     return updated;
   }
 
@@ -508,6 +529,16 @@ export class PathologyResultsService {
         `Your lab report from ${order.lab.name} is now available.`,
         'PUSH',
       );
+      if (order.orderedByUserId) {
+        await this.notificationsService.create(
+          order.orderedByUserId,
+          'Lab report delivered',
+          `The lab report for order ${order.orderNo} has been delivered.`,
+          'PUSH',
+          undefined,
+          { type: 'LAB_REPORT_DELIVERED', labOrderId: order.id },
+        );
+      }
       await this.emailService.sendReportAvailable({
         recipientEmail: hospitalPatient.user.email,
         patientName:

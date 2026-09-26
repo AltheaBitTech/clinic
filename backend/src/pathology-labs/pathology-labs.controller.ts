@@ -92,4 +92,11 @@ export class PathologyLabsController {
   findOne(@Param('id') id: string) {
     return this.pathologyLabsService.findOne(id);
   }
+
+  @Get(':id/stats')
+  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST)
+  @ApiOperation({ summary: "Get a pathology lab's turnaround-time stats" })
+  getStats(@Param('id') id: string) {
+    return this.pathologyLabsService.getStats(id);
+  }
 }

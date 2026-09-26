@@ -8,12 +8,12 @@ import { FileText, Upload, Download, Trash2, Search, X, AlertTriangle, RefreshCw
 import { formatDate, getInitials } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
-const REPORT_TYPES = ['ALL', 'BLOOD_TEST', 'XRAY', 'MRI', 'CT_SCAN', 'ULTRASOUND', 'ECG', 'PRESCRIPTION', 'OTHER'];
+const REPORT_TYPES = ['ALL', 'BLOOD_TEST', 'XRAY', 'MRI', 'CT_SCAN', 'ULTRASOUND', 'ECG', 'LAB_REPORT', 'PRESCRIPTION', 'OTHER'];
 const DOCUMENT_TYPES = REPORT_TYPES.filter((t) => t !== 'ALL');
 
 const TYPE_ICONS: Record<string, string> = {
   BLOOD_TEST: '🩸', XRAY: '🫁', MRI: '🧠', CT_SCAN: '💉',
-  ULTRASOUND: '🔊', ECG: '❤️', PRESCRIPTION: '💊', OTHER: '📄',
+  ULTRASOUND: '🔊', ECG: '❤️', LAB_REPORT: '🧪', PRESCRIPTION: '💊', OTHER: '📄',
 };
 
 export default function ReportsPage() {

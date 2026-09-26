@@ -1,5 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { AppointmentStatus, PaymentStatus } from '@prisma/client';
+import {
+  AppointmentStatus,
+  LabOrderStatus,
+  PaymentStatus,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 export type ReportType =
@@ -13,7 +17,8 @@ export type ReportType =
   | 'pharmacy-sales'
   | 'inventory'
   | 'follow-ups'
-  | 'cancellations';
+  | 'cancellations'
+  | 'lab-orders';
 
 export interface ReportFilters {
   preset?: string;
@@ -53,6 +58,7 @@ const REPORT_LABELS: Record<ReportType, string> = {
   inventory: 'Inventory Report',
   'follow-ups': 'Follow-up Report',
   cancellations: 'Cancellation Report',
+  'lab-orders': 'Lab Orders Report',
 };
 
 function fullName(user?: { firstName?: string; lastName?: string } | null) {
@@ -182,6 +188,8 @@ export class HospitalReportsService {
         return this.followUpsReport(tenantId, filters, page, limit);
       case 'cancellations':
         return this.cancellationsReport(tenantId, filters, page, limit);
+      case 'lab-orders':
+        return this.labOrdersReport(tenantId, filters, page, limit);
       default:
         throw new BadRequestException(`Unknown report type: ${type}`);
     }
@@ -1264,6 +1272,121 @@ export class HospitalReportsService {
       page,
       limit,
       summary: { totalCancellations: total },
+    };
+  }
+
+  private async labOrdersReport(
+    tenantId: string,
+    filters: ReportFilters,
+    page: number,
+    limit: number,
+  ): Promise<ReportResult> {
+    const range = this.resolveDateRange(
+      filters.preset,
+      filters.from,
+      filters.to,
+    );
+
+    const where: any = {
+      hospitalTenantId: tenantId,
+      ...(range ? { createdAt: range } : {}),
+      ...(filters.status ? { status: filters.status as LabOrderStatus } : {}),
+      ...(filters.search
+        ? {
+            OR: [
+              { orderNo: { contains: filters.search, mode: 'insensitive' } },
+              {
+                hospitalPatient: {
+                  user: {
+                    OR: [
+                      {
+                        firstName: {
+                          contains: filters.search,
+                          mode: 'insensitive',
+                        },
+                      },
+                      {
+                        lastName: {
+                          contains: filters.search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+    };
+
+    const [rowsRaw, total, byLabGroups] = await Promise.all([
+      this.prisma.labOrder.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          lab: { select: { name: true } },
+          hospitalPatient: { include: { user: true } },
+        },
+      }),
+      this.prisma.labOrder.count({ where }),
+      this.prisma.labOrder.groupBy({
+        by: ['labId'],
+        where,
+        _sum: { total: true },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const labIds = byLabGroups.map((g) => g.labId);
+    const labs = labIds.length
+      ? await this.prisma.pathologyLab.findMany({
+          where: { id: { in: labIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+    const labNameById = new Map(labs.map((l) => [l.id, l.name]));
+
+    const rows = rowsRaw.map((o) => ({
+      id: o.id,
+      date: o.createdAt,
+      orderNo: o.orderNo,
+      lab: o.lab.name,
+      patient: fullName(o.hospitalPatient?.user),
+      status: o.status,
+      total: Number(o.total),
+    }));
+
+    const totalSpend = byLabGroups.reduce(
+      (sum, g) => sum + Number(g._sum.total || 0),
+      0,
+    );
+
+    return {
+      columns: [
+        { key: 'date', label: 'Date' },
+        { key: 'orderNo', label: 'Order No.' },
+        { key: 'lab', label: 'Lab' },
+        { key: 'patient', label: 'Patient' },
+        { key: 'status', label: 'Status' },
+        { key: 'total', label: 'Total (₹)' },
+      ],
+      rows,
+      total,
+      page,
+      limit,
+      summary: {
+        totalOrders: total,
+        totalSpendAmount: totalSpend,
+        byLab: byLabGroups.map((g) => ({
+          labId: g.labId,
+          labName: labNameById.get(g.labId) || 'Unknown',
+          orderCount: g._count._all,
+          totalSpend: Number(g._sum.total || 0),
+        })),
+      },
     };
   }
 

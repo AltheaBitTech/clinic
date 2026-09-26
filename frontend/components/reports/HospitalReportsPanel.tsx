@@ -6,7 +6,7 @@ import {
   Calendar, Users, Stethoscope, IndianRupee, Receipt, CreditCard,
   ClipboardList, Pill, Package, CalendarClock, XCircle, Search,
   Download, Printer, SlidersHorizontal, X, ChevronLeft, ChevronRight,
-  Loader2, AlertTriangle, RefreshCw, Eye, FileBarChart,
+  Loader2, AlertTriangle, RefreshCw, Eye, FileBarChart, FlaskConical,
 } from 'lucide-react';
 import { hospitalReportsApi, doctorsApi, departmentsApi } from '@/lib/api';
 import { cn, formatCurrency, formatDateTime } from '@/lib/utils';
@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog';
 type ReportType =
   | 'appointments' | 'patients' | 'doctor-activity' | 'revenue' | 'invoices'
   | 'payments' | 'prescriptions' | 'pharmacy-sales' | 'inventory'
-  | 'follow-ups' | 'cancellations';
+  | 'follow-ups' | 'cancellations' | 'lab-orders';
 
 interface StatusOption { value: string; label: string }
 
@@ -46,6 +46,22 @@ const PAYMENT_STATUSES: StatusOption[] = [
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
+const LAB_ORDER_STATUSES: StatusOption[] = [
+  { value: 'ORDERED', label: 'Ordered' },
+  { value: 'SAMPLE_SCHEDULED', label: 'Sample Scheduled' },
+  { value: 'SAMPLE_COLLECTED', label: 'Sample Collected' },
+  { value: 'RECEIVED_AT_LAB', label: 'Received at Lab' },
+  { value: 'ACCEPTED', label: 'Accepted' },
+  { value: 'SAMPLE_REJECTED', label: 'Sample Rejected' },
+  { value: 'RECOLLECTION_REQUESTED', label: 'Recollection Requested' },
+  { value: 'IN_PROGRESS', label: 'In Progress' },
+  { value: 'RESULT_READY', label: 'Result Ready' },
+  { value: 'PENDING_VERIFICATION', label: 'Pending Verification' },
+  { value: 'VERIFIED', label: 'Verified' },
+  { value: 'REPORT_DELIVERED', label: 'Report Delivered' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+];
+
 const REPORT_TYPES: ReportTypeConfig[] = [
   { key: 'appointments', label: 'Appointment Report', icon: Calendar, hasDoctor: true, hasDepartment: true, hasDate: true, statusLabel: 'Status', statusOptions: APPOINTMENT_STATUSES },
   { key: 'patients', label: 'Patient Report', icon: Users, hasDoctor: false, hasDepartment: false, hasDate: true },
@@ -58,6 +74,7 @@ const REPORT_TYPES: ReportTypeConfig[] = [
   { key: 'inventory', label: 'Inventory Report', icon: Package, hasDoctor: false, hasDepartment: false, hasDate: false, statusLabel: 'Type', statusOptions: [{ value: 'MEDICINE', label: 'Medicine' }, { value: 'OINTMENT', label: 'Ointment' }] },
   { key: 'follow-ups', label: 'Follow-up Report', icon: CalendarClock, hasDoctor: true, hasDepartment: true, hasDate: true, statusLabel: 'Status', statusOptions: [{ value: 'upcoming', label: 'Upcoming' }, { value: 'overdue', label: 'Overdue' }] },
   { key: 'cancellations', label: 'Cancellation Report', icon: XCircle, hasDoctor: true, hasDepartment: true, hasDate: true },
+  { key: 'lab-orders', label: 'Lab Orders Report', icon: FlaskConical, hasDoctor: false, hasDepartment: false, hasDate: true, statusLabel: 'Status', statusOptions: LAB_ORDER_STATUSES },
 ];
 
 const DATE_PRESETS: { value: string; label: string }[] = [

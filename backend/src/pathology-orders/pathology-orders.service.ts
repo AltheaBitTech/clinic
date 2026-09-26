@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { LabOrderStatus, TimelineEventType } from '@prisma/client';
@@ -8,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { HospitalLabLinksService } from '../hospital-lab-links/hospital-lab-links.service';
 import { LabAuditService } from '../pathology-shared/lab-audit.service';
 import { LabCommissionService } from '../pathology-shared/lab-commission.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   CancelLabOrderDto,
   CollectSampleDto,
@@ -31,12 +33,39 @@ const ORDER_INCLUDE = {
 
 @Injectable()
 export class PathologyOrdersService {
+  private readonly logger = new Logger(PathologyOrdersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly hospitalLabLinksService: HospitalLabLinksService,
     private readonly commissionService: LabCommissionService,
     private readonly auditService: LabAuditService,
+    private readonly notificationsService: NotificationsService,
   ) {}
+
+  private async notifyOrderingHospitalStaff(
+    order: { id: string; orderNo: string; hospitalTenantId: string | null; orderedByUserId: string | null },
+    title: string,
+    body: string,
+    type: string,
+  ) {
+    if (!order.hospitalTenantId || !order.orderedByUserId) return;
+    try {
+      await this.notificationsService.create(
+        order.orderedByUserId,
+        title,
+        body,
+        'PUSH',
+        undefined,
+        { type, labOrderId: order.id },
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Lab order notification failed (orderId=${order.id}, error=${message})`,
+      );
+    }
+  }
 
   private async nextOrderNo(labId: string) {
     const count = await this.prisma.labOrder.count({ where: { labId } });
@@ -405,7 +434,7 @@ export class PathologyOrdersService {
     userId: string,
     dto: RejectSampleDto,
   ) {
-    return this.transition(
+    const updated = await this.transition(
       id,
       labId,
       userId,
@@ -419,10 +448,17 @@ export class PathologyOrdersService {
         rejectionNotes: dto.rejectionNotes,
       },
     );
+    await this.notifyOrderingHospitalStaff(
+      updated,
+      'Lab sample rejected',
+      `The sample for order ${updated.orderNo} was rejected${dto.rejectionReason ? ` (${dto.rejectionReason})` : ''}.`,
+      'LAB_ORDER_SAMPLE_REJECTED',
+    );
+    return updated;
   }
 
   async requestRecollection(id: string, labId: string, userId: string) {
-    return this.transition(
+    const updated = await this.transition(
       id,
       labId,
       userId,
@@ -431,6 +467,13 @@ export class PathologyOrdersService {
       'REQUEST_RECOLLECTION',
       { recollectionRequestedAt: new Date() },
     );
+    await this.notifyOrderingHospitalStaff(
+      updated,
+      'Sample recollection needed',
+      `A new sample is needed for order ${updated.orderNo}.`,
+      'LAB_ORDER_RECOLLECTION_REQUESTED',
+    );
+    return updated;
   }
 
   async startProcessing(id: string, labId: string, userId: string) {
@@ -467,6 +510,12 @@ export class PathologyOrdersService {
     await this.auditService.log(labId, userId, 'CANCEL', 'LabOrder', id, {
       status: order.status,
     }, { status: LabOrderStatus.CANCELLED });
+    await this.notifyOrderingHospitalStaff(
+      updated,
+      'Lab order cancelled',
+      `Order ${updated.orderNo} was cancelled${dto.cancelReason ? ` (${dto.cancelReason})` : ''}.`,
+      'LAB_ORDER_CANCELLED',
+    );
     return updated;
   }
 

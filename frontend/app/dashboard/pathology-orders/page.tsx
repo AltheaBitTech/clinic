@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  pathologyOrdersApi, pathologyLabsApi, hospitalLabLinksApi, patientsApi, doctorsApi,
+  pathologyOrdersApi, pathologyLabsApi, pathologyCatalogApi, hospitalLabLinksApi, patientsApi, doctorsApi,
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog';
 import {
-  ClipboardList, Plus, Loader2, ChevronRight, Search, FlaskConical, AlertCircle,
+  ClipboardList, Plus, Loader2, ChevronRight, Search, FlaskConical, AlertCircle, Check,
 } from 'lucide-react';
 import { formatDate, formatCurrency, getInitials } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -208,7 +208,7 @@ function NewOrderModal({
   const [patient, setPatient] = useState<any>(null);
   const [patientSearch, setPatientSearch] = useState('');
   const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
-  const [testIds, setTestIds] = useState('');
+  const [selectedTestIds, setSelectedTestIds] = useState<string[]>([]);
   const [collectionType, setCollectionType] = useState<'WALK_IN' | 'HOME'>('WALK_IN');
   const [scheduledAt, setScheduledAt] = useState('');
   const [collectionAddress, setCollectionAddress] = useState('');
@@ -249,6 +249,25 @@ function NewOrderModal({
     ? labs.filter((l: any) => activeLabIds.has(l.id))
     : labs;
 
+  const { data: catalog = [], isLoading: isLoadingCatalog } = useQuery({
+    queryKey: ['lab-catalog', labId],
+    queryFn: () => pathologyCatalogApi.getForLab(labId).then((r) => r.data),
+    enabled: open && !!labId,
+  });
+
+  useEffect(() => {
+    setSelectedTestIds([]);
+  }, [labId]);
+
+  const toggleTest = (testId: string) => {
+    setSelectedTestIds((prev) =>
+      prev.includes(testId) ? prev.filter((id) => id !== testId) : [...prev, testId],
+    );
+  };
+
+  const selectedTests = catalog.filter((t: any) => selectedTestIds.includes(t.id));
+  const testsSubtotal = selectedTests.reduce((sum: number, t: any) => sum + Number(t.price), 0);
+
   const { data: patientsData, isLoading: isLoadingPatients } = useQuery({
     queryKey: ['patients-search-lab-order', patientSearch],
     queryFn: () => patientsApi.getAll({ search: patientSearch, limit: 8 }).then((r) => r.data),
@@ -265,7 +284,7 @@ function NewOrderModal({
     setLabId(initialLabId || '');
     setPatient(null);
     setPatientSearch('');
-    setTestIds('');
+    setSelectedTestIds([]);
     setCollectionType('WALK_IN');
     setScheduledAt('');
     setCollectionAddress('');
@@ -302,7 +321,6 @@ function NewOrderModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const parsedTestIds = testIds.split(',').map((t) => t.trim()).filter(Boolean);
     if (!labId) {
       toast.error('Select a lab');
       return;
@@ -311,15 +329,15 @@ function NewOrderModal({
       toast.error('Select a patient');
       return;
     }
-    if (parsedTestIds.length === 0) {
-      toast.error('Enter at least one test ID');
+    if (selectedTestIds.length === 0) {
+      toast.error('Select at least one test');
       return;
     }
 
     createMutation.mutate({
       labId,
       hospitalPatientId: patient.id,
-      testIds: parsedTestIds,
+      testIds: selectedTestIds,
       ...(referringDoctorId ? { referringDoctorId } : {}),
       ...(!referringDoctorId && referringDoctorName ? { referringDoctorName } : {}),
       ...(!referringDoctorId && referringDoctorPhone ? { referringDoctorPhone } : {}),
@@ -418,18 +436,60 @@ function NewOrderModal({
 
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-              Test IDs (comma-separated)
+              Tests
             </label>
-            <input
-              type="text"
-              value={testIds}
-              onChange={(e) => setTestIds(e.target.value)}
-              placeholder="e.g. cltest123, cltest456"
-              className="input"
-            />
-            <p className="text-xs text-slate-400 mt-1.5">
-              Ask the lab for their catalog test IDs — the lab will confirm exact tests during processing.
-            </p>
+            {!labId ? (
+              <p className="text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl p-3">
+                Select a lab to browse its test catalog.
+              </p>
+            ) : isLoadingCatalog ? (
+              <div className="p-4 text-center text-sm text-slate-400 flex items-center justify-center gap-2 border border-slate-100 rounded-xl">
+                <Loader2 className="w-4 h-4 animate-spin text-cyan-500" /> Loading catalog...
+              </div>
+            ) : catalog.length === 0 ? (
+              <p className="text-xs text-amber-600 border border-dashed border-amber-200 rounded-xl p-3">
+                This lab hasn&apos;t published any tests yet.
+              </p>
+            ) : (
+              <div className="border border-slate-200 rounded-xl divide-y divide-slate-50 max-h-56 overflow-y-auto">
+                {catalog.map((t: any) => {
+                  const checked = selectedTestIds.includes(t.id);
+                  return (
+                    <button
+                      type="button"
+                      key={t.id}
+                      onClick={() => toggleTest(t.id)}
+                      className="w-full flex items-center justify-between gap-3 p-2.5 text-left hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span
+                          className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border ${
+                            checked ? 'bg-cyan-600 border-cyan-600' : 'border-slate-300'
+                          }`}
+                        >
+                          {checked && <Check className="w-3 h-3 text-white" />}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-800 truncate">{t.name}</p>
+                          {t.turnaroundHours && (
+                            <p className="text-[11px] text-slate-400">~{t.turnaroundHours}h turnaround</p>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-sm font-semibold text-slate-700 shrink-0">
+                        {formatCurrency(t.price)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {selectedTests.length > 0 && (
+              <div className="flex items-center justify-between mt-2 text-sm">
+                <span className="text-slate-500">{selectedTests.length} test(s) selected</span>
+                <span className="font-semibold text-slate-800">Subtotal: {formatCurrency(testsSubtotal)}</span>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

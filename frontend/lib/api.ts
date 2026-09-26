@@ -324,6 +324,7 @@ export const pharmacyReportsApi = {
 export const pathologyLabsApi = {
   getAll: (search?: string) => api.get('/pathology-labs', { params: { search } }),
   getOne: (id: string) => api.get(`/pathology-labs/${id}`),
+  getStats: (id: string) => api.get(`/pathology-labs/${id}/stats`),
   createInvite: (data?: { email?: string }) => api.post('/pathology-labs/invite', data),
   getInvite: (token: string) => api.get(`/pathology-labs/invite/${token}`),
   completeInvite: (token: string, data: any) =>
@@ -346,6 +347,8 @@ export const pathologyCatalogApi = {
   getAll: (search?: string) => api.get('/pathology/tests', { params: { search } }),
   getOne: (id: string) => api.get(`/pathology/tests/${id}`),
   update: (id: string, data: any) => api.patch(`/pathology/tests/${id}`, data),
+  getForLab: (labId: string, search?: string) =>
+    api.get(`/pathology/tests/lab/${labId}`, { params: { search } }),
 };
 
 export const pathologyMasterTestsApi = {

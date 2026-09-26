@@ -3,12 +3,13 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { pathologyLabsApi, hospitalLabLinksApi } from '@/lib/api';
+import { pathologyLabsApi, hospitalLabLinksApi, pathologyCatalogApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
   ArrowLeft, FlaskConical, Phone, Mail, MapPin, Building2, Clock, Truck,
-  FileText, User, Link2, XCircle, Loader2, ClipboardList,
+  FileText, User, Link2, XCircle, Loader2, ClipboardList, Timer, TestTube,
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 const LINK_STATUS_STYLES: Record<string, string> = {
@@ -43,6 +44,17 @@ export default function PathologyLabDetailPage() {
 
   const link = links.find((l: any) => l.labId === id);
   const status = link?.status as string | undefined;
+
+  const { data: stats } = useQuery({
+    queryKey: ['pathology-lab-stats', id],
+    queryFn: () => pathologyLabsApi.getStats(id).then((r) => r.data),
+  });
+
+  const { data: catalog = [], isLoading: isLoadingCatalog } = useQuery({
+    queryKey: ['lab-catalog', id],
+    queryFn: () => pathologyCatalogApi.getForLab(id).then((r) => r.data),
+    enabled: status === 'ACTIVE',
+  });
 
   const requestMutation = useMutation({
     mutationFn: () => hospitalLabLinksApi.request({ labId: id }),
@@ -116,6 +128,12 @@ export default function PathologyLabDetailPage() {
         >
           {lab.isActive ? 'Active' : 'Inactive'}
         </span>
+        {stats && stats.averageTurnaroundHours != null && (
+          <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-indigo-50 text-indigo-600">
+            <Timer className="w-3.5 h-3.5" />
+            Avg. turnaround: {stats.averageTurnaroundHours}h ({stats.sampleSize} reports)
+          </span>
+        )}
       </div>
 
       <div className="card mb-6 space-y-6">
@@ -142,6 +160,39 @@ export default function PathologyLabDetailPage() {
         {lab.accreditationNo && (
           <Section title="Regulatory">
             <InfoRow icon={FileText} label="Accreditation No." value={lab.accreditationNo} />
+          </Section>
+        )}
+
+        {status === 'ACTIVE' && (
+          <Section title="Test Catalog">
+            {isLoadingCatalog ? (
+              <div className="p-4 text-center text-sm text-slate-400 flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-cyan-500" /> Loading catalog...
+              </div>
+            ) : catalog.length === 0 ? (
+              <p className="text-sm text-slate-400">This lab hasn&apos;t published any tests yet.</p>
+            ) : (
+              <div className="border border-slate-100 rounded-xl divide-y divide-slate-50 max-h-64 overflow-y-auto">
+                {catalog.map((t: any) => (
+                  <div key={t.id} className="flex items-center justify-between gap-3 p-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                        <TestTube className="w-3.5 h-3.5 text-slate-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-800 truncate">{t.name}</p>
+                        {t.turnaroundHours && (
+                          <p className="text-[11px] text-slate-400">~{t.turnaroundHours}h turnaround</p>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-slate-700 shrink-0">
+                      {formatCurrency(t.price)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </Section>
         )}
 

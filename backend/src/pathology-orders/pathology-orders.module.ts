@@ -3,6 +3,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { PathologyLabsModule } from '../pathology-labs/pathology-labs.module';
 import { HospitalLabLinksModule } from '../hospital-lab-links/hospital-lab-links.module';
 import { PathologySharedModule } from '../pathology-shared/pathology-shared.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PathologyOrdersController } from './pathology-orders.controller';
 import { PathologyOrdersService } from './pathology-orders.service';
 
@@ -12,6 +13,7 @@ import { PathologyOrdersService } from './pathology-orders.service';
     PathologyLabsModule,
     HospitalLabLinksModule,
     PathologySharedModule,
+    NotificationsModule,
   ],
   controllers: [PathologyOrdersController],
   providers: [PathologyOrdersService],

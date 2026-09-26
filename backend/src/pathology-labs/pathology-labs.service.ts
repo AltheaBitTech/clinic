@@ -6,7 +6,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { LabLinkStatus, TenantType, UserRole } from '@prisma/client';
+import {
+  LabLinkStatus,
+  LabOrderStatus,
+  TenantType,
+  UserRole,
+} from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
@@ -49,6 +54,40 @@ export class PathologyLabsService {
     const lab = await this.prisma.pathologyLab.findUnique({ where: { id } });
     if (!lab) throw new NotFoundException('Pathology lab not found');
     return lab;
+  }
+
+  /**
+   * Lightweight, independently-computed turnaround stat for hospitals
+   * browsing the directory — deliberately not sourced from
+   * PathologyReportsService to avoid a module import cycle
+   * (PathologyReportsModule already imports PathologyLabsModule).
+   */
+  async getStats(labId: string) {
+    await this.findOne(labId);
+    const orders = await this.prisma.labOrder.findMany({
+      where: {
+        labId,
+        status: LabOrderStatus.REPORT_DELIVERED,
+        reportDeliveredAt: { not: null },
+      },
+      select: { createdAt: true, reportDeliveredAt: true },
+    });
+
+    if (!orders.length) {
+      return { sampleSize: 0, averageTurnaroundHours: null };
+    }
+
+    const totalHours = orders.reduce((sum, o) => {
+      const hours =
+        (o.reportDeliveredAt!.getTime() - o.createdAt.getTime()) /
+        (1000 * 60 * 60);
+      return sum + hours;
+    }, 0);
+
+    return {
+      sampleSize: orders.length,
+      averageTurnaroundHours: Math.round((totalHours / orders.length) * 10) / 10,
+    };
   }
 
   async getMine(userId: string) {

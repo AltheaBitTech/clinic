@@ -17,8 +17,15 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { PathologyLabsService } from '../pathology-labs/pathology-labs.service';
+import { HospitalLabLinksService } from '../hospital-lab-links/hospital-lab-links.service';
 import { CreateLabTestDto, UpdateLabTestDto } from './dto/lab-test.dto';
 import { PathologyCatalogService } from './pathology-catalog.service';
+
+const HOSPITAL_ROLES = [
+  UserRole.HOSPITAL_ADMIN,
+  UserRole.DOCTOR,
+  UserRole.RECEPTIONIST,
+];
 
 @ApiTags('pathology-tests')
 @ApiBearerAuth()
@@ -28,6 +35,7 @@ export class PathologyCatalogController {
   constructor(
     private readonly catalogService: PathologyCatalogService,
     private readonly pathologyLabsService: PathologyLabsService,
+    private readonly hospitalLabLinksService: HospitalLabLinksService,
   ) {}
 
   @Post()
@@ -50,6 +58,21 @@ export class PathologyCatalogController {
   async findOne(@CurrentUser() user: any, @Param('id') id: string) {
     const lab = await this.pathologyLabsService.getMine(user.id);
     return this.catalogService.findOne(id, lab.id);
+  }
+
+  @Get('lab/:labId')
+  @Roles(...HOSPITAL_ROLES)
+  @ApiOperation({
+    summary: "Browse a linked lab's test catalog (for order placement)",
+  })
+  @ApiQuery({ name: 'search', required: false })
+  async findAllForLab(
+    @CurrentUser() user: any,
+    @Param('labId') labId: string,
+    @Query('search') search?: string,
+  ) {
+    await this.hospitalLabLinksService.assertActiveLink(user.tenantId, labId);
+    return this.catalogService.findAll(labId, search);
   }
 
   @Patch(':id')
