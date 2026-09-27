@@ -495,7 +495,7 @@ export class BillingService {
       const PH = doc.page.height;
       const M = 40;
       const W = PW - M * 2;
-      const grad = (x: number, w: number, from = C.dark, to = C.primary) =>
+      const grad = (x: number, w: number, from = '#bbf7d0', to = '#ecfccb') =>
         doc
           .linearGradient(x, 0, x + w, 0)
           .stop(0, from)
@@ -556,9 +556,9 @@ export class BillingService {
       const pillW = 112;
       const tx = lx + logoBox + 14;
       const tw = M + W - pillW - 30 - tx;
-      doc.font('Bold').fontSize(15).fillColor('#ffffff');
+      doc.font('Bold').fontSize(15).fillColor(C.dark);
       line(tenant?.name || 'Hospital', tx, y + 13, tw);
-      doc.font('Body').fontSize(8.5).fillColor('#d1fae5');
+      doc.font('Body').fontSize(8.5).fillColor('#166534');
       const addr = [tenant?.address, tenant?.city, tenant?.state]
         .filter(Boolean)
         .join(', ');
@@ -581,12 +581,12 @@ export class BillingService {
 
       const [sFg, sBg] = STATUS[invoice.status] ?? [C.muted, '#f1f5f9'];
       const px = M + W - pillW - 16;
-      doc.font('Bold').fontSize(7.5).fillColor('#d1fae5');
+      doc.font('Bold').fontSize(7.5).fillColor('#166534');
       line('PAYMENT STATUS', px, y + 20, pillW, {
         align: 'center',
         characterSpacing: 1,
       });
-      doc.roundedRect(px, y + 34, pillW, 26, 13).fill(sBg);
+      doc.roundedRect(px, y + 34, pillW, 26, 13).fill('#ffffff');
       doc.font('Bold').fontSize(11).fillColor(sFg);
       line(invoice.status, px, y + 41.5, pillW, { align: 'center' });
 
@@ -694,7 +694,7 @@ export class BillingService {
       const colX = (i: number) =>
         M + cols.slice(0, i).reduce((s, c) => s + c.w, 0);
       doc.roundedRect(M, y, W, 26, 6).fill(grad(M, W));
-      doc.font('Bold').fontSize(8.5).fillColor('#ffffff');
+      doc.font('Bold').fontSize(8.5).fillColor(C.dark);
       cols.forEach((c, i) =>
         line(c.label, colX(i) + 10, y + 9, c.w - 20, {
           align: c.align,
@@ -754,7 +754,7 @@ export class BillingService {
         totalRow('Tax (GST)', `+ ${formatMoney(invoice.tax)}`, '#2563eb');
       ay += 2;
       doc.roundedRect(totX, ay, totW, 40, 8).fill(grad(totX, totW));
-      doc.font('Bold').fontSize(10).fillColor('#d1fae5');
+      doc.font('Bold').fontSize(10).fillColor('#166534');
       line(
         invoice.status === 'PAID' ? 'TOTAL PAID' : 'TOTAL PAYABLE',
         totX + 14,
@@ -762,7 +762,7 @@ export class BillingService {
         100,
         { characterSpacing: 0.8 },
       );
-      doc.fontSize(16).fillColor('#ffffff');
+      doc.fontSize(16).fillColor(C.dark);
       line(formatMoney(invoice.total), totX + 100, ay + 12, totW - 114, {
         align: 'right',
       });
@@ -850,8 +850,8 @@ export class BillingService {
         W,
         { align: 'center' },
       );
-      doc.rect(0, PH - 30, PW, 30).fill(grad(0, PW, C.dark, C.primary));
-      doc.font('Body').fontSize(8).fillColor('#d1fae5');
+      doc.rect(0, PH - 30, PW, 30).fill(grad(0, PW));
+      doc.font('Body').fontSize(8).fillColor('#166534');
       line(
         `Powered by Arogyix   •   Generated on ${fmtDate(new Date(), true)}`,
         0,

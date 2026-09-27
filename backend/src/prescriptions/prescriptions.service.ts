@@ -343,7 +343,7 @@ export class PrescriptionsService {
         const M = 40;
         const W = PW - M * 2;
         const FOOTER_TOP = PH - 40;
-        const grad = (x: number, w: number, from = C.dark, to = C.primary) =>
+        const grad = (x: number, w: number, from = '#bbf7d0', to = '#ecfccb') =>
           doc
             .linearGradient(x, 0, x + w, 0)
             .stop(0, from)
@@ -364,8 +364,8 @@ export class PrescriptionsService {
             ...opts,
           });
         const drawFooter = () => {
-          doc.rect(0, PH - 30, PW, 30).fill(grad(0, PW, C.dark, C.primary));
-          doc.font('Body').fontSize(8).fillColor('#d1fae5');
+          doc.rect(0, PH - 30, PW, 30).fill(grad(0, PW));
+          doc.font('Body').fontSize(8).fillColor('#166534');
           line(
             `Powered by Arogyix   •   Prescription dated ${fmtDate(prescription.createdAt)}`,
             0,
@@ -439,9 +439,9 @@ export class PrescriptionsService {
         const rxW = 70;
         const tx = lx + logoBox + 14;
         const tw = M + W - rxW - 30 - tx;
-        doc.font('Bold').fontSize(15).fillColor('#ffffff');
+        doc.font('Bold').fontSize(15).fillColor(C.dark);
         line(tenant?.name || 'Hospital', tx, y + 12, tw);
-        doc.font('Body').fontSize(8.5).fillColor('#d1fae5');
+        doc.font('Body').fontSize(8.5).fillColor('#166534');
         let ty = y + 34;
         for (const t of [
           [tenant?.address, tenant?.city, tenant?.state]
@@ -592,7 +592,7 @@ export class PrescriptionsService {
           M + cols.slice(0, i).reduce((s, c) => s + c.w, 0);
         const tableHeader = () => {
           doc.roundedRect(M, y, W, 26, 6).fill(grad(M, W));
-          doc.font('Bold').fontSize(8).fillColor('#ffffff');
+          doc.font('Bold').fontSize(8).fillColor(C.dark);
           cols.forEach((c, i) =>
             line(c.label, colX(i) + 8, y + 8.5, c.w - 16, {
               align: c.align,
