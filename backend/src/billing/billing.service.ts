@@ -24,6 +24,7 @@ const INVOICE_INCLUDE = {
   appointment: {
     include: { doctor: { include: { user: true, department: true } } },
   },
+  doctor: { include: { user: true, department: true } },
   tenant: true,
 };
 
@@ -47,6 +48,12 @@ export class BillingService {
   }
 
   async createInvoice(tenantId: string, data: any) {
+    // Every invoice must be tied to the treating doctor: either derived from
+    // the billed appointment, or supplied directly for a standalone invoice.
+    // Never trust a client-supplied doctorId when an appointment is present —
+    // the appointment's own doctor is the source of truth.
+    let doctorId: string | null = null;
+
     if (data.appointmentId) {
       const appointment = await this.prisma.appointment.findFirst({
         where: { id: data.appointmentId, tenantId },
@@ -59,6 +66,20 @@ export class BillingService {
           'A bill can only be generated once the patient is checked in or the appointment is completed',
         );
       }
+      doctorId = appointment.doctorId;
+    } else {
+      if (!data.doctorId) {
+        throw new BadRequestException(
+          'A doctor must be selected to generate an invoice',
+        );
+      }
+      const doctor = await this.prisma.doctor.findFirst({
+        where: { id: data.doctorId, tenantId },
+      });
+      if (!doctor) {
+        throw new NotFoundException('Doctor not found');
+      }
+      doctorId = doctor.id;
     }
 
     const total =
@@ -68,6 +89,7 @@ export class BillingService {
         tenantId,
         patientId: data.patientId,
         appointmentId: data.appointmentId,
+        doctorId,
         invoiceNo: this.generateInvoiceNo(),
         amount: data.amount,
         discount: data.discount,
@@ -165,6 +187,11 @@ export class BillingService {
               },
             },
           },
+          doctor: {
+            include: {
+              user: { select: { firstName: true, lastName: true } },
+            },
+          },
         },
       }),
       this.prisma.invoice.count({ where }),
@@ -206,6 +233,11 @@ export class BillingService {
             },
           },
         },
+        doctor: {
+          include: {
+            user: { select: { firstName: true, lastName: true } },
+          },
+        },
       },
     });
 
@@ -225,8 +257,9 @@ export class BillingService {
     const rows = invoices.map((inv) => {
       const patientName =
         `${inv.patient.user.firstName} ${inv.patient.user.lastName}`.trim();
-      const doctor = inv.appointment?.doctor
-        ? `Dr. ${inv.appointment.doctor.user.firstName} ${inv.appointment.doctor.user.lastName}`
+      const invoiceDoctor = inv.doctor || inv.appointment?.doctor;
+      const doctor = invoiceDoctor
+        ? `Dr. ${invoiceDoctor.user.firstName} ${invoiceDoctor.user.lastName}`
         : 'N/A';
       return [
         inv.invoiceNo,
@@ -533,7 +566,7 @@ export class BillingService {
     const pUser = invoice.patient.user;
     const patient = invoice.patient;
     const appt = invoice.appointment;
-    const doctor = appt?.doctor;
+    const doctor = invoice.doctor || appt?.doctor;
 
     const C = {
       dark: '#064e3b',

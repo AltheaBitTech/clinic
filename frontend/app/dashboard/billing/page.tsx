@@ -297,7 +297,7 @@ function AdminBillingView() {
                         {inv.patient.user.firstName} {inv.patient.user.lastName}
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-500">
-                        {inv.appointment?.doctor ? `Dr. ${inv.appointment.doctor.user.firstName} ${inv.appointment.doctor.user.lastName}` : 'N/A'}
+                        {(inv.doctor || inv.appointment?.doctor) ? `Dr. ${(inv.doctor || inv.appointment.doctor).user.firstName} ${(inv.doctor || inv.appointment.doctor).user.lastName}` : 'N/A'}
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-400 bg-slate-50/50">{formatDate(inv.createdAt)}</td>
                       <td className="py-3 px-4 text-xs font-bold text-slate-800">{formatCurrency(inv.total)}</td>
@@ -387,7 +387,7 @@ function AdminBillingView() {
                     <div>
                       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Doctor</p>
                       <p className="text-xs text-slate-600 mt-0.5 truncate">
-                        {inv.appointment?.doctor ? `Dr. ${inv.appointment.doctor.user.firstName} ${inv.appointment.doctor.user.lastName}` : 'N/A'}
+                        {(inv.doctor || inv.appointment?.doctor) ? `Dr. ${(inv.doctor || inv.appointment.doctor).user.firstName} ${(inv.doctor || inv.appointment.doctor).user.lastName}` : 'N/A'}
                       </p>
                     </div>
                     <div>

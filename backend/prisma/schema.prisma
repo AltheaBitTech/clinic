@@ -525,6 +525,7 @@ model Doctor {
   prescriptions     Prescription[]
   chatRooms         ChatRoom[]
   referredLabOrders LabOrder[]
+  invoices          Invoice[]
 
   @@map("doctors")
 }
@@ -769,6 +770,7 @@ model Invoice {
   tenantId      String
   patientId     String
   appointmentId String?       @unique
+  doctorId      String?
   invoiceNo     String        @unique
   amount        Decimal       @db.Decimal(10, 2)
   discount      Decimal?      @db.Decimal(10, 2)
@@ -787,6 +789,7 @@ model Invoice {
   tenant      Tenant       @relation(fields: [tenantId], references: [id])
   patient     Patient      @relation(fields: [patientId], references: [id])
   appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  doctor      Doctor?      @relation(fields: [doctorId], references: [id])
 
   @@map("invoices")
 }

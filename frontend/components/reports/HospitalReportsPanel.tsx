@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   Calendar, Users, Stethoscope, IndianRupee, Receipt, CreditCard,
   ClipboardList, Pill, Package, CalendarClock, XCircle, Search,
@@ -157,7 +157,10 @@ export default function HospitalReportsPanel() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['hospital-report', reportType, params],
     queryFn: () => hospitalReportsApi.run(reportType, params).then((r) => r.data),
+    placeholderData: keepPreviousData,
   });
+
+  const showFullLoader = isLoading && !data;
 
   function selectReportType(type: ReportType) {
     setReportType(type);
@@ -177,6 +180,8 @@ export default function HospitalReportsPanel() {
     setPreset('month');
     setFromDate('');
     setToDate('');
+    setSearchInput('');
+    setSearch('');
     setPage(1);
   }
 
@@ -249,6 +254,11 @@ export default function HospitalReportsPanel() {
           <h3 className="font-bold text-slate-800 text-sm">Reports</h3>
           <p className="text-xs text-slate-400">Generate, filter, and export operational reports</p>
         </div>
+        {!showFullLoader && isFetching && (
+          <span className="flex items-center gap-1.5 text-xs text-cyan-600 font-medium ml-auto shrink-0">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Updating…
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5">
@@ -348,6 +358,18 @@ export default function HospitalReportsPanel() {
                 ))}
               </select>
             )}
+            {search && (
+              <span className="flex items-center gap-1.5 bg-cyan-50 text-cyan-700 text-xs font-medium px-2.5 py-1.5 rounded-lg">
+                &ldquo;{search}&rdquo;
+                <button
+                  onClick={() => { setSearchInput(''); setSearch(''); setPage(1); }}
+                  className="hover:text-cyan-900"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
             {activeFilterCount > 0 && (
               <button onClick={clearFilters} className="text-xs text-cyan-600 hover:text-cyan-700 font-medium">
                 Clear filters
@@ -383,8 +405,17 @@ export default function HospitalReportsPanel() {
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && runSearch()}
                   placeholder="Search…"
-                  className="input pl-8 text-xs py-1.5 w-full"
+                  className="input pl-8 pr-8 text-xs py-1.5 w-full"
                 />
+                {searchInput && (
+                  <button
+                    onClick={() => { setSearchInput(''); setSearch(''); setPage(1); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-slate-300 hover:text-slate-500 hover:bg-slate-100"
+                    aria-label="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
               <button onClick={runSearch} className="btn-secondary text-xs px-3 py-1.5 shrink-0">
                 Search
@@ -393,7 +424,7 @@ export default function HospitalReportsPanel() {
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={handleExport}
-                disabled={exporting || isLoading || !data?.rows?.length}
+                disabled={exporting || showFullLoader || !data?.rows?.length}
                 className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5 disabled:opacity-40"
               >
                 {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
@@ -401,7 +432,7 @@ export default function HospitalReportsPanel() {
               </button>
               <button
                 onClick={handlePrint}
-                disabled={isLoading || !data?.rows?.length}
+                disabled={showFullLoader || !data?.rows?.length}
                 className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5 disabled:opacity-40"
               >
                 <Printer className="w-3.5 h-3.5" /> Print
@@ -430,7 +461,7 @@ export default function HospitalReportsPanel() {
           )}
 
           {/* Table */}
-          {isLoading ? (
+          {showFullLoader ? (
             <div className="py-16 flex justify-center items-center gap-2 text-slate-400 text-sm font-medium">
               <Loader2 className="w-5 h-5 animate-spin text-cyan-600" /> Loading report…
             </div>
@@ -543,7 +574,7 @@ export default function HospitalReportsPanel() {
                     {DATE_PRESETS.map((d) => (
                       <button
                         key={d.value}
-                        onClick={() => setPreset(d.value)}
+                        onClick={() => { setPreset(d.value); setPage(1); }}
                         className={cn(
                           'px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all',
                           preset === d.value ? 'gradient-primary text-white border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200',

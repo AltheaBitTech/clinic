@@ -13,6 +13,14 @@ export class CreateInvoiceDto {
   @IsString()
   appointmentId?: string;
 
+  @ApiPropertyOptional({
+    description:
+      'The unique identifier of the treating doctor. Required when appointmentId is not provided (the doctor is otherwise derived from the appointment).',
+  })
+  @IsOptional()
+  @IsString()
+  doctorId?: string;
+
   @ApiProperty({ description: 'The base amount for the invoice' })
   @IsNumber()
   amount: number;
