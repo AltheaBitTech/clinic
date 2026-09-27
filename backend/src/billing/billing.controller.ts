@@ -103,8 +103,10 @@ export class BillingController {
   ) {
     const invoice = await this.svc.findOne(id);
     this.assertAccessible(user, invoice);
-    const { filePath, fileName } = await this.svc.getInvoicePdfFile(id);
-    res.download(filePath, fileName);
+    const { buffer, fileName } = await this.svc.getInvoicePdfFile(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(buffer);
   }
 
   private assertAccessible(user: any, invoice: any) {

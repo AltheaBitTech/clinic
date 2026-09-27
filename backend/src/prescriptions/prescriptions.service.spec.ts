@@ -3,6 +3,7 @@ import { PrescriptionsService } from './prescriptions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { PharmacyPrescriptionsService } from '../pharmacy-prescriptions/pharmacy-prescriptions.service';
+import { StorageService } from '../storage/storage.service';
 
 describe('PrescriptionsService.create — pharmacy routing', () => {
   const user = { id: 'user_doctor_1', role: 'DOCTOR', tenantId: 'tenant_1' };
@@ -82,6 +83,9 @@ describe('PrescriptionsService.create — pharmacy routing', () => {
         sendPrescriptionAvailable: jest.fn().mockResolvedValue(undefined),
       } as unknown as EmailService,
       pharmacyPrescriptionsService as unknown as PharmacyPrescriptionsService,
+      {
+        uploadBuffer: jest.fn().mockResolvedValue('https://example.supabase.co/storage/v1/object/public/bucket/prescriptions/tenant_1/presc_1.pdf'),
+      } as unknown as StorageService,
     );
   });
 

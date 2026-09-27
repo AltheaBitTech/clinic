@@ -11,9 +11,9 @@ import { PaymentMethod } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { RazorpayService } from '../subscriptions/razorpay.service';
+import { StorageService } from '../storage/storage.service';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getUploadDir } from '../common/utils/upload.util';
 import {
   AROGYIX_WORDMARK_PNG,
   registerPdfFonts,
@@ -41,6 +41,7 @@ export class BillingService {
     private prisma: PrismaService,
     private emailService: EmailService,
     private razorpay: RazorpayService,
+    private storageService: StorageService,
   ) {}
 
   private generateInvoiceNo(): string {
@@ -104,7 +105,7 @@ export class BillingService {
     // the download endpoint regenerates the PDF on demand.
     let pdfUrl: string | null = null;
     try {
-      pdfUrl = await this.generatePdf(invoice);
+      pdfUrl = (await this.generatePdf(invoice)).url;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';
       this.logger.error(
@@ -538,7 +539,7 @@ export class BillingService {
 
   async getInvoicePdfFile(
     id: string,
-  ): Promise<{ filePath: string; fileName: string }> {
+  ): Promise<{ buffer: Buffer; fileName: string }> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id },
       include: INVOICE_INCLUDE,
@@ -547,21 +548,22 @@ export class BillingService {
 
     // Always re-render: status / payment details change after creation, so a
     // cached PDF would show a stale "PENDING" invoice.
-    const pdfUrl = await this.generatePdf(invoice);
-    if (pdfUrl !== invoice.pdfUrl) {
-      await this.prisma.invoice.update({ where: { id }, data: { pdfUrl } });
+    const { url, buffer } = await this.generatePdf(invoice);
+    if (url !== invoice.pdfUrl) {
+      await this.prisma.invoice.update({
+        where: { id },
+        data: { pdfUrl: url },
+      });
     }
 
-    return {
-      filePath: path.join(getUploadDir('invoices'), path.basename(pdfUrl)),
-      fileName: `${invoice.invoiceNo}.pdf`,
-    };
+    return { buffer, fileName: `${invoice.invoiceNo}.pdf` };
   }
 
-  private async generatePdf(invoice: any): Promise<string> {
+  private async generatePdf(
+    invoice: any,
+  ): Promise<{ url: string; buffer: Buffer }> {
     const PDFDocument = require('pdfkit');
     const fileName = `invoice_${invoice.id}.pdf`;
-    const filePath = path.join(getUploadDir('invoices'), fileName);
     const tenant = invoice.tenant;
     const pUser = invoice.patient.user;
     const patient = invoice.patient;
@@ -608,7 +610,7 @@ export class BillingService {
       ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}`.trim()
       : '';
 
-    await new Promise<void>((resolve, reject) => {
+    const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
       const doc = new PDFDocument({
         size: 'A4',
         margin: 0,
@@ -617,10 +619,10 @@ export class BillingService {
           Author: tenant?.name || 'Arogyix',
         },
       });
-      const stream = fs.createWriteStream(filePath);
-      stream.on('finish', resolve);
-      stream.on('error', reject);
-      doc.pipe(stream);
+      const chunks: Buffer[] = [];
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
       registerPdfFonts(doc);
 
       const PW = doc.page.width;
@@ -995,7 +997,13 @@ export class BillingService {
       doc.end();
     });
 
-    return `/uploads/invoices/${fileName}`;
+    const url = await this.storageService.uploadBuffer(
+      `invoices/${invoice.tenantId}/${fileName}`,
+      pdfBuffer,
+      'application/pdf',
+      { upsert: true },
+    );
+    return { url, buffer: pdfBuffer };
   }
 
   private resolveTenantLogoPath(logoUrl?: string | null): string | null {

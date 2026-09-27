@@ -20,7 +20,6 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
 import type { Response } from 'express';
-import * as path from 'path';
 
 @ApiTags('prescriptions')
 @ApiBearerAuth()
@@ -112,9 +111,11 @@ export class PrescriptionsController {
         'You are not authorized to view this prescription',
       );
     }
-    const { filePath, fileName } =
+    const { buffer, fileName } =
       await this.prescriptionsService.getPdfFile(prescription);
-    res.download(filePath, fileName);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(buffer);
   }
 
   @Get(':id/pharmacy-status')

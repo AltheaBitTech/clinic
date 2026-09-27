@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { PharmacyPrescriptionsService } from '../pharmacy-prescriptions/pharmacy-prescriptions.service';
 import { CreatePrescriptionDto } from './dto/prescription.dto';
+import { StorageService } from '../storage/storage.service';
 import { UserRole } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -45,6 +46,7 @@ export class PrescriptionsService {
     private prisma: PrismaService,
     private emailService: EmailService,
     private pharmacyPrescriptionsService: PharmacyPrescriptionsService,
+    private storageService: StorageService,
   ) {}
 
   async create(dto: CreatePrescriptionDto, user: RequestUser) {
@@ -140,8 +142,8 @@ export class PrescriptionsService {
       },
     });
 
-    // Generate PDF (stub — logs path, actual PDF generation below)
-    const pdfPath = await this.generatePdf(prescription);
+    // Generate PDF and upload to storage
+    const pdfPath = (await this.generatePdf(prescription)).url;
 
     // Update PDF URL
     await this.prisma.prescription.update({
@@ -352,28 +354,25 @@ export class PrescriptionsService {
 
   // ─── PDF Generation ──────────────────────────────────────────────────────────
 
-  // Rebuilt on every download: the DB is shared but PDFs live on per-instance
-  // /tmp (Vercel) or ephemeral disk, so a stored file is usually missing.
   async getPdfFile(
     prescription: any,
-  ): Promise<{ filePath: string; fileName: string }> {
-    const pdfUrl = await this.generatePdf(prescription);
-    if (!pdfUrl) {
+  ): Promise<{ buffer: Buffer; fileName: string }> {
+    const { buffer } = await this.generatePdf(prescription);
+    if (!buffer) {
       throw new NotFoundException('Could not generate prescription PDF');
     }
     return {
-      filePath: path.join(getUploadDir('prescriptions'), path.basename(pdfUrl)),
+      buffer,
       fileName: `prescription_${prescription.id}.pdf`,
     };
   }
 
-  private async generatePdf(prescription: any): Promise<string> {
+  private async generatePdf(
+    prescription: any,
+  ): Promise<{ url: string; buffer: Buffer | null }> {
     try {
-      const PDFDocument = require('pdfkit');
-      const uploadDir = getUploadDir('prescriptions');
-
       const fileName = `prescription_${prescription.id}.pdf`;
-      const filePath = path.join(uploadDir, fileName);
+      const PDFDocument = require('pdfkit');
 
       const tenant = await this.prisma.tenant.findUnique({
         where: { id: prescription.doctor.tenantId },
@@ -409,7 +408,7 @@ export class PrescriptionsService {
           .map((l) => l.trim())
           .filter(Boolean);
 
-      await new Promise<void>((resolve, reject) => {
+      const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
         const doc = new PDFDocument({
           size: 'A4',
           margin: 0,
@@ -418,10 +417,10 @@ export class PrescriptionsService {
             Author: doctorName,
           },
         });
-        const stream = fs.createWriteStream(filePath);
-        stream.on('finish', resolve);
-        stream.on('error', reject);
-        doc.pipe(stream);
+        const chunks: Buffer[] = [];
+        doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.on('error', reject);
         registerPdfFonts(doc);
 
         const PW = doc.page.width;
@@ -785,10 +784,16 @@ export class PrescriptionsService {
         doc.end();
       });
 
-      return `/uploads/prescriptions/${fileName}`;
+      const url = await this.storageService.uploadBuffer(
+        `prescriptions/${prescription.doctor.tenantId}/${fileName}`,
+        pdfBuffer,
+        'application/pdf',
+        { upsert: true },
+      );
+      return { url, buffer: pdfBuffer };
     } catch (error) {
       console.error('PDF generation error:', error);
-      return '';
+      return { url: '', buffer: null };
     }
   }
 
