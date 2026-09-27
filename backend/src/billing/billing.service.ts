@@ -14,6 +14,7 @@ import { RazorpayService } from '../subscriptions/razorpay.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getUploadDir } from '../common/utils/upload.util';
+import { registerPdfFonts } from '../common/utils/pdf-fonts';
 
 const INVOICE_INCLUDE = {
   patient: { include: { user: true } },
@@ -74,7 +75,17 @@ export class BillingService {
       include: INVOICE_INCLUDE,
     });
 
-    const pdfUrl = await this.generatePdf(invoice);
+    // A PDF failure must not fail billing: the invoice row already exists and
+    // the download endpoint regenerates the PDF on demand.
+    let pdfUrl: string | null = null;
+    try {
+      pdfUrl = await this.generatePdf(invoice);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      this.logger.error(
+        `Invoice PDF generation failed (invoiceId=${invoice.id}, error=${message})`,
+      );
+    }
     const updated = await this.prisma.invoice.update({
       where: { id: invoice.id },
       data: { pdfUrl },
@@ -475,12 +486,7 @@ export class BillingService {
       stream.on('finish', resolve);
       stream.on('error', reject);
       doc.pipe(stream);
-      // Noto Sans (OFL) instead of built-in Helvetica, which has no ₹ glyph.
-      const font = (f: string) =>
-        path.join(process.cwd(), 'assets', `NotoSans-${f}.ttf`);
-      doc.registerFont('Body', font('Regular'));
-      doc.registerFont('Bold', font('Bold'));
-      doc.registerFont('Italic', font('Italic'));
+      const rupee = registerPdfFonts(doc) ? '₹' : 'Rs. ';
 
       const PW = doc.page.width;
       const PH = doc.page.height;
@@ -714,7 +720,7 @@ export class BillingService {
       ]
         .filter(Boolean)
         .join('  •  ');
-      const amount = formatMoney(invoice.amount);
+      const amount = formatMoney(invoice.amount, rupee);
       doc.font('Body').fontSize(9.5).fillColor(C.text);
       line('1', colX(0) + 10, y + 11, cols[0].w - 20, { align: 'center' });
       doc.font('Bold').fontSize(10);
@@ -750,9 +756,17 @@ export class BillingService {
       };
       totalRow('Subtotal', amount);
       if (Number(invoice.discount) > 0)
-        totalRow('Discount', `- ${formatMoney(invoice.discount)}`, '#dc2626');
+        totalRow(
+          'Discount',
+          `- ${formatMoney(invoice.discount, rupee)}`,
+          '#dc2626',
+        );
       if (Number(invoice.tax) > 0)
-        totalRow('Tax (GST)', `+ ${formatMoney(invoice.tax)}`, '#2563eb');
+        totalRow(
+          'Tax (GST)',
+          `+ ${formatMoney(invoice.tax, rupee)}`,
+          '#2563eb',
+        );
       ay += 2;
       doc.roundedRect(totX, ay, totW, 40, 8).fill(grad(totX, totW));
       doc.font('Bold').fontSize(10).fillColor('#d1fae5');
@@ -764,7 +778,7 @@ export class BillingService {
         { characterSpacing: 0.8 },
       );
       doc.fontSize(16).fillColor('#ffffff');
-      line(formatMoney(invoice.total), totX + 100, ay + 12, totW - 114, {
+      line(formatMoney(invoice.total, rupee), totX + 100, ay + 12, totW - 114, {
         align: 'right',
       });
       ay += 40;
@@ -876,8 +890,8 @@ export class BillingService {
   }
 }
 
-function formatMoney(value: any): string {
-  return `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatMoney(value: any, symbol = '₹'): string {
+  return `${symbol}${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // Indian numbering: 123456.5 -> "Rupees One Lakh Twenty Three Thousand Four Hundred Fifty Six and Fifty Paise Only"

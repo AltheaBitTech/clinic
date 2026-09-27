@@ -12,6 +12,7 @@ import { UserRole } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getUploadDir } from '../common/utils/upload.util';
+import { registerPdfFonts } from '../common/utils/pdf-fonts';
 
 interface RequestUser {
   id: string;
@@ -317,12 +318,7 @@ export class PrescriptionsService {
         stream.on('finish', resolve);
         stream.on('error', reject);
         doc.pipe(stream);
-        // Noto Sans (OFL) instead of built-in Helvetica for proper Unicode.
-        const font = (f: string) =>
-          path.join(process.cwd(), 'assets', `NotoSans-${f}.ttf`);
-        doc.registerFont('Body', font('Regular'));
-        doc.registerFont('Bold', font('Bold'));
-        doc.registerFont('Italic', font('Italic'));
+        registerPdfFonts(doc);
 
         const PW = doc.page.width;
         const PH = doc.page.height;
