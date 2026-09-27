@@ -7,7 +7,7 @@ import {
   Check, X, Clock, Mail, Phone, User, Gift, Loader2, FileText, Pencil, Percent,
   Wallet, History, Landmark, IndianRupee,
 } from 'lucide-react';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, resolveFileUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog';
 
@@ -19,7 +19,7 @@ const KYC_BADGE_STYLES: Record<string, string> = {
 };
 
 function fileUrl(path: string) {
-  return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${path}`;
+  return resolveFileUrl(path, process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '');
 }
 
 function formatPaise(amountInPaise: number) {

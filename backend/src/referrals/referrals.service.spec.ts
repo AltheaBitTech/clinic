@@ -9,6 +9,7 @@ import { ReferralsService } from './referrals.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { AuthService } from '../auth/auth.service';
+import { StorageService } from '../storage/storage.service';
 
 describe('ReferralsService', () => {
   let prisma: {
@@ -31,6 +32,7 @@ describe('ReferralsService', () => {
     sendReferralKycRejected: jest.Mock;
   };
   let authService: { assertRegisterEmailVerified: jest.Mock };
+  let storageService: { uploadBuffer: jest.Mock };
   let service: ReferralsService;
 
   const registerDto = {
@@ -90,10 +92,16 @@ describe('ReferralsService', () => {
     authService = {
       assertRegisterEmailVerified: jest.fn().mockResolvedValue('chal_1'),
     };
+    storageService = {
+      uploadBuffer: jest
+        .fn()
+        .mockResolvedValue('https://supabase.example.com/storage/v1/object/public/bucket/kyc/doc123.png'),
+    };
     service = new ReferralsService(
       prisma as unknown as PrismaService,
       emailService as unknown as EmailService,
       authService as unknown as AuthService,
+      storageService as unknown as StorageService,
     );
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
@@ -224,7 +232,12 @@ describe('ReferralsService', () => {
   });
 
   describe('submitKyc', () => {
-    const file = { filename: 'doc123.png' } as Express.Multer.File;
+    const file = {
+      filename: 'doc123.png',
+      originalname: 'doc123.png',
+      mimetype: 'image/png',
+      buffer: Buffer.from('fake-image-bytes'),
+    } as Express.Multer.File;
 
     it('rejects when no file is provided', async () => {
       await expect(
@@ -249,19 +262,26 @@ describe('ReferralsService', () => {
       prisma.referral.update.mockResolvedValue({
         id: 'ref_1',
         kycStatus: 'PENDING',
-        kycGovtIdDocumentUrl: '/uploads/kyc/doc123.png',
+        kycGovtIdDocumentUrl:
+          'https://supabase.example.com/storage/v1/object/public/bucket/kyc/doc123.png',
       });
       prisma.user.findUnique.mockResolvedValue(createdUser);
       prisma.user.findMany.mockResolvedValue([{ email: 'admin@example.com' }]);
 
       const result = await service.submitKyc('user_1', file);
 
+      expect(storageService.uploadBuffer).toHaveBeenCalledWith(
+        expect.stringMatching(/^kyc\/user_1\/.+\.png$/),
+        file.buffer,
+        'image/png',
+      );
       expect(prisma.referral.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { userId: 'user_1' },
           data: expect.objectContaining({
             kycStatus: 'PENDING',
-            kycGovtIdDocumentUrl: '/uploads/kyc/doc123.png',
+            kycGovtIdDocumentUrl:
+              'https://supabase.example.com/storage/v1/object/public/bucket/kyc/doc123.png',
           }),
         }),
       );

@@ -7,7 +7,7 @@ import { pathologyOrdersApi } from '@/lib/api';
 import {
   ArrowLeft, FlaskConical, User, Phone, Loader2, Truck, Stethoscope, Download, Barcode, AlertTriangle,
 } from 'lucide-react';
-import { formatDateTime, formatCurrency } from '@/lib/utils';
+import { formatDateTime, formatCurrency, resolveFileUrl } from '@/lib/utils';
 
 const STATUS_STYLES: Record<string, string> = {
   ORDERED: 'bg-blue-50 text-blue-700',
@@ -280,7 +280,7 @@ export default function PathologyOrderDetailPage() {
             </p>
           </div>
           <a
-            href={`${BASE_URL}${order.report.fileUrl}`}
+            href={resolveFileUrl(order.report.fileUrl, BASE_URL)}
             target="_blank"
             rel="noreferrer"
             className="btn-primary flex items-center gap-2 text-sm"

@@ -1,9 +1,10 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { StorageService } from '../storage/storage.service';
 import { ReportType } from '@prisma/client';
-import * as path from 'path';
-import * as fs from 'fs';
+import { extname } from 'path';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class ReportsService {
@@ -12,6 +13,7 @@ export class ReportsService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private storageService: StorageService,
   ) {}
 
   async create(
@@ -21,7 +23,12 @@ export class ReportsService {
     file: Express.Multer.File,
     body: any,
   ) {
-    const fileUrl = `/uploads/reports/${file.filename}`;
+    const objectPath = `reports/${tenantId}/${randomUUID()}${extname(file.originalname)}`;
+    const fileUrl = await this.storageService.uploadBuffer(
+      objectPath,
+      file.buffer,
+      file.mimetype,
+    );
 
     const report = await this.prisma.report.create({
       data: {
@@ -122,9 +129,8 @@ export class ReportsService {
 
   async delete(id: string) {
     const report = await this.findOne(id);
-    // Delete file from disk
-    const filePath = path.join(process.cwd(), report.fileUrl);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    const objectPath = this.storageService.pathFromPublicUrl(report.fileUrl);
+    if (objectPath) await this.storageService.deleteFile(objectPath);
     return this.prisma.report.delete({ where: { id } });
   }
 }

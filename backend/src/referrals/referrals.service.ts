@@ -8,12 +8,15 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { AuthService } from '../auth/auth.service';
+import { StorageService } from '../storage/storage.service';
 import { RegisterReferralDto } from './dto/register-referral.dto';
 import { UpdateReferralProfileDto } from './dto/update-referral-profile.dto';
 import { RejectReferralKycDto } from './dto/reject-referral-kyc.dto';
 import { RecordReferralPayoutDto } from './dto/record-referral-payout.dto';
 import { RequestStatus, KycStatus, UserRole, TenantType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
+import { extname } from 'path';
 
 const REFERRAL_CODE_MAX_ATTEMPTS = 5;
 
@@ -25,6 +28,7 @@ export class ReferralsService {
     private prisma: PrismaService,
     private emailService: EmailService,
     private authService: AuthService,
+    private storageService: StorageService,
   ) {}
 
   private normalizeEmail(email: string) {
@@ -461,7 +465,12 @@ export class ReferralsService {
     });
     if (!referral) throw new NotFoundException('Referral profile not found');
 
-    const kycGovtIdDocumentUrl = `/uploads/kyc/${file.filename}`;
+    const objectPath = `kyc/${userId}/${randomUUID()}${extname(file.originalname)}`;
+    const kycGovtIdDocumentUrl = await this.storageService.uploadBuffer(
+      objectPath,
+      file.buffer,
+      file.mimetype,
+    );
 
     const updated = await this.prisma.referral.update({
       where: { userId },

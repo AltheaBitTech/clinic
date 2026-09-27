@@ -18,23 +18,13 @@ import {
   ApiOperation,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { ReportsService } from './reports.service';
 import { UploadReportDto } from './dto/report.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ReportType, UserRole } from '@prisma/client';
-import { getUploadDir } from '../common/utils/upload.util';
 
-const storage = diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, getUploadDir('reports'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-  },
-});
+const storage = memoryStorage();
 
 @ApiTags('reports')
 @ApiBearerAuth()

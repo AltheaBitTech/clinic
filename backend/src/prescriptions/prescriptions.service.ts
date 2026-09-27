@@ -23,6 +23,20 @@ interface RequestUser {
   tenantId: string;
 }
 
+// The server process may run in UTC (or any other TZ) while the clinic
+// operates in IST, so day boundaries must be computed against the clinic's
+// timezone rather than via Date's local-timezone setHours/getHours (mirrors
+// the helper in appointments.service.ts).
+function getDayBoundsInClinicTimezone(dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const utcMidnightForIstDate =
+    Date.UTC(year, month - 1, day) - 5.5 * 60 * 60 * 1000;
+  return {
+    gte: new Date(utcMidnightForIstDate),
+    lt: new Date(utcMidnightForIstDate + 24 * 60 * 60 * 1000),
+  };
+}
+
 @Injectable()
 export class PrescriptionsService {
   private readonly logger = new Logger(PrescriptionsService.name);
@@ -224,6 +238,78 @@ export class PrescriptionsService {
     if (filters.patientId) where.patientId = filters.patientId;
     if (filters.doctorId) where.doctorId = filters.doctorId;
     if (filters.tenantId) where.patient = { tenantId: filters.tenantId };
+
+    if (filters.date) {
+      where.createdAt = getDayBoundsInClinicTimezone(filters.date);
+    }
+
+    const search = filters.search ? String(filters.search).trim() : '';
+    if (search) {
+      const words = search.split(/\s+/).filter(Boolean);
+      where.OR = [
+        { diagnosis: { contains: search, mode: 'insensitive' } },
+        {
+          patient: {
+            user: { firstName: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        {
+          patient: {
+            user: { lastName: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        {
+          doctor: {
+            user: { firstName: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        {
+          doctor: {
+            user: { lastName: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        // Full-name search (e.g. "John Doe"): every word must match either
+        // the first or last name of the patient or doctor, in any order.
+        ...(words.length > 1
+          ? [
+              {
+                AND: words.map((word) => ({
+                  OR: [
+                    {
+                      patient: {
+                        user: {
+                          firstName: { contains: word, mode: 'insensitive' },
+                        },
+                      },
+                    },
+                    {
+                      patient: {
+                        user: {
+                          lastName: { contains: word, mode: 'insensitive' },
+                        },
+                      },
+                    },
+                    {
+                      doctor: {
+                        user: {
+                          firstName: { contains: word, mode: 'insensitive' },
+                        },
+                      },
+                    },
+                    {
+                      doctor: {
+                        user: {
+                          lastName: { contains: word, mode: 'insensitive' },
+                        },
+                      },
+                    },
+                  ],
+                })),
+              },
+            ]
+          : []),
+      ];
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.prescription.findMany({

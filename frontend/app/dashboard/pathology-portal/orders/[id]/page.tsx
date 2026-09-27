@@ -12,7 +12,7 @@ import {
   ClipboardList, AlertTriangle, BellRing, CheckCheck, FileEdit, Barcode,
   MessageCircle,
 } from 'lucide-react';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate, formatDateTime, resolveFileUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog';
 
@@ -199,7 +199,7 @@ export default function PathologyOrderDetailPage() {
     mutationFn: (email: string) =>
       pathologyResultsApi.emailReport(id, {
         email: email || undefined,
-        reportUrl: `${BASE_URL}${order?.report?.fileUrl}`,
+        reportUrl: resolveFileUrl(order?.report?.fileUrl || '', BASE_URL),
       }),
     onSuccess: (res) => {
       toast.success(`Report emailed to ${res.data.recipientEmail}`);
@@ -215,7 +215,7 @@ export default function PathologyOrderDetailPage() {
 
   const handleWhatsAppShare = () => {
     if (!order?.report?.fileUrl) return;
-    const link = `${BASE_URL}${order.report.fileUrl}`;
+    const link = resolveFileUrl(order.report.fileUrl, BASE_URL);
     const message = `Lab Report ${order.orderNo} — view/download: ${link}`;
     const phoneDigits = (order.patient?.phone || '').replace(/\D/g, '');
     const phone = phoneDigits ? (phoneDigits.length === 10 ? `91${phoneDigits}` : phoneDigits) : '';
@@ -438,7 +438,7 @@ export default function PathologyOrderDetailPage() {
           </div>
           <div className="flex items-center gap-2">
             <a
-              href={`${BASE_URL}${order.report.fileUrl}`}
+              href={resolveFileUrl(order.report.fileUrl, BASE_URL)}
               target="_blank"
               rel="noreferrer"
               title="Download report"

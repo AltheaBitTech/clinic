@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { reportsApi, patientsApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { FileText, Upload, Download, Trash2, Search, X, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
-import { formatDate, getInitials } from '@/lib/utils';
+import { formatDate, getInitials, resolveFileUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 const REPORT_TYPES = ['ALL', 'BLOOD_TEST', 'XRAY', 'MRI', 'CT_SCAN', 'ULTRASOUND', 'ECG', 'LAB_REPORT', 'PRESCRIPTION', 'OTHER'];
@@ -253,7 +253,7 @@ export default function ReportsPage() {
                   {TYPE_ICONS[report.type] || '📄'}
                 </div>
                 <div className="flex items-center gap-2">
-                  <a href={`${BASE_URL}${report.fileUrl}`} target="_blank" rel="noreferrer"
+                  <a href={resolveFileUrl(report.fileUrl, BASE_URL)} target="_blank" rel="noreferrer"
                     aria-label={`Download ${report.title}`}
                     className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
                     <Download className="w-4 h-4 text-slate-500" />

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { prescriptionsApi } from '@/lib/api';
-import { ClipboardList, Plus, FileText, Pill, ChevronRight, Stethoscope, ChevronLeft, AlertTriangle, RefreshCw, Store } from 'lucide-react';
+import { prescriptionsApi, doctorsApi } from '@/lib/api';
+import { ClipboardList, Plus, FileText, Pill, ChevronRight, Stethoscope, ChevronLeft, AlertTriangle, RefreshCw, Store, Search, X } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -11,16 +11,42 @@ import toast from 'react-hot-toast';
 
 export default function PrescriptionsPage() {
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [date, setDate] = useState('');
+  const [doctorId, setDoctorId] = useState('');
   const { user } = useAuth();
   const isPatient = user?.role === 'PATIENT';
+  const isDoctor = user?.role === 'DOCTOR';
+  const canFilterByDoctor = !isPatient && !isDoctor;
+
+  // Reset to page 1 whenever a filter changes so a narrower result set
+  // doesn't strand the user on a now-empty later page.
+  useEffect(() => {
+    setPage(1);
+  }, [search, date, doctorId]);
+
+  const { data: doctorsData } = useQuery({
+    queryKey: ['doctors'],
+    queryFn: () => doctorsApi.getAll().then((r) => r.data),
+    enabled: canFilterByDoctor,
+  });
+
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['prescriptions', page, user?.id],
+    queryKey: ['prescriptions', page, search, date, doctorId, user?.id],
     queryFn: () =>
       prescriptionsApi
-        .getAll(isPatient ? { page } : { page, doctorId: user?.doctor?.id })
+        .getAll({
+          page,
+          search: search || undefined,
+          date: date || undefined,
+          doctorId: isDoctor ? user?.doctor?.id : (doctorId || undefined),
+        })
         .then((r) => r.data),
     enabled: !!user,
   });
+
+  const hasFilters = !!(search || date || doctorId);
+  const clearFilters = () => { setSearch(''); setDate(''); setDoctorId(''); };
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
@@ -70,6 +96,44 @@ export default function PrescriptionsPage() {
         )}
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+        <div className="relative flex-1 sm:max-w-xs">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={isPatient ? 'Search by doctor or diagnosis...' : 'Search by patient, doctor, or diagnosis...'}
+            className="input pl-10"
+          />
+        </div>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="input w-auto text-sm"
+        />
+        {canFilterByDoctor && (
+          <select
+            value={doctorId}
+            onChange={(e) => setDoctorId(e.target.value)}
+            className="input w-auto text-sm"
+          >
+            <option value="">All Doctors</option>
+            {doctorsData?.data?.map((d: any) => (
+              <option key={d.id} value={d.id}>
+                Dr. {d.user?.firstName} {d.user?.lastName}
+              </option>
+            ))}
+          </select>
+        )}
+        {hasFilters && (
+          <button onClick={clearFilters} className="flex items-center gap-1.5 text-sm text-cyan-600 hover:text-cyan-700 font-medium shrink-0">
+            <X className="w-3.5 h-3.5" /> Clear filters
+          </button>
+        )}
+      </div>
+
       <div className="space-y-4">
         {isLoading ? (
           [...Array(4)].map((_, i) => (
@@ -94,10 +158,14 @@ export default function PrescriptionsPage() {
           <div className="card text-center py-16">
             <ClipboardList className="w-12 h-12 text-slate-200 mx-auto mb-4" />
             <p className="text-slate-400">No prescriptions found</p>
-            {!isPatient && (
-              <Link href="/dashboard/prescriptions/new" className="btn-primary mt-4 inline-flex items-center gap-2 text-sm">
-                <Plus className="w-4 h-4" /> Write First Prescription
-              </Link>
+            {hasFilters ? (
+              <p className="text-slate-400 text-sm mt-1">Try adjusting or clearing your filters</p>
+            ) : (
+              !isPatient && (
+                <Link href="/dashboard/prescriptions/new" className="btn-primary mt-4 inline-flex items-center gap-2 text-sm">
+                  <Plus className="w-4 h-4" /> Write First Prescription
+                </Link>
+              )
             )}
           </div>
         ) : (

@@ -6,6 +6,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Reports can be backed by either a legacy local `/uploads/...` path (served
+ * relative to the API host) or a fully-qualified Supabase Storage public URL
+ * — don't double up the API host prefix on the latter.
+ */
+export function resolveFileUrl(fileUrl: string, apiHost: string): string {
+  return /^https?:\/\//i.test(fileUrl) ? fileUrl : `${apiHost}${fileUrl}`;
+}
+
 export function isValidPhone(phone: string): boolean {
   return /^\d{10}$/.test(phone.trim());
 }

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Calendar, Pill, FileText, ClipboardList, AlertTriangle, RefreshCw, Receipt } from 'lucide-react';
-import { cn, formatDateTime, formatDate, formatCurrency } from '@/lib/utils';
+import { cn, formatDateTime, formatDate, formatCurrency, resolveFileUrl } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function PatientDashboard() {
@@ -184,7 +184,7 @@ export default function PatientDashboard() {
           ) : (
             <div className="space-y-2">
               {stats.recentReports.map((r: any) => (
-                <a key={r.id} href={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${r.fileUrl}`} target="_blank" rel="noreferrer"
+                <a key={r.id} href={resolveFileUrl(r.fileUrl, process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '')} target="_blank" rel="noreferrer"
                   className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
                   <FileText className="w-4 h-4 text-blue-500 shrink-0" />
                   <div className="flex-1 min-w-0">

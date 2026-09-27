@@ -41,11 +41,15 @@ export class PrescriptionsController {
   @ApiOperation({ summary: 'List prescriptions' })
   @ApiQuery({ name: 'patientId', required: false })
   @ApiQuery({ name: 'doctorId', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'date', required: false })
   @ApiQuery({ name: 'page', required: false })
   async findAll(
     @CurrentUser() user: any,
     @Query('patientId') patientId?: string,
     @Query('doctorId') doctorId?: string,
+    @Query('search') search?: string,
+    @Query('date') date?: string,
     @Query('page') page?: number,
   ) {
     let effectivePatientId = patientId;
@@ -60,7 +64,13 @@ export class PrescriptionsController {
     }
 
     return this.prescriptionsService.findAll(
-      { patientId: effectivePatientId, doctorId, tenantId: user.tenantId },
+      {
+        patientId: effectivePatientId,
+        doctorId,
+        search,
+        date,
+        tenantId: user.tenantId,
+      },
       page,
     );
   }

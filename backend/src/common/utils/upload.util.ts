@@ -1,7 +1,7 @@
-import { join, extname } from 'path';
+import { join } from 'path';
 import { tmpdir } from 'os';
 import { existsSync, mkdirSync } from 'fs';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { BadRequestException } from '@nestjs/common';
 
 export function getUploadsBasePath(): string {
@@ -36,15 +36,7 @@ const KYC_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 export function kycFileUploadOptions() {
   return {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        cb(null, getUploadDir('kyc'));
-      },
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-      },
-    }),
+    storage: memoryStorage(),
     limits: { fileSize: KYC_MAX_FILE_SIZE_BYTES },
     fileFilter: (
       req: unknown,
