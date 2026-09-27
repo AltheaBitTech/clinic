@@ -130,28 +130,6 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
-
-        {/* Demo credentials */}
-        <div className="mt-6 bg-white/[0.02] border border-white/10 rounded-2xl p-5 backdrop-blur-sm">
-          <p className="text-xs text-slate-400 font-semibold mb-3.5 text-center uppercase tracking-wider">Demo Access Credentials</p>
-          <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-300">
-            <div className="bg-white/[0.03] border border-white/5 rounded-xl p-2.5 hover:bg-white/[0.06] transition-colors">
-              <div className="font-bold text-purple-400 mb-1 truncate">Super Admin</div>
-              <div className="truncate text-slate-400 mb-0.5" title="superadmin@Arogyix.health">superadmin@Arogyix.health</div>
-              <div className="font-mono text-slate-500">Password123!</div>
-            </div>
-            <div className="bg-white/[0.03] border border-white/5 rounded-xl p-2.5 hover:bg-white/[0.06] transition-colors">
-              <div className="font-bold text-cyan-400 mb-1 truncate">Hospital Admin</div>
-              <div className="truncate text-slate-400 mb-0.5" title="admin@Arogyix.health">admin@Arogyix.health</div>
-              <div className="font-mono text-slate-500">Password123!</div>
-            </div>
-            <div className="bg-white/[0.03] border border-white/5 rounded-xl p-2.5 hover:bg-white/[0.06] transition-colors">
-              <div className="font-bold text-emerald-400 mb-1 truncate">Doctor</div>
-              <div className="truncate text-slate-400 mb-0.5" title="doctor@Arogyix.health">doctor@Arogyix.health</div>
-              <div className="font-mono text-slate-500">Password123!</div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
