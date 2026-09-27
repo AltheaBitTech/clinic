@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CreditCard, Loader2, Smartphone, Landmark, Wallet, ChevronRight } from 'lucide-react';
@@ -42,12 +42,75 @@ export function PayInvoiceButton({
   const [open, setOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodValue>('UPI');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showStuckHelp, setShowStuckHelp] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const invalidateInvoices = () => {
     qc.invalidateQueries({ queryKey: ['invoices'] });
     qc.invalidateQueries({ queryKey: ['appointment'] });
     qc.invalidateQueries({ queryKey: ['dashboard', 'patient'] });
   };
+
+  const stopWatchingPayment = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    if (stuckTimerRef.current) {
+      clearTimeout(stuckTimerRef.current);
+      stuckTimerRef.current = null;
+    }
+    setShowStuckHelp(false);
+  };
+
+  // Razorpay's client-side `handler` callback only fires if the browser tab
+  // is still around when the payment finishes — a UPI app-switch on mobile
+  // can leave it stranded (paid in the UPI app, but the tab never resumes).
+  // Poll the invoice in the background so we notice a PAID invoice from the
+  // webhook even if that callback never comes back.
+  const watchForPayment = () => {
+    stopWatchingPayment();
+    pollRef.current = setInterval(async () => {
+      try {
+        const { data: invoice } = await billingApi.getOne(invoiceId);
+        if (invoice.status === 'PAID') {
+          stopWatchingPayment();
+          toast.success('Payment successful!');
+          invalidateInvoices();
+          setIsProcessing(false);
+          setOpen(false);
+        }
+      } catch {
+        // transient network error — keep polling, next tick may succeed
+      }
+    }, 3000);
+    stuckTimerRef.current = setTimeout(() => setShowStuckHelp(true), 12000);
+  };
+
+  const checkStatusNow = async () => {
+    try {
+      const { data: invoice } = await billingApi.getOne(invoiceId);
+      if (invoice.status === 'PAID') {
+        stopWatchingPayment();
+        toast.success('Payment successful!');
+        invalidateInvoices();
+        setIsProcessing(false);
+        setOpen(false);
+      } else {
+        toast('No payment received yet for this invoice');
+      }
+    } catch {
+      toast.error('Could not check payment status — please try again');
+    }
+  };
+
+  const giveUpWaiting = () => {
+    stopWatchingPayment();
+    setIsProcessing(false);
+  };
+
+  useEffect(() => stopWatchingPayment, []);
 
   const verifyMutation = useMutation({
     mutationFn: (payload: any) => billingApi.verifyPayment(invoiceId, payload),
@@ -59,7 +122,10 @@ export function PayInvoiceButton({
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Payment verification failed — please contact support if any amount was deducted');
     },
-    onSettled: () => setIsProcessing(false),
+    onSettled: () => {
+      stopWatchingPayment();
+      setIsProcessing(false);
+    },
   });
 
   const createOrderMutation = useMutation({
@@ -86,6 +152,7 @@ export function PayInvoiceButton({
         },
         theme: { color: '#0891b2' },
         handler: (response: any) => {
+          stopWatchingPayment();
           verifyMutation.mutate({
             razorpayOrderId: response.razorpay_order_id,
             razorpayPaymentId: response.razorpay_payment_id,
@@ -95,12 +162,17 @@ export function PayInvoiceButton({
         },
         modal: {
           ondismiss: () => {
-            toast('Payment cancelled');
-            setIsProcessing(false);
+            // Don't assume cancellation: on mobile this also fires when a UPI
+            // app-switch fails to hand control back to the checkout widget,
+            // even though the payment may have gone through. Keep polling the
+            // invoice for a bit before giving up.
+            toast('Waiting for payment confirmation...');
+            watchForPayment();
           },
         },
       });
       rzp.open();
+      watchForPayment();
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to start payment');
@@ -195,6 +267,31 @@ export function PayInvoiceButton({
             )}
             {razorpayReady ? 'Proceed to Payment' : 'Loading payment gateway...'}
           </button>
+
+          {showStuckHelp && (
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
+              <p className="text-amber-800 font-medium">Still waiting for payment confirmation</p>
+              <p className="text-amber-700 text-xs mt-1">
+                If you completed the payment in your UPI app but this screen didn&apos;t update, check the status below.
+              </p>
+              <div className="flex gap-2 mt-2.5">
+                <button
+                  type="button"
+                  onClick={checkStatusNow}
+                  className="flex-1 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-lg py-2"
+                >
+                  Check payment status
+                </button>
+                <button
+                  type="button"
+                  onClick={giveUpWaiting}
+                  className="flex-1 text-xs font-semibold border border-amber-300 text-amber-800 rounded-lg py-2"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

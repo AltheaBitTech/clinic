@@ -353,6 +353,105 @@ export class BillingService {
     });
   }
 
+  // Server-side backstop for the online payment flow: verifyPayment above
+  // only fires if the browser is still around to run Razorpay's `handler`
+  // callback, which UPI app-switches on mobile can interrupt (user pays in
+  // their UPI app, the tab gets backgrounded/killed, and it never returns).
+  // This webhook lets Razorpay tell us directly that the payment captured,
+  // so the invoice still gets marked PAID even if the client never checks in.
+  async handlePaymentWebhook(
+    rawBody: Buffer | undefined,
+    signature: string | undefined,
+    parsedBody: any,
+  ): Promise<{ received: true }> {
+    if (!rawBody || !signature) {
+      throw new UnauthorizedException('Missing webhook signature');
+    }
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      throw new ServiceUnavailableException(
+        'Razorpay is not configured (missing RAZORPAY_WEBHOOK_SECRET)',
+      );
+    }
+
+    const expected = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(rawBody)
+      .digest('hex');
+    const signatureBuf = Buffer.from(signature);
+    const expectedBuf = Buffer.from(expected);
+    const valid =
+      signatureBuf.length === expectedBuf.length &&
+      crypto.timingSafeEqual(signatureBuf, expectedBuf);
+    if (!valid) {
+      throw new UnauthorizedException('Invalid webhook signature');
+    }
+
+    const eventId: string =
+      parsedBody?.id ??
+      crypto.createHash('sha256').update(rawBody).digest('hex');
+
+    try {
+      await this.prisma.webhookEvent.create({
+        data: {
+          eventId,
+          eventType: parsedBody?.event ?? 'unknown',
+          payload: parsedBody,
+        },
+      });
+    } catch {
+      // Already processed (unique constraint on eventId) — ack without redoing work.
+      return { received: true };
+    }
+
+    try {
+      await this.handlePaymentEvent(parsedBody);
+      await this.prisma.webhookEvent.update({
+        where: { eventId },
+        data: { processedAt: new Date() },
+      });
+    } catch (err: any) {
+      this.logger.error(
+        `Failed to process billing webhook ${eventId}: ${err?.message}`,
+      );
+      await this.prisma.webhookEvent.update({
+        where: { eventId },
+        data: { error: String(err?.message ?? err) },
+      });
+    }
+
+    return { received: true };
+  }
+
+  private async handlePaymentEvent(body: any) {
+    if (body?.event !== 'payment.captured') return;
+
+    const payment = body?.payload?.payment?.entity;
+    const orderId: string | undefined = payment?.order_id;
+    if (!orderId) return;
+
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { razorpayOrderId: orderId },
+    });
+    if (!invoice) {
+      this.logger.warn(`Webhook payment.captured for unknown order ${orderId}`);
+      return;
+    }
+    if (invoice.status === 'PAID') return;
+
+    const methodMap: Record<string, PaymentMethod> = {
+      upi: 'UPI',
+      card: 'CARD',
+      netbanking: 'NETBANKING',
+      wallet: 'WALLET',
+    };
+
+    await this.finalizePayment(invoice.id, {
+      paymentMethod: methodMap[payment?.method] ?? undefined,
+      razorpayPaymentId: payment?.id,
+    });
+  }
+
   private async finalizePayment(
     id: string,
     payment?: { paymentMethod?: PaymentMethod; razorpayPaymentId?: string },

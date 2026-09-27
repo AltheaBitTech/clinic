@@ -6,16 +6,20 @@ import {
   Body,
   Param,
   Query,
+  Req,
   Res,
+  Headers,
   ForbiddenException,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { RawBodyRequest } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/billing.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import { UserRole } from '@prisma/client';
 
 @ApiTags('billing')
@@ -147,5 +151,18 @@ export class BillingController {
     const invoice = await this.svc.findOne(id);
     this.assertAccessible(user, invoice);
     return this.svc.verifyPayment(id, dto);
+  }
+
+  @Public()
+  @Post('webhook')
+  @ApiOperation({
+    summary:
+      'Razorpay webhook receiver for invoice payments — server-side backstop for verify-payment',
+  })
+  handleWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('x-razorpay-signature') signature: string,
+  ) {
+    return this.svc.handlePaymentWebhook(req.rawBody, signature, req.body);
   }
 }
