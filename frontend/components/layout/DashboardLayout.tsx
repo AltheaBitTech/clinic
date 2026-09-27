@@ -252,7 +252,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
           <Link href={getDashboardHref()} className="mt-3 flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity w-fit">
-            <Image src="/arogyix-logo.svg" alt="Arogyix" width={14} height={14} className="brightness-0 invert" />
+            <Image src="/arogyix-icon.png" alt="Arogyix" width={14} height={14} className="brightness-0 invert" />
             <span className="text-[11px] font-medium text-slate-400">by Arogyix</span>
           </Link>
         </div>
@@ -296,8 +296,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Menu className="w-5 h-5 text-slate-600" />
           </button>
           <Link href={getDashboardHref()} className="flex items-center gap-2">
-            <Image src="/arogyix-logo.svg" alt="Arogyix" width={24} height={24} />
-            <span className="text-base font-bold text-slate-900">Arogyix</span>
+            <Image src="/arogyix-wordmark.png" alt="Arogyix" width={104} height={34} className="h-8 w-auto" />
           </Link>
         </header>
 

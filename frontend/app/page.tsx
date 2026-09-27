@@ -46,7 +46,7 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 bg-slate-950/60 backdrop-blur-lg border-b border-white/5">
         <nav className="flex items-center justify-between gap-2 px-4 sm:px-6 lg:px-8 py-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink-0">
-            <Image src="/arogyix-logo.svg" alt="Arogyix" width={36} height={36} className="drop-shadow-md w-8 h-8 sm:w-9 sm:h-9 shrink-0" />
+            <Image src="/arogyix-icon.png" alt="Arogyix" width={36} height={36} className="drop-shadow-md w-8 h-8 sm:w-9 sm:h-9 shrink-0" />
             <span className="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent whitespace-nowrap">Arogyix</span>
           </div>
           <div className="flex items-center gap-3 sm:gap-5 shrink-0">
@@ -244,7 +244,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-white/5 py-10 text-center text-slate-500 text-sm bg-slate-950/40">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <Image src="/arogyix-logo.svg" alt="Arogyix" width={20} height={20} />
+          <Image src="/arogyix-icon.png" alt="Arogyix" width={20} height={20} />
           <span className="font-bold text-white tracking-wider">Arogyix</span>
         </div>
         <p className="font-light text-xs text-slate-500">© 2026 Arogyix. Healthcare management made simple.</p>

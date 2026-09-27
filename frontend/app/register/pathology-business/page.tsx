@@ -43,7 +43,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
       <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-emerald-600/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
       <div className="max-w-2xl mx-auto relative z-10 animate-slide-up">
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <Image src="/arogyix-logo.svg" alt="Arogyix" width={36} height={36} className="drop-shadow-lg" />
+          <Image src="/arogyix-icon.png" alt="Arogyix" width={36} height={36} className="drop-shadow-lg" />
           <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
         </div>
         {children}

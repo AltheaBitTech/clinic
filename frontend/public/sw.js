@@ -5,7 +5,7 @@
 // from cache would be a correctness bug, not a performance win. It only
 // precaches the static PWA icons/manifest so the install experience itself
 // (icon, name) is available even on a flaky first load.
-const CACHE_NAME = 'arogyix-static-v1';
+const CACHE_NAME = 'arogyix-static-v2';
 const PRECACHE_URLS = [
   '/manifest.webmanifest',
   '/icon-192.png',

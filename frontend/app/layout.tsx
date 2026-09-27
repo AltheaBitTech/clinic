@@ -32,13 +32,13 @@ export const metadata: Metadata = {
     siteName: 'Arogyix',
     title,
     description,
-    images: [{ url: '/arogyix-logo.svg', width: 512, height: 512, alt: 'Arogyix' }],
+    images: [{ url: '/arogyix-og.png', width: 1200, height: 630, alt: 'Arogyix' }],
   },
   twitter: {
     card: 'summary_large_image',
     title,
     description,
-    images: ['/arogyix-logo.svg'],
+    images: ['/arogyix-og.png'],
   },
   robots: {
     index: true,
