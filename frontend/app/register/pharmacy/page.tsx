@@ -55,9 +55,9 @@ function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10 sm:py-16">
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-center gap-2.5 mb-8">
+        <Link href="/" className="flex items-center justify-center gap-2.5 mb-8">
           <Image src="/arogyix-wordmark.png" alt="Arogyix" width={160} height={52} className="h-11 w-auto" priority />
-        </div>
+        </Link>
         {children}
       </div>
     </div>

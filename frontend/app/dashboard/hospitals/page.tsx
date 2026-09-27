@@ -1,22 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { tenantsApi } from '@/lib/api';
 import {
-  Building2, Search, Mail, Phone, Calendar, 
-  ShieldCheck, Loader2, Users, FileText, Check, X
+  Building2, Search, Mail, Phone, Calendar,
+  ShieldCheck, Loader2, Users, FileText, Check, X, Pill, FlaskConical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
-export default function HospitalsListPage() {
+const TYPE_META: Record<string, { label: string; plural: string; icon: React.ElementType; badge: string }> = {
+  HOSPITAL: { label: 'Hospital', plural: 'Registered Hospitals', icon: Building2, badge: 'bg-cyan-50 text-cyan-700 border border-cyan-200/50' },
+  PHARMACY: { label: 'Pharmacy', plural: 'Registered Pharmacies', icon: Pill, badge: 'bg-teal-50 text-teal-700 border border-teal-200/50' },
+  PATHOLOGY: { label: 'Pathology Lab', plural: 'Registered Pathology Labs', icon: FlaskConical, badge: 'bg-violet-50 text-violet-700 border border-violet-200/50' },
+};
+
+function HospitalsListContent() {
+  const searchParams = useSearchParams();
+  const type = searchParams.get('type') || undefined;
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
 
   const { data: tenantsData, isLoading, refetch } = useQuery({
-    queryKey: ['tenants', page],
-    queryFn: () => tenantsApi.getAll({ page, limit: 10 }).then((r) => r.data),
+    queryKey: ['tenants', page, type],
+    queryFn: () => tenantsApi.getAll({ page, limit: 10, type }).then((r) => r.data),
   });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,13 +61,17 @@ export default function HospitalsListPage() {
     (t.email && t.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const meta = type ? TYPE_META[type] : undefined;
+  const pageTitle = meta?.plural || 'All Tenants';
+  const nodeWord = meta ? meta.label.toLowerCase() : 'tenant';
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       {/* Header */}
       <div className="page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="page-title">Registered Hospitals</h1>
-          <p className="page-subtitle">View and manage all active hospital nodes deployed on Arogyix.</p>
+          <h1 className="page-title">{pageTitle}</h1>
+          <p className="page-subtitle">View and manage all active {nodeWord} nodes deployed on Arogyix.</p>
         </div>
       </div>
 
@@ -68,14 +81,14 @@ export default function HospitalsListPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search hospitals by name, slug..."
+            placeholder={`Search ${nodeWord}s by name, slug...`}
             value={searchTerm}
             onChange={handleSearch}
             className="input pl-9"
           />
         </div>
         <div className="text-xs text-slate-400 ml-0 sm:ml-auto">
-          Showing {filteredTenants.length} of {tenantsData?.total || 0} hospitals
+          Showing {filteredTenants.length} of {tenantsData?.total || 0} {nodeWord}s
         </div>
       </div>
 
@@ -86,6 +99,7 @@ export default function HospitalsListPage() {
             <thead>
               <tr>
                 <th>Hospital Info</th>
+                {!type && <th>Type</th>}
                 <th>Slug / Domain</th>
                 <th>Contacts</th>
                 <th>Sub-records</th>
@@ -108,6 +122,16 @@ export default function HospitalsListPage() {
                       </div>
                     </div>
                   </td>
+                  {!type && (
+                    <td>
+                      <span className={cn(
+                        'badge font-semibold uppercase tracking-wider text-[10px] px-2 py-0.5',
+                        TYPE_META[tenant.type]?.badge || 'bg-slate-100 text-slate-600 border border-slate-200/50'
+                      )}>
+                        {TYPE_META[tenant.type]?.label || tenant.type}
+                      </span>
+                    </td>
+                  )}
                   <td>
                     <span className="font-mono text-xs bg-slate-50 border border-slate-200/50 px-2 py-0.5 rounded text-slate-600">
                       {tenant.slug}
@@ -181,10 +205,10 @@ export default function HospitalsListPage() {
               ))}
               {filteredTenants.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-400">
+                  <td colSpan={type ? 6 : 7} className="text-center py-12 text-slate-400">
                     <div className="flex flex-col items-center gap-2">
                       <Building2 className="w-8 h-8 text-slate-300" />
-                      <p className="text-sm font-medium">No hospitals matching the search criteria</p>
+                      <p className="text-sm font-medium">No {nodeWord}s matching the search criteria</p>
                     </div>
                   </td>
                 </tr>
@@ -217,5 +241,19 @@ export default function HospitalsListPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function HospitalsListPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-cyan-600" />
+        </div>
+      }
+    >
+      <HospitalsListContent />
+    </Suspense>
   );
 }

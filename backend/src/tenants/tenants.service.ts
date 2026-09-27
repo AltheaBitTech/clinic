@@ -59,10 +59,12 @@ export class TenantsService {
     });
   }
 
-  async findAll(page = 1, limit = 20) {
+  async findAll(page = 1, limit = 20, type?: string) {
     const skip = (page - 1) * limit;
+    const where = type ? { type: type as any } : {};
     const [data, total] = await Promise.all([
       this.prisma.tenant.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -72,7 +74,7 @@ export class TenantsService {
           },
         },
       }),
-      this.prisma.tenant.count(),
+      this.prisma.tenant.count({ where }),
     ]);
     return { data, total, page, limit, pages: Math.ceil(total / limit) };
   }

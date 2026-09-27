@@ -43,10 +43,10 @@ export default function ForgotPasswordPage() {
 
       <div className="w-full max-w-md animate-slide-up relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2.5 mb-4">
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
             <Image src="/arogyix-icon.png" alt="Arogyix" width={42} height={42} className="drop-shadow-lg" />
             <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
-          </div>
+          </Link>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Forgot password?</h1>
           <p className="text-slate-400 mt-2 text-sm font-light">
             {sent ? 'Check your inbox for a reset link' : "Enter your email and we'll send you a reset link"}

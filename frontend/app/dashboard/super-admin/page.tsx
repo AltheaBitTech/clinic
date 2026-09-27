@@ -222,12 +222,12 @@ export default function SuperAdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Total Hospitals" value={stats?.totalHospitals || 0} icon={Building2} color="bg-cyan-500" />
-        <StatCard label="Total Pharmacies" value={stats?.totalPharmacies || 0} icon={Pill} color="bg-teal-500" />
-        <StatCard label="Total Labs" value={stats?.totalLabs || 0} icon={FlaskConical} color="bg-violet-500" />
-        <StatCard label="Total Patients" value={stats?.totalPatients || 0} icon={UserCheck} color="bg-purple-500" />
+        <StatCard label="Total Hospitals" value={stats?.totalHospitals || 0} icon={Building2} color="bg-cyan-500" href="/dashboard/hospitals?type=HOSPITAL" />
+        <StatCard label="Total Pharmacies" value={stats?.totalPharmacies || 0} icon={Pill} color="bg-teal-500" href="/dashboard/hospitals?type=PHARMACY" />
+        <StatCard label="Total Labs" value={stats?.totalLabs || 0} icon={FlaskConical} color="bg-violet-500" href="/dashboard/hospitals?type=PATHOLOGY" />
+        <StatCard label="Total Patients" value={stats?.totalPatients || 0} icon={UserCheck} color="bg-purple-500" href="/dashboard/patients" />
         <StatCard label="Platform Users" value={stats?.totalUsers || 0} icon={Users} color="bg-emerald-500" href="/dashboard/super-admin/users" />
-        <StatCard label="Total Appointments" value={stats?.totalAppointments || 0} icon={Calendar} color="bg-amber-500" />
+        <StatCard label="Total Appointments" value={stats?.totalAppointments || 0} icon={Calendar} color="bg-amber-500" href="/dashboard/appointments" />
         <StatCard label="Pending Referrals" value={stats?.pendingReferralCount || 0} icon={Gift} color="bg-purple-500" href="/dashboard/super-admin/referrals" />
       </div>
 

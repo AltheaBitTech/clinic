@@ -61,8 +61,13 @@ export class TenantsController {
   @ApiOperation({ summary: 'List all tenants [SuperAdmin]' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.tenantsService.findAll(page, limit);
+  @ApiQuery({ name: 'type', required: false })
+  findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('type') type?: string,
+  ) {
+    return this.tenantsService.findAll(page, limit, type);
   }
 
   @Get('my')

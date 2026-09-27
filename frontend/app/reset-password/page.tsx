@@ -31,10 +31,10 @@ function Shell({ children }: { children: React.ReactNode }) {
 
       <div className="w-full max-w-md animate-slide-up relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2.5 mb-4">
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
             <Image src="/arogyix-icon.png" alt="Arogyix" width={42} height={42} className="drop-shadow-lg" />
             <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Arogyix</span>
-          </div>
+          </Link>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Reset your password</h1>
         </div>
 

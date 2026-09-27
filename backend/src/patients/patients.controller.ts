@@ -38,7 +38,12 @@ export class PatientsController {
   }
 
   @Get()
-  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST)
+  @Roles(
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.DOCTOR,
+    UserRole.RECEPTIONIST,
+    UserRole.SUPER_ADMIN,
+  )
   @ApiOperation({ summary: 'List all patients for this hospital' })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'page', required: false })
@@ -76,7 +81,12 @@ export class PatientsController {
   }
 
   @Get(':id')
-  @Roles(UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST)
+  @Roles(
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.DOCTOR,
+    UserRole.RECEPTIONIST,
+    UserRole.SUPER_ADMIN,
+  )
   @ApiOperation({ summary: 'Get patient by ID' })
   findOne(@CurrentUser() user: any, @Param('id') id: string) {
     return this.patientsService.findOne(id, user.tenantId);
