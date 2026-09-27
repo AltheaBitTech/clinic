@@ -14,7 +14,10 @@ import { RazorpayService } from '../subscriptions/razorpay.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getUploadDir } from '../common/utils/upload.util';
-import { registerPdfFonts } from '../common/utils/pdf-fonts';
+import {
+  AROGYIX_WORDMARK_PNG,
+  registerPdfFonts,
+} from '../common/utils/pdf-fonts';
 
 const INVOICE_INCLUDE = {
   patient: { include: { user: true } },
@@ -486,7 +489,7 @@ export class BillingService {
       stream.on('finish', resolve);
       stream.on('error', reject);
       doc.pipe(stream);
-      const rupee = registerPdfFonts(doc) ? '₹' : 'Rs. ';
+      registerPdfFonts(doc);
 
       const PW = doc.page.width;
       const PH = doc.page.height;
@@ -518,17 +521,7 @@ export class BillingService {
 
       // ─── Arogyix wordmark + INVOICE title ───
       let y = 28;
-      const wordmark = path.join(
-        process.cwd(),
-        'assets',
-        'arogyix-wordmark.png',
-      );
-      if (fs.existsSync(wordmark)) {
-        doc.image(wordmark, M, y, { height: 46 });
-      } else {
-        doc.font('Bold').fontSize(24).fillColor(C.primary);
-        line('Arogyix', M, y + 10, 200);
-      }
+      doc.image(AROGYIX_WORDMARK_PNG, M, y, { height: 46 });
       doc.font('Bold').fontSize(28).fillColor(C.dark);
       line('INVOICE', M, y, W, { align: 'right', characterSpacing: 3 });
       doc.font('Body').fontSize(10).fillColor(C.muted);
@@ -720,7 +713,7 @@ export class BillingService {
       ]
         .filter(Boolean)
         .join('  •  ');
-      const amount = formatMoney(invoice.amount, rupee);
+      const amount = formatMoney(invoice.amount);
       doc.font('Body').fontSize(9.5).fillColor(C.text);
       line('1', colX(0) + 10, y + 11, cols[0].w - 20, { align: 'center' });
       doc.font('Bold').fontSize(10);
@@ -756,17 +749,9 @@ export class BillingService {
       };
       totalRow('Subtotal', amount);
       if (Number(invoice.discount) > 0)
-        totalRow(
-          'Discount',
-          `- ${formatMoney(invoice.discount, rupee)}`,
-          '#dc2626',
-        );
+        totalRow('Discount', `- ${formatMoney(invoice.discount)}`, '#dc2626');
       if (Number(invoice.tax) > 0)
-        totalRow(
-          'Tax (GST)',
-          `+ ${formatMoney(invoice.tax, rupee)}`,
-          '#2563eb',
-        );
+        totalRow('Tax (GST)', `+ ${formatMoney(invoice.tax)}`, '#2563eb');
       ay += 2;
       doc.roundedRect(totX, ay, totW, 40, 8).fill(grad(totX, totW));
       doc.font('Bold').fontSize(10).fillColor('#d1fae5');
@@ -778,7 +763,7 @@ export class BillingService {
         { characterSpacing: 0.8 },
       );
       doc.fontSize(16).fillColor('#ffffff');
-      line(formatMoney(invoice.total, rupee), totX + 100, ay + 12, totW - 114, {
+      line(formatMoney(invoice.total), totX + 100, ay + 12, totW - 114, {
         align: 'right',
       });
       ay += 40;
@@ -815,7 +800,7 @@ export class BillingService {
               .filter(Boolean)
               .join(' ') || 'Paid in full'
           : invoice.status === 'PENDING'
-            ? 'Pay online from your patient portal or at the reception desk.'
+            ? 'Pay online via the patient portal or at the reception.'
             : `This invoice is ${cap(invoice.status).toLowerCase()}.`,
         M + 14,
         infoY + 25,
@@ -890,8 +875,8 @@ export class BillingService {
   }
 }
 
-function formatMoney(value: any, symbol = '₹'): string {
-  return `${symbol}${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatMoney(value: any): string {
+  return `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // Indian numbering: 123456.5 -> "Rupees One Lakh Twenty Three Thousand Four Hundred Fifty Six and Fifty Paise Only"

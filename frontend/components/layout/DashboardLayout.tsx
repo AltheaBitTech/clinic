@@ -90,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Live notifications (e.g. new chat messages between patient <-> doctor)
   useEffect(() => {
     if (!user) return;
-    const socket: Socket = io(`${SOCKET_URL}/chat`, { auth: { userId: user.id } });
+    const socket: Socket = io(`${SOCKET_URL}/chat`, { auth: { userId: user.id }, transports: ['websocket'] });
 
     socket.on('new_notification', (notification: { title: string; body: string }) => {
       toast(notification.title, { icon: '🔔' });

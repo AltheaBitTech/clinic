@@ -7,6 +7,7 @@ import { ClipboardList, Plus, FileText, Pill, ChevronRight, Stethoscope, Chevron
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+import toast from 'react-hot-toast';
 
 export default function PrescriptionsPage() {
   const [page, setPage] = useState(1);
@@ -21,6 +22,35 @@ export default function PrescriptionsPage() {
     enabled: !!user,
   });
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (rx: any) => {
+    try {
+      setDownloadingId(rx.id);
+      const res = await prescriptionsApi.downloadPdf(rx.id);
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `prescription-${rx.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      // Backend not redeployed with the /pdf endpoint yet: fall back to the old static link.
+      if (err?.response?.status === 404 && rx.pdfUrl) {
+        window.open(`${BASE_URL}${rx.pdfUrl}`, '_blank', 'noreferrer');
+        return;
+      }
+      // responseType is 'blob', so the JSON error body arrives as a Blob.
+      const body = await err?.response?.data?.text?.().catch(() => '');
+      let message = 'Failed to download prescription';
+      try { message = JSON.parse(body).message || message; } catch {}
+      toast.error(message);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const totalPages = data ? Math.ceil(data.total / data.limit) : 1;
 
@@ -98,12 +128,10 @@ export default function PrescriptionsPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {rx.pdfUrl && (
-                      <a href={`${BASE_URL}${rx.pdfUrl}`} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-1.5 text-sm text-cyan-600 hover:text-cyan-700 border border-cyan-200 rounded-lg px-3 py-1.5 transition-colors">
-                        <FileText className="w-4 h-4" /> PDF
-                      </a>
-                    )}
+                    <button type="button" onClick={() => handleDownload(rx)} disabled={downloadingId === rx.id}
+                      className="flex items-center gap-1.5 text-sm text-cyan-600 hover:text-cyan-700 border border-cyan-200 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50">
+                      <FileText className="w-4 h-4" /> {downloadingId === rx.id ? 'Downloading…' : 'PDF'}
+                    </button>
                   </div>
                 </div>
 

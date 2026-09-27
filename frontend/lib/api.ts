@@ -120,6 +120,7 @@ export const prescriptionsApi = {
   getAll: (params?: any) => api.get('/prescriptions', { params }),
   getOne: (id: string) => api.get(`/prescriptions/${id}`),
   getPharmacyStatus: (id: string) => api.get(`/prescriptions/${id}/pharmacy-status`),
+  downloadPdf: (id: string) => api.get(`/prescriptions/${id}/pdf`, { responseType: 'blob' }),
 };
 
 export const reportsApi = {

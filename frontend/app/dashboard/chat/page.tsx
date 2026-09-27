@@ -101,7 +101,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user?.id) return;
 
-    const socket = io(`${SOCKET_URL}/chat`, { auth: { userId: user.id } });
+    const socket = io(`${SOCKET_URL}/chat`, { auth: { userId: user.id }, transports: ['websocket'] });
     socketRef.current = socket;
 
     socket.on('connect', () => setConnected(true));

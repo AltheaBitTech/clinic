@@ -12,7 +12,10 @@ import { UserRole } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getUploadDir } from '../common/utils/upload.util';
-import { registerPdfFonts } from '../common/utils/pdf-fonts';
+import {
+  AROGYIX_WORDMARK_PNG,
+  registerPdfFonts,
+} from '../common/utils/pdf-fonts';
 
 interface RequestUser {
   id: string;
@@ -263,6 +266,21 @@ export class PrescriptionsService {
 
   // ─── PDF Generation ──────────────────────────────────────────────────────────
 
+  // Rebuilt on every download: the DB is shared but PDFs live on per-instance
+  // /tmp (Vercel) or ephemeral disk, so a stored file is usually missing.
+  async getPdfFile(
+    prescription: any,
+  ): Promise<{ filePath: string; fileName: string }> {
+    const pdfUrl = await this.generatePdf(prescription);
+    if (!pdfUrl) {
+      throw new NotFoundException('Could not generate prescription PDF');
+    }
+    return {
+      filePath: path.join(getUploadDir('prescriptions'), path.basename(pdfUrl)),
+      fileName: `prescription_${prescription.id}.pdf`,
+    };
+  }
+
   private async generatePdf(prescription: any): Promise<string> {
     try {
       const PDFDocument = require('pdfkit');
@@ -370,17 +388,7 @@ export class PrescriptionsService {
         // ─── Top accent strip + wordmark + title ───
         doc.rect(0, 0, PW, 8).fill(grad(0, PW, C.dark, C.accent));
         y = 28;
-        const wordmark = path.join(
-          process.cwd(),
-          'assets',
-          'arogyix-wordmark.png',
-        );
-        if (fs.existsSync(wordmark)) {
-          doc.image(wordmark, M, y, { height: 46 });
-        } else {
-          doc.font('Bold').fontSize(24).fillColor(C.primary);
-          line('Arogyix', M, y + 10, 200);
-        }
+        doc.image(AROGYIX_WORDMARK_PNG, M, y, { height: 46 });
         doc.font('Bold').fontSize(24).fillColor(C.dark);
         line('PRESCRIPTION', M, y - 2, W, {
           align: 'right',

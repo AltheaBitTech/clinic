@@ -19,7 +19,7 @@ import { CreatePrescriptionDto } from './dto/prescription.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
-import { Response } from 'express';
+import type { Response } from 'express';
 import * as path from 'path';
 
 @ApiTags('prescriptions')
@@ -81,6 +81,30 @@ export class PrescriptionsController {
       );
     }
     return prescription;
+  }
+
+  @Get(':id/pdf')
+  @ApiOperation({ summary: 'Download prescription PDF' })
+  async downloadPdf(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const prescription = await this.prescriptionsService.findOne(
+      id,
+      user.tenantId,
+    );
+    if (
+      user.role === UserRole.PATIENT &&
+      prescription.patient.userId !== user.id
+    ) {
+      throw new ForbiddenException(
+        'You are not authorized to view this prescription',
+      );
+    }
+    const { filePath, fileName } =
+      await this.prescriptionsService.getPdfFile(prescription);
+    res.download(filePath, fileName);
   }
 
   @Get(':id/pharmacy-status')
