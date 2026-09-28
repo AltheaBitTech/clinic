@@ -17,6 +17,7 @@ import * as path from 'path';
 import {
   AROGYIX_WORDMARK_PNG,
   registerPdfFonts,
+  loadTenantLogo,
 } from '../common/utils/pdf-fonts';
 
 const INVOICE_INCLUDE = {
@@ -610,6 +611,10 @@ export class BillingService {
       ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}`.trim()
       : '';
 
+    const tenantLogo = await loadTenantLogo(
+      this.storageService,
+      tenant?.logoUrl,
+    );
     const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
       const doc = new PDFDocument({
         size: 'A4',
@@ -669,7 +674,6 @@ export class BillingService {
       const lx = M + 14;
       const ly = y + (bandH - logoBox) / 2;
       doc.roundedRect(lx, ly, logoBox, logoBox, 10).fill('#ffffff');
-      const tenantLogo = this.resolveTenantLogoPath(tenant?.logoUrl);
       if (tenantLogo) {
         doc.image(tenantLogo, lx + 5, ly + 5, {
           fit: [logoBox - 10, logoBox - 10],
@@ -1004,14 +1008,6 @@ export class BillingService {
       { upsert: true },
     );
     return { url, buffer: pdfBuffer };
-  }
-
-  private resolveTenantLogoPath(logoUrl?: string | null): string | null {
-    if (!logoUrl || !logoUrl.startsWith('/uploads/')) return null;
-    const ext = path.extname(logoUrl).toLowerCase();
-    if (!['.png', '.jpg', '.jpeg'].includes(ext)) return null;
-    const filePath = path.join(process.cwd(), logoUrl.replace(/^\//, ''));
-    return fs.existsSync(filePath) ? filePath : null;
   }
 }
 

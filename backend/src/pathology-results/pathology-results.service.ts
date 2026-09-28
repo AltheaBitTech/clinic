@@ -19,6 +19,10 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { LabAuditService } from '../pathology-shared/lab-audit.service';
 import { StorageService } from '../storage/storage.service';
 import {
+  AROGYIX_WORDMARK_PNG,
+  registerPdfFonts,
+} from '../common/utils/pdf-fonts';
+import {
   AcknowledgeCriticalDto,
   AmendReportDto,
   EnterLabResultsDto,
@@ -64,14 +68,23 @@ export class PathologyResultsService {
   ): ResultFlag {
     const numeric = Number(rawValue);
     if (param && !Number.isNaN(numeric)) {
-      const critLow = param.criticalRangeLow != null ? Number(param.criticalRangeLow) : null;
-      const critHigh = param.criticalRangeHigh != null ? Number(param.criticalRangeHigh) : null;
-      if ((critLow != null && numeric < critLow) || (critHigh != null && numeric > critHigh)) {
+      const critLow =
+        param.criticalRangeLow != null ? Number(param.criticalRangeLow) : null;
+      const critHigh =
+        param.criticalRangeHigh != null
+          ? Number(param.criticalRangeHigh)
+          : null;
+      if (
+        (critLow != null && numeric < critLow) ||
+        (critHigh != null && numeric > critHigh)
+      ) {
         return ResultFlag.CRITICAL;
       }
       if (!explicitFlag) {
-        const low = param.refRangeLow != null ? Number(param.refRangeLow) : null;
-        const high = param.refRangeHigh != null ? Number(param.refRangeHigh) : null;
+        const low =
+          param.refRangeLow != null ? Number(param.refRangeLow) : null;
+        const high =
+          param.refRangeHigh != null ? Number(param.refRangeHigh) : null;
         if (low != null && numeric < low) return ResultFlag.LOW;
         if (high != null && numeric > high) return ResultFlag.HIGH;
       }
@@ -197,7 +210,8 @@ export class PathologyResultsService {
           { type: 'LAB_RESULT_CRITICAL', labOrderId: order.id, resultValueId },
         );
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'unknown error';
+        const message =
+          error instanceof Error ? error.message : 'unknown error';
         this.logger.error(
           `Critical result notification failed (orderId=${order.id}, error=${message})`,
         );
@@ -393,7 +407,12 @@ export class PathologyResultsService {
    * Request → (re-entry + re-verify) → Corrected Report. Re-uses the
    * existing submit/verify path rather than versioning a new report row.
    */
-  async amend(orderId: string, labId: string, userId: string, dto: AmendReportDto) {
+  async amend(
+    orderId: string,
+    labId: string,
+    userId: string,
+    dto: AmendReportDto,
+  ) {
     const order = await this.prisma.labOrder.findFirst({
       where: { id: orderId, labId },
       include: { report: true },
@@ -576,70 +595,409 @@ export class PathologyResultsService {
   private async generateReportPdf(order: any): Promise<string> {
     const PDFDocument = require('pdfkit');
     const fileName = `lab_report_${order.id}.pdf`;
+    const lab = order.lab;
+    const patient = order.patient;
+    const amended = !!order.report?.isAmended;
+
+    const C = {
+      dark: '#064e3b',
+      primary: '#15803d',
+      accent: '#84cc16',
+      text: '#0f172a',
+      muted: '#64748b',
+      line: '#e2e8f0',
+      soft: '#f0fdf4',
+      card: '#f8fafc',
+    };
+    // [text colour, chip background] per result flag.
+    const FLAG: Record<string, [string, string]> = {
+      LOW: ['#1d4ed8', '#dbeafe'],
+      HIGH: ['#c2410c', '#ffedd5'],
+      ABNORMAL: ['#b45309', '#fef3c7'],
+      CRITICAL: ['#b91c1c', '#fee2e2'],
+    };
+    const fmtDate = (d?: Date | string | null, withTime = false) =>
+      d
+        ? new Date(d).toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            ...(withTime
+              ? { hour: '2-digit', minute: '2-digit', hour12: true }
+              : {}),
+            timeZone: 'Asia/Kolkata',
+          })
+        : '';
+    const cap = (s?: string | null) =>
+      s ? s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, ' ') : '';
+    const age = patient.dateOfBirth
+      ? Math.floor(
+          (Date.now() - new Date(patient.dateOfBirth).getTime()) /
+            (365.25 * 24 * 3600 * 1000),
+        )
+      : null;
+    const reportDate = order.verifiedAt || new Date();
 
     const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      const doc = new PDFDocument({
+        size: 'A4',
+        margin: 0,
+        info: {
+          Title: `Lab Report ${order.orderNo}`,
+          Author: lab?.name || 'Arogyix',
+        },
+      });
       const chunks: Buffer[] = [];
       doc.on('data', (chunk: Buffer) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
+      registerPdfFonts(doc);
 
-      doc
-        .fontSize(16)
-        .font('Helvetica-Bold')
-        .text(order.lab.name, { align: 'center' });
-      doc
-        .fontSize(10)
-        .font('Helvetica')
-        .text(order.lab.address || '', { align: 'center' });
-      doc.moveDown(1);
-      doc
-        .fontSize(12)
-        .font('Helvetica-Bold')
-        .text(`Lab Report — ${order.orderNo}`);
-      doc.fontSize(10).font('Helvetica');
-      doc.text(`Patient: ${order.patient.name}`);
-      if (order.patient.gender) doc.text(`Gender: ${order.patient.gender}`);
-      if (order.sampleId) doc.text(`Sample ID: ${order.sampleId}`);
-      doc.text(`Report Date: ${new Date().toLocaleDateString()}`);
-      if (order.report?.isAmended) {
+      const PW = doc.page.width;
+      const PH = doc.page.height;
+      const M = 40;
+      const W = PW - M * 2;
+      const FOOTER_TOP = PH - 40;
+      const grad = (x: number, w: number, from = '#bbf7d0', to = '#ecfccb') =>
         doc
-          .fillColor('#b91c1c')
-          .font('Helvetica-Bold')
-          .text('AMENDED / CORRECTED REPORT');
-        if (order.report.amendmentReason) {
-          doc.font('Helvetica').text(`Reason: ${order.report.amendmentReason}`);
-        }
-        doc.fillColor('black');
+          .linearGradient(x, 0, x + w, 0)
+          .stop(0, from)
+          .stop(1, to);
+      // Single-line text that truncates instead of wrapping.
+      const line = (
+        text: string,
+        x: number,
+        y: number,
+        w: number,
+        opts: any = {},
+      ) =>
+        doc.text(text, x, y, {
+          width: w,
+          height: doc._fontSize * 1.4,
+          ellipsis: true,
+          lineBreak: false,
+          ...opts,
+        });
+      const drawFooter = () => {
+        doc.rect(0, PH - 30, PW, 30).fill(grad(0, PW));
+        doc.font('Body').fontSize(8).fillColor('#166534');
+        line(
+          `Powered by Arogyix   •   ${lab?.name || 'Lab'}   •   Order ${order.orderNo}`,
+          0,
+          PH - 19,
+          PW,
+          { align: 'center' },
+        );
+      };
+      let y = 0;
+      // Starts a new page when the next block would run into the footer.
+      const ensureSpace = (h: number) => {
+        if (y + h <= FOOTER_TOP - 10) return false;
+        drawFooter();
+        doc.addPage({ size: 'A4', margin: 0 });
+        doc.rect(0, 0, PW, 8).fill(grad(0, PW, C.dark, C.accent));
+        y = 30;
+        return true;
+      };
+
+      // ─── Top accent strip + wordmark + title ───
+      doc.rect(0, 0, PW, 8).fill(grad(0, PW, C.dark, C.accent));
+      y = 28;
+      doc.image(AROGYIX_WORDMARK_PNG, M, y, { height: 46 });
+      doc.font('Bold').fontSize(24).fillColor(C.dark);
+      line('LAB REPORT', M, y - 2, W, { align: 'right', characterSpacing: 2 });
+      doc.font('Body').fontSize(10).fillColor(C.muted);
+      line(
+        `# ${order.orderNo}   •   Reported: ${fmtDate(reportDate)}`,
+        M,
+        y + 32,
+        W,
+        { align: 'right' },
+      );
+
+      // ─── Lab band ───
+      y = 90;
+      const bandH = 82;
+      doc.roundedRect(M, y, W, bandH, 10).fill(grad(M, W));
+      const logoBox = 58;
+      const lx = M + 14;
+      const ly = y + (bandH - logoBox) / 2;
+      doc.roundedRect(lx, ly, logoBox, logoBox, 10).fill('#ffffff');
+      const initials = (lab?.name || 'L')
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((w: string) => w[0])
+        .join('')
+        .toUpperCase();
+      doc.font('Bold').fontSize(20).fillColor(C.primary);
+      line(initials, lx, ly + 17, logoBox, { align: 'center' });
+
+      const pillW = 112;
+      const tx = lx + logoBox + 14;
+      const tw = M + W - pillW - 30 - tx;
+      doc.font('Bold').fontSize(15).fillColor(C.dark);
+      line(lab?.name || 'Pathology Lab', tx, y + 12, tw);
+      doc.font('Body').fontSize(8.5).fillColor('#166534');
+      let ty = y + 34;
+      for (const t of [
+        [lab?.address, lab?.city, lab?.state, lab?.pincode]
+          .filter(Boolean)
+          .join(', '),
+        [lab?.phone && `Ph: ${lab.phone}`, lab?.email]
+          .filter(Boolean)
+          .join('   |   '),
+        [
+          lab?.licenseNumber && `Licence: ${lab.licenseNumber}`,
+          lab?.accreditationNo && `Accreditation: ${lab.accreditationNo}`,
+        ]
+          .filter(Boolean)
+          .join('   |   '),
+      ].filter(Boolean)) {
+        line(String(t), tx, ty, tw);
+        ty += 12;
       }
-      doc.moveDown(1);
+      const [sFg, sLabel] = amended
+        ? ['#b91c1c', 'AMENDED']
+        : ['#15803d', 'VERIFIED'];
+      const px = M + W - pillW - 16;
+      doc.font('Bold').fontSize(7.5).fillColor('#166534');
+      line('REPORT STATUS', px, y + 20, pillW, {
+        align: 'center',
+        characterSpacing: 1,
+      });
+      doc.roundedRect(px, y + 34, pillW, 26, 13).fill('#ffffff');
+      doc.font('Bold').fontSize(11).fillColor(sFg);
+      line(sLabel, px, y + 40, pillW, { align: 'center' });
+      y += bandH + 16;
+
+      // ─── Amendment notice ───
+      if (amended) {
+        doc.font('Body').fontSize(9);
+        const reason = order.report.amendmentReason || '';
+        const h =
+          30 +
+          (reason
+            ? Math.min(doc.heightOfString(reason, { width: W - 28 }), 40)
+            : 0);
+        doc.roundedRect(M, y, W, h, 8).fill('#fef2f2');
+        doc.rect(M, y, 4, h).fill('#dc2626');
+        doc.font('Bold').fontSize(9).fillColor('#b91c1c');
+        line(
+          'AMENDED / CORRECTED REPORT - this replaces any earlier version',
+          M + 14,
+          y + 9,
+          W - 28,
+        );
+        if (reason) {
+          doc.font('Body').fontSize(9).fillColor(C.text);
+          doc.text(`Reason: ${reason}`, M + 14, y + 24, {
+            width: W - 28,
+            height: 40,
+            ellipsis: true,
+          });
+        }
+        y += h + 14;
+      }
+
+      // ─── Info cards ───
+      const gap = 12;
+      const cardW = (W - gap * 2) / 3;
+      const cards: [string, string, [string, any][]][] = [
+        [
+          'PATIENT',
+          '#0d9488',
+          [
+            ['Name', patient.name],
+            [
+              'Age / Sex',
+              [age !== null ? `${age} yrs` : '', cap(patient.gender)]
+                .filter(Boolean)
+                .join(' / '),
+            ],
+            ['Phone', patient.phone],
+            ['Email', patient.email],
+          ],
+        ],
+        [
+          'SAMPLE',
+          '#2563eb',
+          [
+            ['Sample ID', order.sampleId],
+            ['Type', order.sampleType],
+            ['Collected', fmtDate(order.sampleCollectedAt, true)],
+            ['Received', fmtDate(order.receivedAtLabAt, true)],
+            ['Collection', cap(order.collectionType)],
+          ],
+        ],
+        [
+          'REPORT',
+          '#7c3aed',
+          [
+            ['Order No', order.orderNo],
+            [
+              'Referred by',
+              order.referringDoctorName &&
+                `Dr. ${order.referringDoctorName.replace(/^Dr\.?\s*/i, '')}`,
+            ],
+            ['Registered', fmtDate(order.createdAt, true)],
+            ['Verified', fmtDate(order.verifiedAt || new Date(), true)],
+          ],
+        ],
+      ];
+      const rowsOf = (rows: [string, any][]) =>
+        rows.filter(([, v]) => v !== null && v !== undefined && v !== '');
+      const valW = cardW - 74;
+      doc.font('Bold').fontSize(8.5);
+      const rowHeights = cards.map(([, , rows]) =>
+        rowsOf(rows).map(
+          ([, v]) =>
+            Math.min(doc.heightOfString(String(v), { width: valW }), 26) + 3,
+        ),
+      );
+      const cardH =
+        36 + Math.max(...rowHeights.map((h) => h.reduce((s, x) => s + x, 0)));
+      cards.forEach(([title, color, rows], i) => {
+        const cx = M + i * (cardW + gap);
+        doc.roundedRect(cx, y, cardW, cardH, 8).fill(C.card);
+        doc
+          .roundedRect(cx, y, cardW, cardH, 8)
+          .lineWidth(0.6)
+          .strokeColor(C.line)
+          .stroke();
+        doc.rect(cx + 12, y, cardW - 24, 3).fill(color);
+        doc.font('Bold').fontSize(8.5).fillColor(color);
+        line(title, cx + 12, y + 12, cardW - 24, { characterSpacing: 1 });
+        let ry = y + 30;
+        rowsOf(rows).forEach(([label, value], r) => {
+          doc.font('Body').fontSize(7.5).fillColor(C.muted);
+          line(label, cx + 12, ry + 0.8, 52);
+          doc.font('Bold').fontSize(8.5).fillColor(C.text);
+          doc.text(String(value), cx + 62, ry, {
+            width: valW,
+            height: 26,
+            ellipsis: true,
+          });
+          ry += rowHeights[i][r];
+        });
+      });
+      y += cardH + 20;
+
+      // ─── Results, one table per test ───
+      const cols = [
+        { label: 'PARAMETER', w: W - 95 - 70 - 150 - 75, align: 'left' },
+        { label: 'RESULT', w: 95, align: 'left' },
+        { label: 'UNIT', w: 70, align: 'left' },
+        { label: 'REFERENCE RANGE', w: 150, align: 'left' },
+        { label: 'FLAG', w: 75, align: 'center' },
+      ];
+      const colX = (i: number) =>
+        M + cols.slice(0, i).reduce((s, c) => s + c.w, 0);
+      const tableHeader = (testName: string) => {
+        doc.font('Bold').fontSize(11).fillColor(C.dark);
+        line(testName, M, y, W);
+        y += 18;
+        doc.roundedRect(M, y, W, 24, 6).fill(grad(M, W));
+        doc.font('Bold').fontSize(8).fillColor(C.dark);
+        cols.forEach((c, i) =>
+          line(c.label, colX(i) + 8, y + 7.5, c.w - 16, {
+            align: c.align,
+            characterSpacing: 0.6,
+          }),
+        );
+        y += 24;
+      };
 
       for (const item of order.items) {
-        doc.fontSize(11).font('Helvetica-Bold').text(item.testNameSnapshot);
-        doc.moveDown(0.3);
-        doc.fontSize(9).font('Helvetica-Bold');
-        doc.text(
-          'Parameter                Result          Unit        Reference Range',
-        );
-        doc.font('Helvetica');
-        for (const r of item.resultValues) {
-          doc.text(
-            `${r.parameterNameSnapshot.padEnd(24)}  ${r.value.padEnd(14)}  ${(r.unit || '').padEnd(10)}  ${r.refRangeText || ''}${r.flag && r.flag !== 'NORMAL' ? `  [${r.flag}]` : ''}`,
-          );
+        ensureSpace(18 + 24 + 30);
+        tableHeader(item.testNameSnapshot);
+        item.resultValues.forEach((r: any, i: number) => {
+          const flagged = r.flag && r.flag !== 'NORMAL';
+          doc.font('Body').fontSize(8);
+          const noteH = r.comment
+            ? Math.min(
+                doc.heightOfString(`Note: ${r.comment}`, {
+                  width: cols[0].w - 16,
+                }),
+                30,
+              ) + 2
+            : 0;
+          const rowH = Math.max(28, 20 + noteH);
+          if (ensureSpace(rowH))
+            tableHeader(`${item.testNameSnapshot} (contd.)`);
+          doc.rect(M, y, W, rowH).fill(i % 2 ? '#ffffff' : C.soft);
+          doc.font('Body').fontSize(9.5).fillColor(C.text);
+          line(r.parameterNameSnapshot, colX(0) + 8, y + 8, cols[0].w - 16);
           if (r.comment) {
-            doc.fontSize(8).fillColor('#555').text(`   Note: ${r.comment}`);
-            doc.fontSize(9).fillColor('black');
+            doc.font('Italic').fontSize(8).fillColor(C.muted);
+            doc.text(`Note: ${r.comment}`, colX(0) + 8, y + 21, {
+              width: cols[0].w - 16,
+              height: 30,
+              ellipsis: true,
+            });
           }
-        }
-        doc.moveDown(0.8);
+          const [fFg, fBg] = FLAG[r.flag] ?? [C.text, C.soft];
+          doc
+            .font(flagged ? 'Bold' : 'Body')
+            .fontSize(9.5)
+            .fillColor(flagged ? fFg : C.text);
+          line(String(r.value ?? '-'), colX(1) + 8, y + 8, cols[1].w - 16);
+          doc.font('Body').fontSize(9).fillColor(C.muted);
+          line(r.unit || '-', colX(2) + 8, y + 8.5, cols[2].w - 16);
+          line(r.refRangeText || '-', colX(3) + 8, y + 8.5, cols[3].w - 16);
+          if (flagged) {
+            const chipW = cols[4].w - 16;
+            doc.roundedRect(colX(4) + 8, y + 6, chipW, 16, 8).fill(fBg);
+            doc.font('Bold').fontSize(7.5).fillColor(fFg);
+            line(r.flag, colX(4) + 8, y + 9.5, chipW, { align: 'center' });
+          } else {
+            doc.font('Body').fontSize(8.5).fillColor(C.primary);
+            line('Normal', colX(4) + 8, y + 8.5, cols[4].w - 16, {
+              align: 'center',
+            });
+          }
+          y += rowH;
+        });
+        doc
+          .moveTo(M, y)
+          .lineTo(M + W, y)
+          .lineWidth(1)
+          .strokeColor(C.primary)
+          .stroke();
+        y += 18;
       }
 
-      doc.moveDown(1);
+      // ─── Sign-off ───
+      ensureSpace(70);
+      const sy = Math.max(y, FOOTER_TOP - 76);
+      doc.font('Bold').fontSize(8.5).fillColor(C.muted);
+      line('*** End of Report ***', M, sy - 4, W, { align: 'center' });
+      doc.font('Italic').fontSize(8.5).fillColor(C.muted);
+      doc.text(
+        'Results relate only to the sample tested. Highlighted values are outside the reference range - please consult your doctor for interpretation.',
+        M,
+        sy + 18,
+        { width: W - 220 },
+      );
+      const sigW = 180;
+      const sx = M + W - sigW;
       doc
-        .fontSize(8)
-        .fillColor('#666')
-        .text('Generated by Arogyix', { align: 'center' });
+        .moveTo(sx, sy + 22)
+        .lineTo(sx + sigW, sy + 22)
+        .lineWidth(0.8)
+        .strokeColor(C.muted)
+        .stroke();
+      doc.font('Bold').fontSize(10.5).fillColor(C.text);
+      line('Verified by Pathologist', sx, sy + 27, sigW, { align: 'center' });
+      doc.font('Body').fontSize(8).fillColor(C.muted);
+      line(
+        `Electronically verified • ${fmtDate(order.verifiedAt || new Date(), true)}`,
+        sx,
+        sy + 43,
+        sigW,
+        { align: 'center' },
+      );
 
+      drawFooter();
       doc.end();
     });
 

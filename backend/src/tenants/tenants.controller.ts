@@ -10,6 +10,8 @@ import {
   UseGuards,
   UploadedFile,
   UseInterceptors,
+  BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -19,8 +21,7 @@ import {
   ApiQuery,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { TenantsService } from './tenants.service';
 import {
   CreateTenantDto,
@@ -31,23 +32,22 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { UserRole } from '@prisma/client';
-import { getUploadDir } from '../common/utils/upload.util';
+import { StorageService } from '../storage/storage.service';
 
-const logoStorage = diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, getUploadDir('logos'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-  },
-});
+// PNG/JPEG only: the formats PDFKit can embed in invoices and prescriptions.
+const LOGO_TYPES: Record<string, string> = {
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+};
 
 @ApiTags('tenants')
 @ApiBearerAuth()
 @Controller('tenants')
 export class TenantsController {
-  constructor(private readonly tenantsService: TenantsService) {}
+  constructor(
+    private readonly tenantsService: TenantsService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN)
@@ -120,16 +120,35 @@ export class TenantsController {
 
   @Post(':id/logo')
   @Roles(UserRole.SUPER_ADMIN, UserRole.HOSPITAL_ADMIN)
-  @UseInterceptors(FileInterceptor('file', { storage: logoStorage }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 2 * 1024 * 1024 },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Upload hospital/clinic logo [SuperAdmin, HospitalAdmin]',
   })
   async uploadLogo(
+    @CurrentUser() user: any,
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const url = `/uploads/logos/${file.filename}`;
+    if (user.role !== UserRole.SUPER_ADMIN && user.tenantId !== id) {
+      throw new ForbiddenException('You can only change your own logo');
+    }
+    const ext = file && LOGO_TYPES[file.mimetype];
+    if (!ext) {
+      throw new BadRequestException('Upload a PNG or JPG logo (max 2MB)');
+    }
+    // Stored in the storage bucket, not local disk: serverless disk is
+    // per-instance and wiped, so disk-saved logos vanished on Vercel.
+    const url = await this.storageService.uploadBuffer(
+      `logos/${id}/${Date.now()}${ext}`,
+      file.buffer,
+      file.mimetype,
+    );
     await this.tenantsService.update(id, { logoUrl: url });
     return { url };
   }

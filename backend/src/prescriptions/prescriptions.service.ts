@@ -16,6 +16,7 @@ import { getUploadDir } from '../common/utils/upload.util';
 import {
   AROGYIX_WORDMARK_PNG,
   registerPdfFonts,
+  loadTenantLogo,
 } from '../common/utils/pdf-fonts';
 
 interface RequestUser {
@@ -408,6 +409,10 @@ export class PrescriptionsService {
           .map((l) => l.trim())
           .filter(Boolean);
 
+      const tenantLogo = await loadTenantLogo(
+        this.storageService,
+        tenant?.logoUrl,
+      );
       const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
         const doc = new PDFDocument({
           size: 'A4',
@@ -504,7 +509,6 @@ export class PrescriptionsService {
         const lx = M + 14;
         const ly = y + (bandH - logoBox) / 2;
         doc.roundedRect(lx, ly, logoBox, logoBox, 10).fill('#ffffff');
-        const tenantLogo = this.resolveTenantLogoPath(tenant?.logoUrl);
         if (tenantLogo) {
           doc.image(tenantLogo, lx + 5, ly + 5, {
             fit: [logoBox - 10, logoBox - 10],
@@ -808,17 +812,6 @@ export class PrescriptionsService {
       .replace(/_/g, ' ')
       .toLowerCase()
       .replace(/\b\w/g, (c) => c.toUpperCase());
-  }
-
-  private resolveTenantLogoPath(logoUrl?: string | null): string | null {
-    if (!logoUrl || !logoUrl.startsWith('/uploads/')) return null;
-    const ext = path.extname(logoUrl).toLowerCase();
-    if (!['.png', '.jpg', '.jpeg'].includes(ext)) return null;
-    const rel = logoUrl.replace(/^\/uploads\//, '');
-    const primary = path.join(getUploadDir('logos'), path.basename(rel));
-    if (fs.existsSync(primary)) return primary;
-    const filePath = path.join(process.cwd(), logoUrl.replace(/^\//, ''));
-    return fs.existsSync(filePath) ? filePath : null;
   }
 
   // ─── Create Medicine Reminders ────────────────────────────────────────────────

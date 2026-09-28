@@ -497,7 +497,7 @@ export default function SettingsPage() {
                     )}
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg"
                       className="hidden"
                       disabled={isUploadingLogo}
                       onChange={async (e) => {
@@ -544,7 +544,7 @@ export default function SettingsPage() {
                 </div>
 
                 <p className="text-xs text-slate-400">
-                  Supports JPG, PNG, GIF up to 2MB. Shown on prescriptions and portal branding. Without a logo, your clinic&apos;s initials are shown instead.
+                  Supports PNG or JPG up to 2MB. Shown on prescriptions and portal branding. Without a logo, your clinic&apos;s initials are shown instead.
                 </p>
               </div>
             </div>

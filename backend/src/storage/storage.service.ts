@@ -76,9 +76,27 @@ export class StorageService {
     return decodeURIComponent(url.slice(index + marker.length));
   }
 
+  /**
+   * Downloads an object previously returned by `uploadBuffer`. Only URLs that
+   * point into the configured bucket are fetched (via the storage client, not
+   * an arbitrary HTTP request), so a user-supplied URL can't make the server
+   * call out elsewhere. Returns null when missing or not ours.
+   */
+  async downloadByPublicUrl(url: string): Promise<Buffer | null> {
+    const objectPath = this.pathFromPublicUrl(url);
+    if (!this.client || !objectPath) return null;
+    const { data, error } = await this.client.storage
+      .from(this.bucket)
+      .download(objectPath);
+    if (error || !data) return null;
+    return Buffer.from(await data.arrayBuffer());
+  }
+
   async deleteFile(path: string): Promise<void> {
     if (!this.client) return;
-    const { error } = await this.client.storage.from(this.bucket).remove([path]);
+    const { error } = await this.client.storage
+      .from(this.bucket)
+      .remove([path]);
     if (error) {
       this.logger.error(`Supabase delete failed for ${path}: ${error.message}`);
     }
