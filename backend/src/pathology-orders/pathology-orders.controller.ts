@@ -59,6 +59,21 @@ export class PathologyOrdersController {
     return this.ordersService.findCollectors(lab.id);
   }
 
+  @Get('patients')
+  @Roles(UserRole.PATHOLOGY)
+  @ApiOperation({
+    summary:
+      "Search this lab's patients by ID, name, phone, email or order number",
+  })
+  @ApiQuery({ name: 'search', required: false })
+  async searchPatients(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+  ) {
+    const lab = await this.pathologyLabsService.getMine(user.id);
+    return this.ordersService.searchPatients(lab.id, search);
+  }
+
   @Post('collectors')
   @Roles(UserRole.PATHOLOGY)
   @ApiOperation({ summary: 'Add a sample collector to the roster' })

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -10,7 +10,7 @@ import {
   CalendarClock, FlaskConical, ShieldCheck, PackageCheck, Ban, FileDown,
   Plus, Trash2, ClipboardCheck, PackageOpen, XCircle, RotateCcw,
   ClipboardList, AlertTriangle, BellRing, CheckCheck, FileEdit, Barcode,
-  MessageCircle,
+  MessageCircle, Eye, ExternalLink,
 } from 'lucide-react';
 import { formatDate, formatDateTime, resolveFileUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -80,6 +80,14 @@ export default function PathologyOrderDetailPage() {
   const [amendReason, setAmendReason] = useState('');
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [emailInput, setEmailInput] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewReviewed, setPreviewReviewed] = useState(false);
+
+  // Blob URLs hold the PDF in memory until revoked.
+  useEffect(() => {
+    if (!previewUrl) return;
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['pathology-order', id],
@@ -166,10 +174,30 @@ export default function PathologyOrderDetailPage() {
     onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to submit'),
   });
 
+  const previewMutation = useMutation({
+    mutationFn: () => pathologyResultsApi.previewReport(id),
+    onSuccess: (res) => {
+      setPreviewReviewed(false);
+      setPreviewUrl(URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' })));
+    },
+    onError: async (err: any) => {
+      // responseType 'blob' means error bodies arrive as a Blob too.
+      let message = 'Failed to load report preview';
+      const data = err.response?.data;
+      if (data instanceof Blob) {
+        try {
+          message = JSON.parse(await data.text()).message || message;
+        } catch {}
+      }
+      toast.error(message);
+    },
+  });
+
   const verifyMutation = useMutation({
     mutationFn: () => pathologyResultsApi.verify(id),
     onSuccess: () => {
       toast.success('Report verified');
+      setPreviewUrl(null);
       invalidate();
     },
     onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to verify'),
@@ -242,6 +270,7 @@ export default function PathologyOrderDetailPage() {
   const canEnterResults = status === 'ACCEPTED' || status === 'IN_PROGRESS';
   const canSubmitForVerification = status === 'RESULT_READY';
   const canVerify = status === 'PENDING_VERIFICATION';
+  const canPreview = status === 'RESULT_READY' || status === 'PENDING_VERIFICATION';
   const canDeliver = status === 'VERIFIED';
   const canAmend = (status === 'VERIFIED' || status === 'REPORT_DELIVERED') && !showAmendForm;
   const canCancel = status !== 'REPORT_DELIVERED' && status !== 'CANCELLED';
@@ -255,6 +284,7 @@ export default function PathologyOrderDetailPage() {
     cancelMutation.isPending ||
     submitForVerificationMutation.isPending ||
     verifyMutation.isPending ||
+    previewMutation.isPending ||
     deliverMutation.isPending ||
     amendMutation.isPending ||
     paymentStatusMutation.isPending;
@@ -495,6 +525,68 @@ export default function PathologyOrderDetailPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!previewUrl} onOpenChange={(open) => !open && setPreviewUrl(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogTitle>
+            <Eye className="w-4 h-4 text-cyan-600" />
+            {order.report?.isAmended ? 'Preview Amended Report' : 'Preview Report'} — {order.orderNo}
+          </DialogTitle>
+          <div className="space-y-3">
+            {order.report?.isAmended && (
+              <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 text-sm text-amber-700">
+                <span className="font-semibold">Amendment reason:</span> {order.report.amendmentReason}
+              </div>
+            )}
+            <p className="text-xs text-slate-500">
+              This is an unsaved preview of the report as it will be issued. Check the updated values before verifying.
+            </p>
+            {previewUrl && (
+              <iframe
+                src={previewUrl}
+                title="Report preview"
+                className="w-full h-[65vh] rounded-xl border border-slate-200 bg-slate-50"
+              />
+            )}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <a
+                href={previewUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-sm font-medium text-cyan-700 hover:underline"
+              >
+                <ExternalLink className="w-4 h-4" /> Open in new tab
+              </a>
+              {canVerify ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={previewReviewed}
+                      onChange={(e) => setPreviewReviewed(e.target.checked)}
+                      className="rounded border-slate-300"
+                    />
+                    I have reviewed the {order.report?.isAmended ? 'amended ' : ''}results
+                  </label>
+                  <button onClick={() => setPreviewUrl(null)} className="btn-secondary text-sm">
+                    Back to Edit
+                  </button>
+                  <button
+                    onClick={() => verifyMutation.mutate()}
+                    disabled={!previewReviewed || verifyMutation.isPending}
+                    className="btn-primary flex items-center gap-2 text-sm disabled:opacity-60"
+                  >
+                    {verifyMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    {verifyMutation.isPending ? 'Verifying...' : 'Confirm & Verify'}
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">Submit for verification to sign off this report.</p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Items */}
       <div className="card mb-6">
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Tests</h3>
@@ -563,14 +655,26 @@ export default function PathologyOrderDetailPage() {
             {submitForVerificationMutation.isPending ? 'Submitting...' : 'Submit for Verification'}
           </button>
         )}
-        {canVerify && (
+        {canPreview && (
           <button
-            onClick={() => verifyMutation.mutate()}
+            onClick={() => previewMutation.mutate()}
+            disabled={isMutating}
+            className="btn-secondary flex items-center gap-2 text-sm"
+          >
+            {previewMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+            {order.report?.isAmended ? 'Preview Amended Report' : 'Preview Report'}
+          </button>
+        )}
+        {canVerify && (
+          // Verification always goes through the preview so the signed-off
+          // data has been seen in its final report form.
+          <button
+            onClick={() => previewMutation.mutate()}
             disabled={isMutating}
             className="btn-primary flex items-center gap-2 text-sm"
           >
             <ShieldCheck className="w-4 h-4" />
-            {verifyMutation.isPending ? 'Verifying...' : 'Verify Report'}
+            Review &amp; Verify
           </button>
         )}
         {canDeliver && (
@@ -842,6 +946,8 @@ type ResultRow = {
 function OrderItem({ item, canEnterResults, onSaved }: { item: any; canEnterResults: boolean; onSaved: () => void }) {
   const [editing, setEditing] = useState(false);
   const [rows, setRows] = useState<ResultRow[]>([]);
+  const [showErrors, setShowErrors] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (item.resultValues?.length) {
@@ -907,11 +1013,18 @@ function OrderItem({ item, canEnterResults, onSaved }: { item: any; canEnterResu
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
 
   const handleSave = () => {
-    const invalid = rows.find((r) => !r.parameterNameSnapshot.trim() || !r.value.trim());
-    if (invalid) {
+    const invalidIndex = rows.findIndex((r) => !r.parameterNameSnapshot.trim() || !r.value.trim());
+    if (invalidIndex !== -1) {
+      setShowErrors(true);
       toast.error('Every result row needs a parameter name and value');
+      // Move the cursor to the first missing required field.
+      const field = rows[invalidIndex].parameterNameSnapshot.trim() ? 'value' : 'parameterNameSnapshot';
+      const input = editorRef.current?.querySelector<HTMLInputElement>(`[data-row="${invalidIndex}"][data-field="${field}"]`);
+      input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input?.focus({ preventScroll: true });
       return;
     }
+    setShowErrors(false);
     enterMutation.mutate(
       rows.map((r) => ({
         parameterId: r.parameterId || undefined,
@@ -927,9 +1040,9 @@ function OrderItem({ item, canEnterResults, onSaved }: { item: any; canEnterResu
 
   return (
     <div className="border border-slate-100 rounded-xl p-3">
-      <div className="flex items-center justify-between gap-3 mb-2">
-        <div>
-          <p className="text-sm font-semibold text-slate-800">{item.testNameSnapshot}</p>
+      <div className="flex flex-wrap items-start sm:items-center justify-between gap-2 sm:gap-3 mb-2">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-800 break-words">{item.testNameSnapshot}</p>
           <p className="text-xs text-slate-400">₹{Number(item.price).toFixed(2)} · {item.test?.sampleType}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -1005,65 +1118,103 @@ function OrderItem({ item, canEnterResults, onSaved }: { item: any; canEnterResu
       )}
 
       {editing && (
-        <div className="space-y-2 mt-2">
+        <div ref={editorRef} className="space-y-3 sm:space-y-2 mt-2">
+          {rows.length > 0 && (
+            <div className="hidden sm:grid grid-cols-12 gap-2 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <span className="col-span-3">Parameter</span>
+              <span className="col-span-2">Value</span>
+              <span className="col-span-2">Unit</span>
+              <span className="col-span-2">Ref Range</span>
+              <span className="col-span-2">Flag</span>
+            </div>
+          )}
           {rows.map((r, i) => (
-            <div key={i} className="space-y-1.5 p-2 rounded-lg bg-slate-50/60">
-              <div className="grid grid-cols-12 gap-2 items-center">
-                <input
-                  type="text"
-                  placeholder="Parameter *"
-                  value={r.parameterNameSnapshot}
-                  onChange={(e) => setRow(i, 'parameterNameSnapshot', e.target.value)}
-                  className="input text-xs col-span-3"
-                />
-                <input
-                  type="text"
-                  placeholder="Value *"
-                  value={r.value}
-                  onChange={(e) => setRow(i, 'value', e.target.value)}
-                  className="input text-xs col-span-2"
-                />
-                <input
-                  type="text"
-                  placeholder="Unit"
-                  value={r.unit}
-                  onChange={(e) => setRow(i, 'unit', e.target.value)}
-                  className="input text-xs col-span-2"
-                />
-                <input
-                  type="text"
-                  placeholder="Ref range"
-                  value={r.refRangeText}
-                  onChange={(e) => setRow(i, 'refRangeText', e.target.value)}
-                  className="input text-xs col-span-2"
-                />
-                <select
-                  value={r.flag}
-                  onChange={(e) => setRow(i, 'flag', e.target.value)}
-                  className="input text-xs col-span-2"
-                >
-                  <option value="NORMAL">Normal</option>
-                  <option value="LOW">Low</option>
-                  <option value="HIGH">High</option>
-                  <option value="ABNORMAL">Abnormal</option>
-                  <option value="CRITICAL">Critical</option>
-                </select>
+            <div key={i} className="space-y-2 sm:space-y-1.5 p-3 sm:p-2 rounded-lg bg-slate-50/60 border border-slate-100 sm:border-0">
+              <div className="flex items-center justify-between sm:hidden">
+                <span className="text-xs font-semibold text-slate-600">Parameter {i + 1}</span>
                 <button
                   type="button"
                   onClick={() => removeRow(i)}
                   aria-label="Remove row"
-                  className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer col-span-1 flex justify-center"
+                  className="text-red-500 hover:bg-red-50 p-2 rounded-lg border-none bg-transparent transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-12 gap-x-3 gap-y-2.5 sm:gap-2 sm:items-center">
+                <ResultField label="Parameter *" className="col-span-2 sm:col-span-3">
+                  <input
+                    type="text"
+                    placeholder="Parameter *"
+                    value={r.parameterNameSnapshot}
+                    onChange={(e) => setRow(i, 'parameterNameSnapshot', e.target.value)}
+                    data-row={i}
+                    data-field="parameterNameSnapshot"
+                    aria-invalid={showErrors && !r.parameterNameSnapshot.trim()}
+                    className={`input text-sm sm:text-xs ${showErrors && !r.parameterNameSnapshot.trim() ? 'border-red-400 focus:border-red-500' : ''}`}
+                  />
+                </ResultField>
+                <ResultField label="Value *" className="col-span-1 sm:col-span-2">
+                  <input
+                    type="text"
+                    placeholder="Value *"
+                    value={r.value}
+                    onChange={(e) => setRow(i, 'value', e.target.value)}
+                    data-row={i}
+                    data-field="value"
+                    aria-invalid={showErrors && !r.value.trim()}
+                    className={`input text-sm sm:text-xs ${showErrors && !r.value.trim() ? 'border-red-400 focus:border-red-500' : ''}`}
+                  />
+                </ResultField>
+                <ResultField label="Unit" className="col-span-1 sm:col-span-2">
+                  <input
+                    type="text"
+                    placeholder="Unit"
+                    value={r.unit}
+                    onChange={(e) => setRow(i, 'unit', e.target.value)}
+                    className="input text-sm sm:text-xs"
+                  />
+                </ResultField>
+                <ResultField label="Ref Range" className="col-span-1 sm:col-span-2">
+                  <input
+                    type="text"
+                    placeholder="Ref range"
+                    value={r.refRangeText}
+                    onChange={(e) => setRow(i, 'refRangeText', e.target.value)}
+                    className="input text-sm sm:text-xs"
+                  />
+                </ResultField>
+                <ResultField label="Flag" className="col-span-1 sm:col-span-2">
+                  <select
+                    value={r.flag}
+                    onChange={(e) => setRow(i, 'flag', e.target.value)}
+                    className="input text-sm sm:text-xs"
+                  >
+                    <option value="NORMAL">Normal</option>
+                    <option value="LOW">Low</option>
+                    <option value="HIGH">High</option>
+                    <option value="ABNORMAL">Abnormal</option>
+                    <option value="CRITICAL">Critical</option>
+                  </select>
+                </ResultField>
+                <button
+                  type="button"
+                  onClick={() => removeRow(i)}
+                  aria-label="Remove row"
+                  className="hidden sm:flex text-red-500 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer col-span-1 justify-center"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <input
-                type="text"
-                placeholder="Comment / microscopy finding (optional)"
-                value={r.comment}
-                onChange={(e) => setRow(i, 'comment', e.target.value)}
-                className="input text-xs w-full"
-              />
+              <ResultField label="Comment">
+                <input
+                  type="text"
+                  placeholder="Comment / microscopy finding (optional)"
+                  value={r.comment}
+                  onChange={(e) => setRow(i, 'comment', e.target.value)}
+                  className="input text-sm sm:text-xs"
+                />
+              </ResultField>
             </div>
           ))}
           <p className="text-[11px] text-slate-400">
@@ -1072,26 +1223,35 @@ function OrderItem({ item, canEnterResults, onSaved }: { item: any; canEnterResu
           <button
             type="button"
             onClick={addRow}
-            className="flex items-center gap-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700 py-2.5 sm:py-0 rounded-lg border border-dashed border-cyan-200 sm:border-0"
           >
             <Plus className="w-3.5 h-3.5" /> Add Row
           </button>
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-2">
             <button
               onClick={handleSave}
               disabled={enterMutation.isPending}
-              className="btn-primary flex items-center gap-2 text-xs px-4 py-2"
+              className="btn-primary flex items-center justify-center gap-2 text-xs px-4 py-2.5 sm:py-2"
             >
               <ClipboardCheck className="w-3.5 h-3.5" />
               {enterMutation.isPending ? 'Saving...' : 'Save Results'}
             </button>
-            <button type="button" onClick={() => setEditing(false)} className="btn-secondary text-xs px-4 py-2">
+            <button type="button" onClick={() => { setEditing(false); setShowErrors(false); }} className="btn-secondary text-xs px-4 py-2.5 sm:py-2">
               Cancel
             </button>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function ResultField({ label, className = '', children }: { label: string; className?: string; children: React.ReactNode }) {
+  return (
+    <label className={`block min-w-0 ${className}`}>
+      <span className="block sm:hidden text-[11px] font-medium text-slate-500 mb-1">{label}</span>
+      {children}
+    </label>
   );
 }
 

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { stripNonNumericRanges } from '../pathology-shared/parameter-ranges';
 import {
   CreateMasterTestDto,
   UpdateMasterTestDto,
@@ -14,7 +15,9 @@ export class PathologyMasterTestsService {
     return this.prisma.pathologyMasterTest.create({
       data: {
         ...rest,
-        parameters: parameters?.length ? { create: parameters } : undefined,
+        parameters: parameters?.length
+          ? { create: parameters.map(stripNonNumericRanges) }
+          : undefined,
       },
       include: { parameters: { orderBy: { displayOrder: 'asc' } } },
     });
@@ -70,7 +73,9 @@ export class PathologyMasterTestsService {
         where: { id },
         data: {
           ...rest,
-          parameters: parameters?.length ? { create: parameters } : undefined,
+          parameters: parameters?.length
+            ? { create: parameters.map(stripNonNumericRanges) }
+            : undefined,
         },
         include: { parameters: { orderBy: { displayOrder: 'asc' } } },
       });

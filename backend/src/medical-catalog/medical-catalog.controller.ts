@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -14,7 +15,10 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { MedicalCatalogService } from './medical-catalog.service';
-import { CreateMedicalCatalogItemDto } from './dto/medical-catalog.dto';
+import {
+  CreateMedicalCatalogItemDto,
+  UpdateMedicalCatalogItemDto,
+} from './dto/medical-catalog.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
@@ -52,10 +56,27 @@ export class MedicalCatalogController {
     return this.svc.findAll(user.tenantId, type, search, page, limit);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a single catalog item' })
+  findOne(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.svc.findOne(user.tenantId, id);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
+  @ApiOperation({ summary: 'Update a catalog item' })
+  update(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateMedicalCatalogItemDto,
+  ) {
+    return this.svc.update(user.tenantId, id, dto);
+  }
+
   @Delete(':id')
   @Roles(UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @ApiOperation({ summary: 'Remove a catalog item' })
-  delete(@Param('id') id: string) {
-    return this.svc.delete(id);
+  delete(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.svc.delete(user.tenantId, id);
   }
 }

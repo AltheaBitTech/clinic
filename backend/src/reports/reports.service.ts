@@ -91,11 +91,39 @@ export class ReportsService {
     type?: ReportType,
     page = 1,
     limit = 20,
+    search?: string,
   ) {
+    page = Number(page) || 1;
     const skip = (page - 1) * limit;
     const where: any = { tenantId };
     if (patientId) where.patientId = patientId;
     if (type) where.type = type;
+
+    const trimmed = search?.trim();
+    if (trimmed) {
+      const words = trimmed.split(/\s+/).filter(Boolean);
+      where.patient = {
+        OR: [
+          { patientCode: { contains: trimmed, mode: 'insensitive' } },
+          { user: { firstName: { contains: trimmed, mode: 'insensitive' } } },
+          { user: { lastName: { contains: trimmed, mode: 'insensitive' } } },
+          // Full-name search (e.g. "John Doe"): every word must match either
+          // the first or last name, regardless of order.
+          ...(words.length > 1
+            ? [
+                {
+                  AND: words.map((word) => ({
+                    OR: [
+                      { user: { firstName: { contains: word, mode: 'insensitive' } } },
+                      { user: { lastName: { contains: word, mode: 'insensitive' } } },
+                    ],
+                  })),
+                },
+              ]
+            : []),
+        ],
+      };
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.report.findMany({
@@ -103,6 +131,15 @@ export class ReportsService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          patient: {
+            select: {
+              id: true,
+              patientCode: true,
+              user: { select: { firstName: true, lastName: true } },
+            },
+          },
+        },
       }),
       this.prisma.report.count({ where }),
     ]);

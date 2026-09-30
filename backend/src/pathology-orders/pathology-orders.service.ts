@@ -157,7 +157,7 @@ export class PathologyOrdersService {
     orderedByUserId: string,
     dto: CreateLabOrderWalkInDto,
   ) {
-    let patientId = dto.patientId;
+    let patientId = dto.patientId?.trim();
     if (!patientId) {
       if (!dto.patient) {
         throw new BadRequestException(
@@ -179,10 +179,24 @@ export class PathologyOrdersService {
       });
       patientId = created.id;
     } else {
+      // Accept the LabPatient id, the linked Arogyix hospital patient id, or one
+      // of the patient's order numbers — staff often have one of the latter to hand.
       const existing = await this.prisma.labPatient.findFirst({
-        where: { id: patientId, labId },
+        where: {
+          labId,
+          OR: [
+            { id: patientId },
+            { arogyixPatientId: patientId },
+            {
+              orders: {
+                some: { orderNo: { equals: patientId, mode: 'insensitive' } },
+              },
+            },
+          ],
+        },
       });
       if (!existing) throw new NotFoundException('Lab patient not found');
+      patientId = existing.id;
     }
 
     const tests = await this.resolveTests(labId, dto.testIds);
@@ -550,6 +564,34 @@ export class PathologyOrdersService {
 
   async createCollector(labId: string, dto: CreateLabCollectorDto) {
     return this.prisma.labCollector.create({ data: { labId, ...dto } });
+  }
+
+  async searchPatients(labId: string, search?: string) {
+    const q = search?.trim();
+    return this.prisma.labPatient.findMany({
+      where: {
+        labId,
+        ...(q
+          ? {
+              OR: [
+                { id: q },
+                { arogyixPatientId: q },
+                { name: { contains: q, mode: 'insensitive' } },
+                { phone: { contains: q } },
+                { email: { contains: q, mode: 'insensitive' } },
+                {
+                  orders: {
+                    some: { orderNo: { equals: q, mode: 'insensitive' } },
+                  },
+                },
+              ],
+            }
+          : {}),
+      },
+      include: { _count: { select: { orders: true } } },
+      orderBy: { updatedAt: 'desc' },
+      take: 20,
+    });
   }
 
   async findCollectors(labId: string) {

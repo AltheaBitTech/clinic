@@ -76,6 +76,7 @@ export class ReportsController {
     @Query('patientId') patientId?: string,
     @Query('type') type?: ReportType,
     @Query('page') page?: number,
+    @Query('search') search?: string,
   ) {
     let effectivePatientId = patientId;
 
@@ -93,6 +94,8 @@ export class ReportsController {
       effectivePatientId,
       type,
       page,
+      20,
+      search,
     );
   }
 

@@ -592,9 +592,56 @@ export class PathologyResultsService {
     }
   }
 
+  /**
+   * Renders the report exactly as verify() would, but in memory and stamped
+   * "PREVIEW" — lets the pathologist review (amended) results before sign-off.
+   * Nothing is uploaded or persisted.
+   */
+  async previewReport(
+    orderId: string,
+    labId: string,
+  ): Promise<{ buffer: Buffer; fileName: string }> {
+    const order = await this.prisma.labOrder.findFirst({
+      where: { id: orderId, labId },
+      include: {
+        items: { include: { resultValues: true, test: true } },
+        patient: true,
+        lab: true,
+        report: true,
+      },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    const previewable: LabOrderStatus[] = [
+      LabOrderStatus.RESULT_READY,
+      LabOrderStatus.PENDING_VERIFICATION,
+    ];
+    if (!previewable.includes(order.status)) {
+      throw new BadRequestException(
+        'A preview is only available while results await verification',
+      );
+    }
+
+    const buffer = await this.buildReportPdf(order, { preview: true });
+    return { buffer, fileName: `lab_report_${order.orderNo}_preview.pdf` };
+  }
+
   private async generateReportPdf(order: any): Promise<string> {
-    const PDFDocument = require('pdfkit');
     const fileName = `lab_report_${order.id}.pdf`;
+    const pdfBuffer = await this.buildReportPdf(order);
+
+    return this.storageService.uploadBuffer(
+      `lab-reports/${order.labId}/${fileName}`,
+      pdfBuffer,
+      'application/pdf',
+      { upsert: true },
+    );
+  }
+
+  private buildReportPdf(
+    order: any,
+    options: { preview?: boolean } = {},
+  ): Promise<Buffer> {
+    const PDFDocument = require('pdfkit');
     const lab = order.lab;
     const patient = order.patient;
     const amended = !!order.report?.isAmended;
@@ -638,7 +685,7 @@ export class PathologyResultsService {
       : null;
     const reportDate = order.verifiedAt || new Date();
 
-    const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+    return new Promise<Buffer>((resolve, reject) => {
       const doc = new PDFDocument({
         size: 'A4',
         margin: 0,
@@ -756,9 +803,11 @@ export class PathologyResultsService {
         line(String(t), tx, ty, tw);
         ty += 12;
       }
-      const [sFg, sLabel] = amended
-        ? ['#b91c1c', 'AMENDED']
-        : ['#15803d', 'VERIFIED'];
+      const [sFg, sLabel] = options.preview
+        ? ['#b45309', 'PREVIEW']
+        : amended
+          ? ['#b91c1c', 'AMENDED']
+          : ['#15803d', 'VERIFIED'];
       const px = M + W - pillW - 16;
       doc.font('Bold').fontSize(7.5).fillColor('#166534');
       line('REPORT STATUS', px, y + 20, pillW, {
@@ -769,6 +818,20 @@ export class PathologyResultsService {
       doc.font('Bold').fontSize(11).fillColor(sFg);
       line(sLabel, px, y + 40, pillW, { align: 'center' });
       y += bandH + 16;
+
+      // ─── Preview notice ───
+      if (options.preview) {
+        doc.roundedRect(M, y, W, 28, 8).fill('#fffbeb');
+        doc.rect(M, y, 4, 28).fill('#d97706');
+        doc.font('Bold').fontSize(9).fillColor('#b45309');
+        line(
+          'PREVIEW - NOT VERIFIED. Not valid for clinical use.',
+          M + 14,
+          y + 9.5,
+          W - 28,
+        );
+        y += 28 + 14;
+      }
 
       // ─── Amendment notice ───
       if (amended) {
@@ -840,7 +903,12 @@ export class PathologyResultsService {
                 `Dr. ${order.referringDoctorName.replace(/^Dr\.?\s*/i, '')}`,
             ],
             ['Registered', fmtDate(order.createdAt, true)],
-            ['Verified', fmtDate(order.verifiedAt || new Date(), true)],
+            [
+              'Verified',
+              options.preview
+                ? 'Pending'
+                : fmtDate(order.verifiedAt || new Date(), true),
+            ],
           ],
         ],
       ];
@@ -990,7 +1058,9 @@ export class PathologyResultsService {
       line('Verified by Pathologist', sx, sy + 27, sigW, { align: 'center' });
       doc.font('Body').fontSize(8).fillColor(C.muted);
       line(
-        `Electronically verified • ${fmtDate(order.verifiedAt || new Date(), true)}`,
+        options.preview
+          ? 'Pending verification - preview only'
+          : `Electronically verified • ${fmtDate(order.verifiedAt || new Date(), true)}`,
         sx,
         sy + 43,
         sigW,
@@ -1000,12 +1070,5 @@ export class PathologyResultsService {
       drawFooter();
       doc.end();
     });
-
-    return this.storageService.uploadBuffer(
-      `lab-reports/${order.labId}/${fileName}`,
-      pdfBuffer,
-      'application/pdf',
-      { upsert: true },
-    );
   }
 }

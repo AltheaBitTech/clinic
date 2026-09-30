@@ -5,7 +5,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   Calendar, Users, Stethoscope, IndianRupee, Receipt, CreditCard,
   ClipboardList, Pill, Package, CalendarClock, XCircle, Search,
-  Download, Printer, SlidersHorizontal, X, ChevronLeft, ChevronRight,
+  Download, Printer, SlidersHorizontal, X, ChevronLeft, ChevronRight, ChevronDown,
   Loader2, AlertTriangle, RefreshCw, Eye, FileBarChart, FlaskConical,
 } from 'lucide-react';
 import { hospitalReportsApi, doctorsApi, departmentsApi } from '@/lib/api';
@@ -285,27 +285,22 @@ export default function HospitalReportsPanel() {
           })}
         </div>
 
-        {/* Report type — horizontal scroll chips on mobile/tablet */}
-        <div className="flex lg:hidden items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-          {REPORT_TYPES.map((r) => {
-            const Icon = r.icon;
-            const active = r.key === reportType;
-            return (
-              <button
-                key={r.key}
-                onClick={() => selectReportType(r.key)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 whitespace-nowrap transition-all border',
-                  active
-                    ? 'gradient-primary text-white border-transparent shadow-sm'
-                    : 'bg-white text-slate-500 border-slate-200',
-                )}
-              >
-                <Icon className="w-3.5 h-3.5 shrink-0" />
-                {r.label.replace(' Report', '')}
-              </button>
-            );
-          })}
+        {/* Report type — dropdown on mobile/tablet */}
+        <div className="relative lg:hidden">
+          <config.icon className="w-4 h-4 text-cyan-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <select
+            value={reportType}
+            onChange={(e) => selectReportType(e.target.value as ReportType)}
+            aria-label="Report type"
+            className="input w-full appearance-none pl-9 pr-9 text-sm font-semibold text-slate-700"
+          >
+            {REPORT_TYPES.map((r) => (
+              <option key={r.key} value={r.key}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         <div className="min-w-0 space-y-4 lg:col-start-2 lg:row-start-1">

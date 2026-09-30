@@ -33,7 +33,7 @@ describe('AppointmentsService.create', () => {
 
   let prisma: {
     patient: { findUnique: jest.Mock };
-    appointment: { create: jest.Mock };
+    appointment: { create: jest.Mock; updateMany: jest.Mock };
     patientTimeline: { create: jest.Mock };
     notification: { create: jest.Mock };
   };
@@ -47,7 +47,10 @@ describe('AppointmentsService.create', () => {
   beforeEach(() => {
     prisma = {
       patient: { findUnique: jest.fn() },
-      appointment: { create: jest.fn().mockResolvedValue(appointment) },
+      appointment: {
+        create: jest.fn().mockResolvedValue(appointment),
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+      },
       patientTimeline: { create: jest.fn().mockResolvedValue({}) },
       notification: { create: jest.fn().mockResolvedValue({}) },
     };
@@ -144,6 +147,27 @@ describe('AppointmentsService.create', () => {
 
     expect(result.id).toBe('appt_1');
     expect(result).not.toHaveProperty('tenant');
+  });
+
+  it('resolves the missed follow-up it was booked for, plus open ones with the same doctor', async () => {
+    await service.create(
+      { role: 'RECEPTIONIST', tenantId: 'tenant_1' },
+      { ...dto, followUpOfId: 'appt_old' },
+    );
+
+    expect(prisma.appointment.updateMany).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        tenantId: 'tenant_1',
+        patientId: 'patient_1',
+        status: 'COMPLETED',
+        followUpResolvedAt: null,
+        OR: [{ doctorId: 'doctor_1' }, { id: 'appt_old' }],
+      }),
+      data: {
+        followUpResolvedAt: expect.any(Date),
+        followUpAppointmentId: 'appt_1',
+      },
+    });
   });
 
   it('H. existing appointment/database failure is not converted into success', async () => {

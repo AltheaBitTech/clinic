@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateMedicalCatalogItemDto } from './dto/medical-catalog.dto';
+import {
+  CreateMedicalCatalogItemDto,
+  UpdateMedicalCatalogItemDto,
+} from './dto/medical-catalog.dto';
 
 @Injectable()
 export class MedicalCatalogService {
@@ -60,7 +63,30 @@ export class MedicalCatalogService {
     });
   }
 
-  async delete(id: string) {
+  async findOne(tenantId: string, id: string) {
+    const item = await this.prisma.medicalCatalogItem.findFirst({
+      where: { id, tenantId },
+    });
+    if (!item) throw new NotFoundException('Catalog item not found');
+    return item;
+  }
+
+  async update(tenantId: string, id: string, dto: UpdateMedicalCatalogItemDto) {
+    await this.findOne(tenantId, id);
+    return this.prisma.medicalCatalogItem.update({
+      where: { id },
+      data: {
+        name: dto.name,
+        type: dto.type,
+        dosage: dto.dosage,
+        frequency: dto.frequency,
+        timing: dto.timing,
+      },
+    });
+  }
+
+  async delete(tenantId: string, id: string) {
+    await this.findOne(tenantId, id);
     return this.prisma.medicalCatalogItem.delete({
       where: { id },
     });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { reportsApi, patientsApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -22,6 +22,14 @@ export default function ReportsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [typeFilter, setTypeFilter] = useState('ALL');
+  // Staff-only filter over the report list by patient name or patient ID.
+  const [reportSearch, setReportSearch] = useState('');
+  const [debouncedReportSearch, setDebouncedReportSearch] = useState('');
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedReportSearch(reportSearch.trim()), 300);
+    return () => clearTimeout(t);
+  }, [reportSearch]);
   const [uploading, setUploading] = useState(false);
   const [uploadType, setUploadType] = useState('');
 
@@ -40,8 +48,11 @@ export default function ReportsPage() {
   });
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['reports'],
-    queryFn: () => reportsApi.getAll().then((r) => r.data),
+    queryKey: ['reports', debouncedReportSearch],
+    queryFn: () =>
+      reportsApi
+        .getAll(debouncedReportSearch ? { search: debouncedReportSearch } : undefined)
+        .then((r) => r.data),
   });
 
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
@@ -203,6 +214,29 @@ export default function ReportsPage() {
         </div>
       </div>
 
+      {!isPatient && (
+        <div className="relative w-full sm:w-80 mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            value={reportSearch}
+            onChange={(e) => setReportSearch(e.target.value)}
+            placeholder="Search reports by patient name or ID..."
+            aria-label="Search reports by patient name or patient ID"
+            className="input pl-9 pr-9 text-sm"
+          />
+          {reportSearch && (
+            <button
+              type="button"
+              onClick={() => setReportSearch('')}
+              aria-label="Clear report search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Type filter */}
       <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
         {REPORT_TYPES.map((t) => (
@@ -242,7 +276,11 @@ export default function ReportsPage() {
           <div className="col-span-full card text-center py-16">
             <FileText className="w-12 h-12 text-slate-200 mx-auto mb-4" />
             <p className="text-slate-400">
-              {data?.data?.length === 0 ? 'No reports uploaded yet' : 'No reports match this type'}
+              {debouncedReportSearch
+                ? `No reports found for "${debouncedReportSearch}"`
+                : data?.data?.length === 0
+                  ? 'No reports uploaded yet'
+                  : 'No reports match this type'}
             </p>
           </div>
         ) : (
@@ -267,6 +305,12 @@ export default function ReportsPage() {
               </div>
               <h3 className="font-semibold text-slate-800 mb-1 truncate">{report.title}</h3>
               <p className="text-xs text-slate-400 mb-3">{report.type.replace('_', ' ')} · {formatDate(report.createdAt)}</p>
+              {!isPatient && report.patient?.user && (
+                <p className="text-xs text-slate-500 mb-1 truncate">
+                  👤 {report.patient.user.firstName} {report.patient.user.lastName}
+                  {report.patient.patientCode && <span className="text-slate-400"> · {report.patient.patientCode}</span>}
+                </p>
+              )}
               {report.labName && <p className="text-xs text-slate-500">🏥 {report.labName}</p>}
             </div>
           ))

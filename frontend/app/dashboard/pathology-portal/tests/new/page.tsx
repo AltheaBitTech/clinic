@@ -5,21 +5,17 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { pathologyCatalogApi, pathologyMasterTestsApi } from '@/lib/api';
-import { ArrowLeft, Sparkles, Search, ListPlus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, Search, ListPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-type ParameterForm = {
-  name: string;
-  unit: string;
-  resultType: string;
-  options: string;
-  refRangeLow: string;
-  refRangeHigh: string;
-  refRangeText: string;
-  criticalRangeLow: string;
-  criticalRangeHigh: string;
-  criticalRangeText: string;
-};
+import SampleFields from '@/components/pathology/SampleFields';
+import ParameterRow, {
+  ParameterForm,
+  applyParameterChange,
+  emptyParameter,
+  fromApiParameter,
+  toParameterPayload,
+  validateParameter,
+} from '@/components/pathology/ParameterRow';
 
 type TestForm = {
   name: string;
@@ -37,19 +33,6 @@ type TestForm = {
   masterTestId: string | null;
 };
 
-const emptyParameter: ParameterForm = {
-  name: '',
-  unit: '',
-  resultType: 'NUMERIC',
-  options: '',
-  refRangeLow: '',
-  refRangeHigh: '',
-  refRangeText: '',
-  criticalRangeLow: '',
-  criticalRangeHigh: '',
-  criticalRangeText: '',
-};
-
 const emptyForm: TestForm = {
   name: '',
   code: '',
@@ -65,16 +48,6 @@ const emptyForm: TestForm = {
   parameters: [],
   masterTestId: null,
 };
-
-const sampleTypeOptions = ['BLOOD', 'URINE', 'STOOL', 'SPUTUM', 'SWAB', 'CSF', 'TISSUE', 'BIOPSY', 'FNAC', 'BODY_FLUID', 'OTHER'];
-const resultTypeOptions = [
-  { value: 'NUMERIC', label: 'Numeric' },
-  { value: 'TEXT', label: 'Text' },
-  { value: 'DROPDOWN', label: 'Dropdown' },
-  { value: 'POSITIVE_NEGATIVE', label: 'Positive / Negative' },
-  { value: 'REACTIVE_NONREACTIVE', label: 'Reactive / Non-reactive' },
-  { value: 'NORMAL_ABNORMAL', label: 'Normal / Abnormal' },
-];
 
 export default function NewPathologyTestPage() {
   const router = useRouter();
@@ -124,18 +97,7 @@ export default function NewPathologyTestPage() {
       parameters: (item.parameters || [])
         .slice()
         .sort((a: any, b: any) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
-        .map((p: any) => ({
-          name: p.name || '',
-          unit: p.unit || '',
-          resultType: p.resultType || 'NUMERIC',
-          options: (p.options || []).join(', '),
-          refRangeLow: p.refRangeLow != null ? String(p.refRangeLow) : '',
-          refRangeHigh: p.refRangeHigh != null ? String(p.refRangeHigh) : '',
-          refRangeText: p.refRangeText || '',
-          criticalRangeLow: p.criticalRangeLow != null ? String(p.criticalRangeLow) : '',
-          criticalRangeHigh: p.criticalRangeHigh != null ? String(p.criticalRangeHigh) : '',
-          criticalRangeText: p.criticalRangeText || '',
-        })),
+        .map(fromApiParameter),
     }));
   };
 
@@ -150,7 +112,7 @@ export default function NewPathologyTestPage() {
   const setParameter = (index: number, field: keyof ParameterForm, value: string) => {
     setForm((prev) => ({
       ...prev,
-      parameters: prev.parameters.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
+      parameters: prev.parameters.map((p, i) => (i === index ? applyParameterChange(p, field, value) : p)),
     }));
   };
 
@@ -160,9 +122,9 @@ export default function NewPathologyTestPage() {
       toast.error('Name and price are required');
       return;
     }
-    const invalidParam = form.parameters.find((p) => !p.name.trim());
-    if (invalidParam) {
-      toast.error('Every parameter needs a name');
+    const paramError = form.parameters.map(validateParameter).find(Boolean);
+    if (paramError) {
+      toast.error(paramError);
       return;
     }
     const payload: any = {
@@ -178,21 +140,7 @@ export default function NewPathologyTestPage() {
       fastingRequired: form.fastingRequired,
       homeCollectionSupported: form.homeCollectionSupported,
       masterTestId: form.masterTestId || undefined,
-      parameters: form.parameters.map((p, i) => ({
-        name: p.name.trim(),
-        unit: p.unit || undefined,
-        resultType: p.resultType || undefined,
-        options: p.resultType === 'DROPDOWN' && p.options
-          ? p.options.split(',').map((o) => o.trim()).filter(Boolean)
-          : undefined,
-        refRangeLow: p.refRangeLow ? Number(p.refRangeLow) : undefined,
-        refRangeHigh: p.refRangeHigh ? Number(p.refRangeHigh) : undefined,
-        refRangeText: p.refRangeText || undefined,
-        criticalRangeLow: p.criticalRangeLow ? Number(p.criticalRangeLow) : undefined,
-        criticalRangeHigh: p.criticalRangeHigh ? Number(p.criticalRangeHigh) : undefined,
-        criticalRangeText: p.criticalRangeText || undefined,
-        displayOrder: i,
-      })),
+      parameters: form.parameters.map(toParameterPayload),
     };
     createMutation.mutate(payload);
   };
@@ -266,7 +214,7 @@ export default function NewPathologyTestPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Code</label>
             <input
@@ -288,7 +236,7 @@ export default function NewPathologyTestPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Department</label>
             <input
@@ -311,43 +259,14 @@ export default function NewPathologyTestPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Sample Type</label>
-            <select
-              value={form.sampleType}
-              onChange={(e) => setForm({ ...form, sampleType: e.target.value })}
-              className="input text-sm"
-            >
-              {sampleTypeOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, ' ')}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Container</label>
-            <input
-              type="text"
-              value={form.container}
-              onChange={(e) => setForm({ ...form, container: e.target.value })}
-              placeholder="e.g. EDTA"
-              className="input text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Turnaround (hours)</label>
-            <input
-              type="number"
-              value={form.turnaroundHours}
-              onChange={(e) => setForm({ ...form, turnaroundHours: e.target.value })}
-              className="input text-sm"
-            />
-          </div>
-        </div>
+        <SampleFields
+          sampleType={form.sampleType}
+          container={form.container}
+          turnaroundHours={form.turnaroundHours}
+          onChange={(patch) => setForm({ ...form, ...patch })}
+        />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
               Price (₹) <span className="text-red-500">*</span>
@@ -361,7 +280,7 @@ export default function NewPathologyTestPage() {
               className="input text-sm"
             />
           </div>
-          <div className="flex items-end gap-4 pb-2">
+          <div className="flex items-end gap-4 sm:pb-2">
             <label className="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer">
               <input
                 type="checkbox"
@@ -405,102 +324,12 @@ export default function NewPathologyTestPage() {
           ) : (
             <div className="space-y-3">
               {form.parameters.map((p, i) => (
-                <div key={i} className="p-3 rounded-xl border border-slate-100 bg-slate-50 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="Parameter name *"
-                      value={p.name}
-                      onChange={(e) => setParameter(i, 'name', e.target.value)}
-                      className="input text-xs flex-1"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Unit"
-                      value={p.unit}
-                      onChange={(e) => setParameter(i, 'unit', e.target.value)}
-                      className="input text-xs w-24"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeParameterRow(i)}
-                      aria-label="Remove parameter"
-                      className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer shrink-0"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <select
-                      value={p.resultType}
-                      onChange={(e) => setParameter(i, 'resultType', e.target.value)}
-                      className="input text-xs"
-                    >
-                      {resultTypeOptions.map((rt) => (
-                        <option key={rt.value} value={rt.value}>{rt.label}</option>
-                      ))}
-                    </select>
-                    {p.resultType === 'DROPDOWN' && (
-                      <input
-                        type="text"
-                        placeholder="Options, comma separated"
-                        value={p.options}
-                        onChange={(e) => setParameter(i, 'options', e.target.value)}
-                        className="input text-xs"
-                      />
-                    )}
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Range low"
-                      value={p.refRangeLow}
-                      onChange={(e) => setParameter(i, 'refRangeLow', e.target.value)}
-                      className="input text-xs"
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Range high"
-                      value={p.refRangeHigh}
-                      onChange={(e) => setParameter(i, 'refRangeHigh', e.target.value)}
-                      className="input text-xs"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Range text (e.g. Negative)"
-                      value={p.refRangeText}
-                      onChange={(e) => setParameter(i, 'refRangeText', e.target.value)}
-                      className="input text-xs"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Critical below"
-                      value={p.criticalRangeLow}
-                      onChange={(e) => setParameter(i, 'criticalRangeLow', e.target.value)}
-                      className="input text-xs border-red-100"
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Critical above"
-                      value={p.criticalRangeHigh}
-                      onChange={(e) => setParameter(i, 'criticalRangeHigh', e.target.value)}
-                      className="input text-xs border-red-100"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Critical note"
-                      value={p.criticalRangeText}
-                      onChange={(e) => setParameter(i, 'criticalRangeText', e.target.value)}
-                      className="input text-xs border-red-100"
-                    />
-                  </div>
-                </div>
+                <ParameterRow
+                  key={i}
+                  parameter={p}
+                  onChange={(field, value) => setParameter(i, field, value)}
+                  onRemove={() => removeParameterRow(i)}
+                />
               ))}
             </div>
           )}

@@ -1,29 +1,32 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { Suspense, useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { medicalCatalogApi } from '@/lib/api';
 import {
-  Pill, Plus, Search, Trash2, ChevronDown, ChevronLeft, ChevronRight,
-  Loader2, Sparkles, AlertCircle, FileText
+  Pill, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight,
+  Loader2, FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatDate } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 10;
 
-export default function MedicinesCatalogPage() {
+type CatalogType = 'MEDICINE' | 'OINTMENT';
+
+function MedicinesCatalogContent() {
   const qc = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'MEDICINE' | 'OINTMENT'>('MEDICINE');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab: CatalogType = searchParams.get('type') === 'OINTMENT' ? 'OINTMENT' : 'MEDICINE';
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Form states
-  const [name, setName] = useState('');
-  const [dosage, setDosage] = useState('');
-  const [frequency, setFrequency] = useState('Once daily');
-  const [timing, setTiming] = useState('AFTER_FOOD');
+  const setActiveTab = (tab: CatalogType) => {
+    router.replace(`/dashboard/medicines?type=${tab}`, { scroll: false });
+  };
 
   // Queries
   const { data: catalogItems, isLoading } = useQuery({
@@ -32,19 +35,6 @@ export default function MedicinesCatalogPage() {
   });
 
   // Mutations
-  const createMutation = useMutation({
-    mutationFn: (payload: any) => medicalCatalogApi.create(payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['medical-catalog', activeTab] });
-      toast.success(`${activeTab === 'MEDICINE' ? 'Medicine' : 'Ointment'} added to catalog!`);
-      closeModal();
-    },
-    onError: (err: any) => {
-      const msg = err.response?.data?.message || 'Failed to add item';
-      toast.error(msg);
-    }
-  });
-
   const deleteMutation = useMutation({
     mutationFn: (id: string) => medicalCatalogApi.delete(id),
     onSuccess: () => {
@@ -57,40 +47,10 @@ export default function MedicinesCatalogPage() {
     }
   });
 
-  const openCreateModal = () => {
-    setName('');
-    setDosage('');
-    setFrequency(activeTab === 'MEDICINE' ? 'Once daily' : 'As needed (PRN)');
-    setTiming(activeTab === 'MEDICINE' ? 'AFTER_FOOD' : 'AFTER_BATH');
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setName('');
-    setDosage('');
-  };
-
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to remove this item from the catalog?')) {
       deleteMutation.mutate(id);
     }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      toast.error('Name is required');
-      return;
-    }
-
-    createMutation.mutate({
-      name: name.trim(),
-      type: activeTab,
-      dosage: dosage || undefined,
-      frequency: frequency || undefined,
-      timing: timing || undefined,
-    });
   };
 
   const filteredItems = catalogItems?.filter((item: any) => {
@@ -124,9 +84,12 @@ export default function MedicinesCatalogPage() {
           </h1>
           <p className="page-subtitle">Define preconfigured medicines and topical ointments for faster autocompleted prescription writing.</p>
         </div>
-        <button onClick={openCreateModal} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
+        <Link
+          href={`/dashboard/medicines/new?type=${activeTab}`}
+          className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+        >
           <Plus className="w-4 h-4" /> Add {activeTab === 'MEDICINE' ? 'Medicine' : 'Ointment'}
-        </button>
+        </Link>
       </div>
 
       {/* Tabs */}
@@ -212,12 +175,19 @@ export default function MedicinesCatalogPage() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-xs text-slate-400 border-r border-slate-100">{formatDate(item.createdAt)}</td>
-                    <td className="py-3 px-4 text-xs text-right">
+                    <td className="py-3 px-4 text-xs text-right whitespace-nowrap">
+                      <Link
+                        href={`/dashboard/medicines/${item.id}/edit`}
+                        aria-label={`Edit ${item.name}`}
+                        className="inline-flex text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 p-1.5 rounded-lg transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Link>
                       <button
                         onClick={() => handleDelete(item.id)}
                         disabled={deleteMutation.isPending}
                         aria-label={`Delete ${item.name}`}
-                        className="text-red-500 hover:text-red-650 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg border-none bg-transparent transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -259,112 +229,20 @@ export default function MedicinesCatalogPage() {
         </div>
       )}
 
-      {/* CREATE MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up relative max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-              <Sparkles className="w-5 h-5 text-cyan-600" />
-              Add {activeTab === 'MEDICINE' ? 'Medicine' : 'Ointment'} to Catalog
-            </h3>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Item Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={activeTab === 'MEDICINE' ? 'e.g. Paracetamol' : 'e.g. Betadine Ointment'}
-                  className="input text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Default Suggested Dosage (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={dosage}
-                  onChange={(e) => setDosage(e.target.value)}
-                  placeholder={activeTab === 'MEDICINE' ? 'e.g. 500mg' : 'e.g. Apply twice daily'}
-                  className="input text-sm"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Suggested Frequency
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={frequency}
-                      onChange={(e) => setFrequency(e.target.value)}
-                      className="input appearance-none pr-10 text-xs"
-                    >
-                      <option value="Once daily">Once daily</option>
-                      <option value="Twice daily">Twice daily</option>
-                      <option value="Thrice daily">Thrice daily</option>
-                      <option value="Four times daily">Four times daily</option>
-                      <option value="Before bed">Before bed</option>
-                      <option value="Morning">Morning</option>
-                      <option value="As needed (PRN)">As needed (PRN)</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Suggested Timing
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={timing}
-                      onChange={(e) => setTiming(e.target.value)}
-                      className="input appearance-none pr-10 text-xs"
-                    >
-                      {activeTab === 'MEDICINE' ? (
-                        <>
-                          <option value="AFTER_FOOD">After Food</option>
-                          <option value="BEFORE_FOOD">Before Food</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="AFTER_BATH">After Bath</option>
-                          <option value="BEFORE_SLEEPING">Before Sleeping</option>
-                          <option value="AFTER_WASHING_CLEANING_SKIN">After Washing/Cleaning the Skin</option>
-                        </>
-                      )}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-6">
-                <button type="button" onClick={closeModal} className="btn-secondary">
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={createMutation.isPending || !name.trim()}
-                  className="btn-primary"
-                >
-                  {createMutation.isPending ? 'Saving...' : 'Add to Catalog'}
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
     </div>
+  );
+}
+
+export default function MedicinesCatalogPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="py-20 flex justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-cyan-600" />
+        </div>
+      }
+    >
+      <MedicinesCatalogContent />
+    </Suspense>
   );
 }

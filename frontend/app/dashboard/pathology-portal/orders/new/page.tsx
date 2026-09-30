@@ -1,11 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pathologyOrdersApi, pathologyCatalogApi } from '@/lib/api';
-import { ArrowLeft, Loader2, Sparkles, UserPlus, Search } from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles, Search, X, User, Phone, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 type NewPatientForm = {
@@ -23,7 +23,9 @@ export default function NewWalkInOrderPage() {
   const router = useRouter();
   const qc = useQueryClient();
   const [patientMode, setPatientMode] = useState<'NEW' | 'EXISTING'>('NEW');
-  const [existingPatientId, setExistingPatientId] = useState('');
+  const [existingPatient, setExistingPatient] = useState<any | null>(null);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [debouncedPatientSearch, setDebouncedPatientSearch] = useState('');
   const [patient, setPatient] = useState<NewPatientForm>(emptyPatient);
   const [testSearch, setTestSearch] = useState('');
   const [selectedTestIds, setSelectedTestIds] = useState<string[]>([]);
@@ -39,6 +41,17 @@ export default function NewWalkInOrderPage() {
   const { data: tests, isLoading: testsLoading } = useQuery({
     queryKey: ['pathology-tests-active'],
     queryFn: () => pathologyCatalogApi.getAll().then((r) => r.data),
+  });
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedPatientSearch(patientSearch.trim()), 300);
+    return () => clearTimeout(t);
+  }, [patientSearch]);
+
+  const { data: patientResults, isFetching: patientsLoading } = useQuery({
+    queryKey: ['pathology-lab-patients', debouncedPatientSearch],
+    queryFn: () => pathologyOrdersApi.searchPatients(debouncedPatientSearch).then((r) => r.data),
+    enabled: patientMode === 'EXISTING' && !existingPatient,
   });
 
   const activeTests = useMemo(
@@ -72,8 +85,8 @@ export default function NewWalkInOrderPage() {
       toast.error('Select at least one test');
       return;
     }
-    if (patientMode === 'EXISTING' && !existingPatientId.trim()) {
-      toast.error('Enter the existing patient ID');
+    if (patientMode === 'EXISTING' && !existingPatient) {
+      toast.error('Search and select an existing patient');
       return;
     }
     if (patientMode === 'NEW' && !patient.name.trim()) {
@@ -94,7 +107,7 @@ export default function NewWalkInOrderPage() {
     };
 
     if (patientMode === 'EXISTING') {
-      payload.patientId = existingPatientId.trim();
+      payload.patientId = existingPatient.id;
     } else {
       payload.patient = {
         name: patient.name.trim(),
@@ -151,16 +164,85 @@ export default function NewWalkInOrderPage() {
           </div>
 
           {patientMode === 'EXISTING' ? (
-            <div className="flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={existingPatientId}
-                onChange={(e) => setExistingPatientId(e.target.value)}
-                placeholder="Existing patient ID"
-                className="input text-sm"
-              />
-            </div>
+            existingPatient ? (
+              <div className="rounded-xl border border-cyan-200 bg-cyan-50/50 p-3 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1 min-w-0">
+                    <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-slate-400" /> {existingPatient.name}
+                    </p>
+                    {existingPatient.phone && (
+                      <p className="text-slate-600 flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-slate-400" /> {existingPatient.phone}
+                      </p>
+                    )}
+                    {existingPatient.email && (
+                      <p className="text-slate-600 flex items-center gap-1.5 break-all">
+                        <Mail className="w-3.5 h-3.5 text-slate-400" /> {existingPatient.email}
+                      </p>
+                    )}
+                    <p className="text-xs text-slate-500">
+                      {[
+                        existingPatient.gender,
+                        existingPatient.dateOfBirth && `DOB ${new Date(existingPatient.dateOfBirth).toLocaleDateString()}`,
+                        `${existingPatient._count?.orders ?? 0} previous order(s)`,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                    {existingPatient.address && <p className="text-xs text-slate-500">{existingPatient.address}</p>}
+                    <p className="text-[11px] text-slate-400 break-all">ID: {existingPatient.id}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExistingPatient(null)}
+                    className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-white"
+                    aria-label="Change patient"
+                    title="Change patient"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={patientSearch}
+                    onChange={(e) => setPatientSearch(e.target.value)}
+                    placeholder="Search by name, phone, email, patient ID or order no."
+                    className="input text-sm pl-9"
+                  />
+                </div>
+                <div className="mt-2 max-h-60 overflow-y-auto rounded-xl border border-slate-100 divide-y divide-slate-100">
+                  {patientsLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                    </div>
+                  ) : (patientResults || []).length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-4">
+                      {debouncedPatientSearch ? 'No matching patients found' : 'No patients yet'}
+                    </p>
+                  ) : (
+                    (patientResults || []).map((p: any) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setExistingPatient(p)}
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors"
+                      >
+                        <p className="text-sm font-medium text-slate-800">{p.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {[p.phone, p.email, `${p._count?.orders ?? 0} order(s)`].filter(Boolean).join(' · ')}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <input
@@ -184,23 +266,37 @@ export default function NewWalkInOrderPage() {
                 onChange={(e) => setPatient({ ...patient, email: e.target.value })}
                 className="input text-sm"
               />
-              <input
-                type="date"
-                placeholder="Date of birth"
-                value={patient.dateOfBirth}
-                onChange={(e) => setPatient({ ...patient, dateOfBirth: e.target.value })}
-                className="input text-sm"
-              />
-              <select
-                value={patient.gender}
-                onChange={(e) => setPatient({ ...patient, gender: e.target.value })}
-                className="input text-sm"
-              >
-                <option value="">Gender</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
-              </select>
+              <div>
+                <label htmlFor="patient-dob" className="block text-[11px] font-medium text-slate-500 mb-1">
+                  Patient Date of Birth
+                </label>
+                <input
+                  id="patient-dob"
+                  type="date"
+                  aria-label="Patient date of birth"
+                  title="Patient date of birth"
+                  max={new Date().toISOString().split('T')[0]}
+                  value={patient.dateOfBirth}
+                  onChange={(e) => setPatient({ ...patient, dateOfBirth: e.target.value })}
+                  className="input text-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="patient-gender" className="block text-[11px] font-medium text-slate-500 mb-1">
+                  Gender
+                </label>
+                <select
+                  id="patient-gender"
+                  value={patient.gender}
+                  onChange={(e) => setPatient({ ...patient, gender: e.target.value })}
+                  className="input text-sm"
+                >
+                  <option value="">Select gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
               <input
                 type="text"
                 placeholder="Address"

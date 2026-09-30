@@ -606,6 +606,11 @@ model Appointment {
   notes         String?
   followUpDate  DateTime?
   followUpNotes String?
+  // Missed follow-up tracking: when staff last reminded the patient, and when
+  // the follow-up was resolved by a new booking (followUpAppointmentId).
+  followUpNotifiedAt    DateTime?
+  followUpResolvedAt    DateTime?
+  followUpAppointmentId String?
   checkedInAt   DateTime?
   completedAt   DateTime?
   cancelledAt   DateTime?

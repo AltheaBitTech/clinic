@@ -1,5 +1,10 @@
 import { IsString, IsOptional, IsDateString, IsEnum } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PartialType,
+} from '@nestjs/swagger';
 import { AppointmentStatus } from '@prisma/client';
 
 export class CreateAppointmentDto {
@@ -9,9 +14,19 @@ export class CreateAppointmentDto {
   @ApiPropertyOptional() @IsOptional() @IsString() type?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() reason?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'ID of the completed appointment whose missed follow-up this booking resolves',
+  })
+  @IsOptional()
+  @IsString()
+  followUpOfId?: string;
 }
 
-export class UpdateAppointmentDto extends PartialType(CreateAppointmentDto) {
+export class UpdateAppointmentDto extends PartialType(
+  OmitType(CreateAppointmentDto, ['followUpOfId'] as const),
+) {
   @ApiPropertyOptional({ enum: AppointmentStatus })
   @IsOptional()
   @IsEnum(AppointmentStatus)

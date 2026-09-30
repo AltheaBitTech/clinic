@@ -1,4 +1,5 @@
-import { Body, Controller, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -63,6 +64,23 @@ export class PathologyResultsController {
   async submitForVerification(@CurrentUser() user: any, @Param('id') id: string) {
     const lab = await this.pathologyLabsService.getMine(user.id);
     return this.resultsService.submitForVerification(id, lab.id, user.id);
+  }
+
+  @Get(':id/report-preview')
+  @ApiOperation({
+    summary: 'Unsaved PDF preview of the report, for review before verification',
+  })
+  async previewReport(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const lab = await this.pathologyLabsService.getMine(user.id);
+    const { buffer, fileName } = await this.resultsService.previewReport(id, lab.id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(buffer);
   }
 
   @Put(':id/verify')

@@ -81,7 +81,7 @@ export default function PrescriptionsPage() {
   const totalPages = data ? Math.ceil(data.total / data.limit) : 1;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+    <div className={`p-4 sm:p-6 lg:p-8 animate-fade-in ${!isPatient ? 'pb-24 sm:pb-28 lg:pb-28' : ''}`}>
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="page-title">{isPatient ? 'My Prescriptions' : 'Prescriptions'}</h1>

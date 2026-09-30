@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsIn } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
 export class CreateMedicalCatalogItemDto {
   @ApiProperty()
@@ -26,3 +26,7 @@ export class CreateMedicalCatalogItemDto {
   @IsString()
   timing?: string;
 }
+
+export class UpdateMedicalCatalogItemDto extends PartialType(
+  CreateMedicalCatalogItemDto,
+) {}

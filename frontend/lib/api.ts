@@ -222,6 +222,8 @@ export const usersApi = {
 export const medicalCatalogApi = {
   create: (data: any) => api.post('/medical-catalog', data),
   getAll: (params?: any) => api.get('/medical-catalog', { params }),
+  getOne: (id: string) => api.get(`/medical-catalog/${id}`),
+  update: (id: string, data: any) => api.patch(`/medical-catalog/${id}`, data),
   delete: (id: string) => api.delete(`/medical-catalog/${id}`),
 };
 
@@ -362,6 +364,8 @@ export const pathologyMasterTestsApi = {
 export const pathologyOrdersApi = {
   createForHospital: (data: any) => api.post('/pathology-orders/hospital', data),
   createWalkIn: (data: any) => api.post('/pathology-orders', data),
+  searchPatients: (search?: string) =>
+    api.get('/pathology-orders/patients', { params: { search: search || undefined } }),
   getAll: (params?: any) => api.get('/pathology-orders', { params }),
   getOne: (id: string) => api.get(`/pathology-orders/${id}`),
   scheduleCollection: (id: string, data: any) =>
@@ -396,6 +400,8 @@ export const pathologyResultsApi = {
   submitForVerification: (orderId: string) =>
     api.put(`/pathology-orders/${orderId}/submit-for-verification`),
   verify: (orderId: string) => api.put(`/pathology-orders/${orderId}/verify`),
+  previewReport: (orderId: string) =>
+    api.get(`/pathology-orders/${orderId}/report-preview`, { responseType: 'blob' }),
   deliver: (orderId: string) => api.put(`/pathology-orders/${orderId}/deliver`),
   amend: (orderId: string, data: { reason: string }) =>
     api.put(`/pathology-orders/${orderId}/amend`, data),

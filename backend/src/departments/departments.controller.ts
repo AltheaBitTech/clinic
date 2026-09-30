@@ -36,14 +36,18 @@ export class DepartmentsController {
   @Put(':id')
   @Roles(UserRole.HOSPITAL_ADMIN)
   @ApiOperation({ summary: 'Update a department' })
-  update(@Param('id') id: string, @Body() dto: UpdateDepartmentDto) {
-    return this.svc.update(id, dto);
+  update(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateDepartmentDto,
+  ) {
+    return this.svc.update(user.tenantId, id, dto);
   }
 
   @Delete(':id')
   @Roles(UserRole.HOSPITAL_ADMIN)
   @ApiOperation({ summary: 'Delete a department' })
-  delete(@Param('id') id: string) {
-    return this.svc.delete(id);
+  delete(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.svc.delete(user.tenantId, id);
   }
 }

@@ -7,7 +7,7 @@ import {
   AlertCircle, Phone, CalendarPlus, RefreshCw, Loader2,
   Stethoscope, ArrowLeft, CheckCircle2, BellRing,
 } from 'lucide-react';
-import { cn, formatDateTime, getInitials } from '@/lib/utils';
+import { cn, formatDateTime, getInitials, timeAgo } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 function daysOverdue(followUpDate: string) {
@@ -24,8 +24,12 @@ export default function FollowUpsPage() {
 
   const notifyMutation = useMutation({
     mutationFn: (id: string) => appointmentsApi.notifyFollowUp(id),
-    onSuccess: () => {
+    onSuccess: (res, id) => {
       toast.success('Follow-up reminder sent to patient');
+      // Reflect the new "Reminder sent" status immediately, then resync.
+      qc.setQueryData(['appointments', 'missed-followups'], (prev: any[] | undefined) =>
+        prev?.map((a) => (a.id === id ? { ...a, followUpNotifiedAt: res.data.followUpNotifiedAt } : a)),
+      );
       qc.invalidateQueries({ queryKey: ['appointments', 'missed-followups'] });
     },
     onError: (err: any) => {
@@ -93,6 +97,7 @@ export default function FollowUpsPage() {
                   <th className="py-3 px-4">Doctor</th>
                   <th className="py-3 px-4">Follow-up Was Due</th>
                   <th className="py-3 px-4">Notes</th>
+                  <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -132,6 +137,21 @@ export default function FollowUpsPage() {
                         {appt.followUpNotes || '—'}
                       </td>
                       <td className="py-4 px-4">
+                        {appt.followUpNotifiedAt ? (
+                          <div>
+                            <span className="badge bg-amber-100 text-amber-800 text-[10px] inline-flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Reminder sent
+                            </span>
+                            <p className="text-xs text-slate-400 mt-1" title={formatDateTime(appt.followUpNotifiedAt)}>
+                              {timeAgo(appt.followUpNotifiedAt)}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="badge bg-slate-100 text-slate-600 text-[10px]">Not contacted</span>
+                        )}
+                      </td>
+                      <td className="py-4 px-4">
                         <div className="flex items-center justify-end gap-2">
                           {phone && (
                             <a
@@ -154,10 +174,10 @@ export default function FollowUpsPage() {
                             ) : (
                               <BellRing className="w-3.5 h-3.5" />
                             )}
-                            Notify
+                            {appt.followUpNotifiedAt ? 'Resend' : 'Notify'}
                           </button>
                           <Link
-                            href={`/dashboard/appointments/new?patientId=${appt.patient?.id}&doctorId=${appt.doctor?.id}`}
+                            href={`/dashboard/appointments/new?patientId=${appt.patient?.id}&doctorId=${appt.doctor?.id}&followUpOf=${appt.id}`}
                             className="btn bg-cyan-600 hover:bg-cyan-700 text-white py-1.5 px-2.5 font-semibold rounded-lg text-xs flex items-center gap-1.5 transition-all shadow-sm"
                           >
                             <CalendarPlus className="w-3.5 h-3.5" />

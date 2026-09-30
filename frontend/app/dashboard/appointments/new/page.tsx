@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -17,9 +17,12 @@ import toast from 'react-hot-toast';
 function NewAppointmentContent() {
   const { user } = useAuth();
   const router = useRouter();
+  const qc = useQueryClient();
   const searchParams = useSearchParams();
   const patientIdParam = searchParams.get('patientId');
   const doctorIdParam = searchParams.get('doctorId');
+  // Set when booking from the Missed Follow-ups list; resolves that follow-up.
+  const followUpOfParam = searchParams.get('followUpOf');
   const isPatient = user?.role === 'PATIENT';
 
   // State
@@ -33,7 +36,7 @@ function NewAppointmentContent() {
 
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
-  const [appointmentType, setAppointmentType] = useState('CONSULTATION');
+  const [appointmentType, setAppointmentType] = useState(followUpOfParam ? 'FOLLOW_UP' : 'CONSULTATION');
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -168,11 +171,14 @@ function NewAppointmentContent() {
         type: appointmentType,
         reason: reason || undefined,
         notes: notes || undefined,
+        followUpOfId: followUpOfParam || undefined,
       };
 
       await appointmentsApi.create(payload);
       toast.success('Appointment scheduled successfully!', { id: loadingToast });
-      router.push('/dashboard/appointments');
+      qc.invalidateQueries({ queryKey: ['appointments'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      router.push(followUpOfParam ? '/dashboard/follow-ups' : '/dashboard/appointments');
     } catch (error: any) {
       const errMsg = error.response?.data?.message || 'Failed to schedule appointment';
       toast.error(errMsg, { id: loadingToast });

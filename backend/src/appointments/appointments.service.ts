@@ -122,6 +122,8 @@ export class AppointmentsService {
 
     const { tenant, ...appointmentResponse } = appointment;
 
+    await this.resolveFollowUpsForBooking(appointment, dto.followUpOfId);
+
     // Add to patient timeline
     await this.prisma.patientTimeline.create({
       data: {
@@ -466,6 +468,14 @@ export class AppointmentsService {
     });
 
     const isCancellation = dto.status === 'CANCELLED';
+    if (isCancellation) {
+      // The booking that resolved a missed follow-up fell through — put the
+      // follow-up back on the missed list.
+      await this.prisma.appointment.updateMany({
+        where: { tenantId: updated.tenantId, followUpAppointmentId: id },
+        data: { followUpResolvedAt: null, followUpAppointmentId: null },
+      });
+    }
     if (isCancellation || isReschedule) {
       try {
         const tenant = await this.prisma.tenant.findUnique({
@@ -585,13 +595,17 @@ export class AppointmentsService {
   }
 
   async getMissedFollowUps(tenantId: string, doctorId?: string) {
+    await this.resolveStaleFollowUps(tenantId, doctorId);
+
     return this.prisma.appointment.findMany({
       where: {
         tenantId,
         ...(doctorId && { doctorId }),
         status: 'COMPLETED',
         followUpDate: { lt: new Date() },
+        followUpResolvedAt: null,
       },
+      orderBy: { followUpDate: 'asc' },
       include: {
         patient: {
           include: {
@@ -603,6 +617,79 @@ export class AppointmentsService {
         },
       },
       take: 20,
+    });
+  }
+
+  /**
+   * Marks open follow-ups as resolved when a newer booking already exists for
+   * the same patient and doctor (e.g. booked by the patient themselves, or
+   * before follow-up tracking existed), so they drop off the missed list.
+   */
+  private async resolveStaleFollowUps(tenantId: string, doctorId?: string) {
+    const open = await this.prisma.appointment.findMany({
+      where: {
+        tenantId,
+        ...(doctorId && { doctorId }),
+        status: 'COMPLETED',
+        followUpDate: { not: null },
+        followUpResolvedAt: null,
+      },
+      select: { id: true, patientId: true, doctorId: true, scheduledAt: true },
+    });
+
+    for (const followUp of open) {
+      const booking = await this.prisma.appointment.findFirst({
+        where: {
+          tenantId,
+          patientId: followUp.patientId,
+          doctorId: followUp.doctorId,
+          scheduledAt: { gt: followUp.scheduledAt },
+          status: { not: 'CANCELLED' },
+        },
+        orderBy: { scheduledAt: 'asc' },
+        select: { id: true },
+      });
+      if (booking) {
+        await this.prisma.appointment.update({
+          where: { id: followUp.id },
+          data: {
+            followUpResolvedAt: new Date(),
+            followUpAppointmentId: booking.id,
+          },
+        });
+      }
+    }
+  }
+
+  /**
+   * A new booking resolves the follow-up it was explicitly made for, plus any
+   * other open follow-up the patient has with the same doctor.
+   */
+  private async resolveFollowUpsForBooking(
+    booking: {
+      id: string;
+      tenantId: string;
+      patientId: string;
+      doctorId: string;
+    },
+    followUpOfId?: string,
+  ) {
+    await this.prisma.appointment.updateMany({
+      where: {
+        tenantId: booking.tenantId,
+        patientId: booking.patientId,
+        status: 'COMPLETED',
+        followUpDate: { not: null },
+        followUpResolvedAt: null,
+        OR: [
+          { doctorId: booking.doctorId },
+          ...(followUpOfId ? [{ id: followUpOfId }] : []),
+        ],
+      },
+      data: {
+        followUpResolvedAt: new Date(),
+        followUpAppointmentId: booking.id,
+      },
     });
   }
 
@@ -620,12 +707,22 @@ export class AppointmentsService {
         'This appointment has no follow-up scheduled',
       );
     }
+    if (appointment.followUpResolvedAt) {
+      throw new BadRequestException(
+        'A follow-up visit has already been booked for this patient',
+      );
+    }
 
     const doctorName =
       `Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`.trim();
     const followUpDateStr = appointment.followUpDate.toLocaleDateString(
       'en-IN',
-      { timeZone: CLINIC_TIMEZONE, day: 'numeric', month: 'long', year: 'numeric' },
+      {
+        timeZone: CLINIC_TIMEZONE,
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      },
     );
 
     await this.notificationsService.create(
@@ -647,6 +744,12 @@ export class AppointmentsService {
       },
     });
 
-    return { success: true };
+    const { followUpNotifiedAt } = await this.prisma.appointment.update({
+      where: { id: appointment.id },
+      data: { followUpNotifiedAt: new Date() },
+      select: { followUpNotifiedAt: true },
+    });
+
+    return { success: true, followUpNotifiedAt };
   }
 }

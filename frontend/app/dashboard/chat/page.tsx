@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation, keepPreviousData } from '@tanstack/react-query';
 import { io, Socket } from 'socket.io-client';
 import { chatApi, doctorsApi, patientsApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -82,6 +82,10 @@ export default function ChatPage() {
   }, [rooms, roomSearch, isDoctor]);
 
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
+  // Drive the mobile list/thread toggle off the resolved room, not just the id —
+  // otherwise an id that isn't in `rooms` yet hides the list and strands the user
+  // on the empty "Select a conversation" state with no back button.
+  const showThread = !!selectedRoom;
 
   const messagesQuery = useQuery({
     queryKey: ['chat-messages', selectedRoomId],
@@ -158,6 +162,10 @@ export default function ChatPage() {
     mutationFn: (data: { patientId: string; doctorId: string }) =>
       chatApi.getOrCreateRoom(data).then((r) => r.data as ChatRoom),
     onSuccess: (room) => {
+      // Put the room in the cache immediately so it resolves before the refetch lands.
+      queryClient.setQueryData<ChatRoom[]>(['chat-rooms'], (prev = []) =>
+        prev.some((r) => r.id === room.id) ? prev : [room, ...prev],
+      );
       queryClient.invalidateQueries({ queryKey: ['chat-rooms'] });
       setSelectedRoomId(room.id);
       setShowNewChat(false);
@@ -187,7 +195,7 @@ export default function ChatPage() {
       <aside
         className={cn(
           'w-full lg:w-80 shrink-0 border-r border-slate-100 bg-white flex-col',
-          selectedRoomId ? 'hidden lg:flex' : 'flex',
+          showThread ? 'hidden lg:flex' : 'flex',
         )}
       >
         <div className="px-5 py-5 border-b border-slate-100">
@@ -275,7 +283,7 @@ export default function ChatPage() {
       <section
         className={cn(
           'flex-1 flex-col min-w-0 bg-slate-50',
-          selectedRoomId ? 'flex' : 'hidden lg:flex',
+          showThread ? 'flex' : 'hidden lg:flex',
         )}
       >
         {!selectedRoom ? (
@@ -393,13 +401,22 @@ function NewChatModal({
   submitting: boolean;
 }) {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // Patients are searched server-side, so the search term must be part of the
+  // query key to trigger a refetch; doctors are filtered client-side below.
   const peopleQuery = useQuery({
-    queryKey: isDoctor ? ['chat-new-patients'] : ['chat-new-doctors'],
+    queryKey: isDoctor ? ['chat-new-patients', debouncedSearch] : ['chat-new-doctors'],
     queryFn: () =>
       isDoctor
-        ? patientsApi.getAll({ search: search || undefined }).then((r) => r.data.data)
+        ? patientsApi.getAll({ search: debouncedSearch || undefined }).then((r) => r.data.data)
         : doctorsApi.getAll().then((r) => r.data.data),
+    placeholderData: keepPreviousData,
   });
 
   const people = peopleQuery.data || [];

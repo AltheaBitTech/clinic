@@ -101,6 +101,7 @@ export class DashboardService {
           tenantId,
           status: 'COMPLETED',
           followUpDate: { lt: new Date() },
+          followUpResolvedAt: null,
         },
       }),
       this.prisma.patient.findMany({
@@ -172,6 +173,7 @@ export class DashboardService {
             doctorId,
             status: 'COMPLETED',
             followUpDate: { lt: new Date() },
+            followUpResolvedAt: null,
           },
         }),
         this.prisma.appointment.findMany({

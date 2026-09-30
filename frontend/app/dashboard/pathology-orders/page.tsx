@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { pathologyOrdersApi } from '@/lib/api';
 import {
-  ClipboardList, Plus, Loader2, ChevronRight,
+  ClipboardList, Plus, Loader2, ChevronRight, ChevronDown,
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 
@@ -86,8 +86,22 @@ function PathologyOrdersContent() {
         </Link>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200 mb-6 gap-2 overflow-x-auto">
+      {/* Tabs — dropdown on mobile */}
+      <div className="relative mb-6 sm:hidden">
+        <select
+          value={activeTab}
+          onChange={(e) => setActiveTab(e.target.value as Tab)}
+          className="input appearance-none pr-10"
+          aria-label="Filter orders by status"
+        >
+          {tabs.map(({ key, label }) => (
+            <option key={key} value={key}>{label}</option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+      </div>
+
+      <div className="hidden sm:flex border-b border-slate-200 mb-6 gap-2 overflow-x-auto">
         {tabs.map(({ key, label }) => (
           <button
             key={key}
