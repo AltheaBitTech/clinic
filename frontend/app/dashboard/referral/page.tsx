@@ -4,16 +4,23 @@ import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dashboardApi, referralApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Building2, Store, Copy, Loader2, Save, Gift, ShieldCheck, Upload, FileText, Mail, Phone, MapPin, Calendar, Wallet, IndianRupee, Landmark, History } from 'lucide-react';
+import { Building2, Store, FlaskConical, Copy, Loader2, Save, Gift, ShieldCheck, Upload, FileText, Mail, Phone, MapPin, Calendar, Wallet, IndianRupee, Landmark, History } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog';
 
-type ReferredTenantType = 'HOSPITAL' | 'PHARMACY';
+type ReferredTenantType = 'HOSPITAL' | 'PHARMACY' | 'PATHOLOGY';
 
 const REFERRED_TENANT_LABELS: Record<ReferredTenantType, string> = {
   HOSPITAL: 'Hospitals Referred',
   PHARMACY: 'Pharmacies Referred',
+  PATHOLOGY: 'Pathology Labs Referred',
+};
+
+const REFERRED_TENANT_PLURALS: Record<ReferredTenantType, string> = {
+  HOSPITAL: 'hospitals',
+  PHARMACY: 'pharmacies',
+  PATHOLOGY: 'pathology labs',
 };
 
 function ReferredTenantsModal({
@@ -33,7 +40,13 @@ function ReferredTenantsModal({
     <Dialog open={!!type} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogTitle>
-          {type === 'PHARMACY' ? <Store className="w-5 h-5 text-emerald-600" /> : <Building2 className="w-5 h-5 text-cyan-600" />}
+          {type === 'PHARMACY' ? (
+            <Store className="w-5 h-5 text-emerald-600" />
+          ) : type === 'PATHOLOGY' ? (
+            <FlaskConical className="w-5 h-5 text-violet-600" />
+          ) : (
+            <Building2 className="w-5 h-5 text-cyan-600" />
+          )}
           {type ? REFERRED_TENANT_LABELS[type] : ''}
         </DialogTitle>
 
@@ -45,7 +58,7 @@ function ReferredTenantsModal({
           </div>
         ) : !tenants || tenants.length === 0 ? (
           <p className="text-sm text-slate-400 py-6 text-center">
-            No {type === 'PHARMACY' ? 'pharmacies' : 'hospitals'} have signed up with your referral code yet.
+            No {type ? REFERRED_TENANT_PLURALS[type] : ''} have signed up with your referral code yet.
           </p>
         ) : (
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
@@ -214,8 +227,8 @@ export default function ReferralDashboard() {
   if (statsLoading || meLoading || kycLoading) {
     return (
       <div className="p-4 sm:p-6 lg:p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {[...Array(2)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {[...Array(3)].map((_, i) => (
             <div key={i} className="card animate-pulse">
               <div className="w-11 h-11 bg-slate-200 rounded-xl mb-4" />
               <div className="h-8 bg-slate-200 rounded mb-2 w-24" />
@@ -232,11 +245,11 @@ export default function ReferralDashboard() {
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="page-header">
         <h1 className="page-title">Referral Dashboard</h1>
-        <p className="page-subtitle">Welcome back, {user?.firstName}. Track hospitals and pharmacies you've referred to Arogyix.</p>
+        <p className="page-subtitle">Welcome back, {user?.firstName}. Track hospitals, pharmacies and pathology labs you've referred to Arogyix.</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <StatCard
           label="Hospitals Referred"
           value={stats?.hospitalsReferred || 0}
@@ -250,6 +263,13 @@ export default function ReferralDashboard() {
           icon={Store}
           color="bg-emerald-500"
           onClick={() => setReferredTenantsType('PHARMACY')}
+        />
+        <StatCard
+          label="Pathology Labs Referred"
+          value={stats?.pathologyLabsReferred || 0}
+          icon={FlaskConical}
+          color="bg-violet-500"
+          onClick={() => setReferredTenantsType('PATHOLOGY')}
         />
       </div>
 
@@ -335,7 +355,7 @@ export default function ReferralDashboard() {
           </div>
           <div>
             <h3 className="font-semibold text-slate-800 text-lg">Your Referral Code</h3>
-            <p className="text-xs text-slate-400">Share this with hospitals or pharmacies to sign up on Arogyix</p>
+            <p className="text-xs text-slate-400">Share this with hospitals, pharmacies or pathology labs to sign up on Arogyix</p>
           </div>
         </div>
         {me?.referralCode && kyc?.kycStatus === 'APPROVED' ? (

@@ -53,22 +53,33 @@ export class DashboardService {
 
   async getReferralDashboard(referralId?: string) {
     if (!referralId) {
-      return { hospitalsReferred: 0, pharmaciesReferred: 0, totalReferred: 0 };
+      return {
+        hospitalsReferred: 0,
+        pharmaciesReferred: 0,
+        pathologyLabsReferred: 0,
+        totalReferred: 0,
+      };
     }
 
-    const [hospitalsReferred, pharmaciesReferred] = await Promise.all([
-      this.prisma.tenant.count({
-        where: { referredById: referralId, type: 'HOSPITAL' },
-      }),
-      this.prisma.tenant.count({
-        where: { referredById: referralId, type: 'PHARMACY' },
-      }),
-    ]);
+    const [hospitalsReferred, pharmaciesReferred, pathologyLabsReferred] =
+      await Promise.all([
+        this.prisma.tenant.count({
+          where: { referredById: referralId, type: 'HOSPITAL' },
+        }),
+        this.prisma.tenant.count({
+          where: { referredById: referralId, type: 'PHARMACY' },
+        }),
+        this.prisma.tenant.count({
+          where: { referredById: referralId, type: 'PATHOLOGY' },
+        }),
+      ]);
 
     return {
       hospitalsReferred,
       pharmaciesReferred,
-      totalReferred: hospitalsReferred + pharmaciesReferred,
+      pathologyLabsReferred,
+      totalReferred:
+        hospitalsReferred + pharmaciesReferred + pathologyLabsReferred,
     };
   }
 

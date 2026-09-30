@@ -187,7 +187,7 @@ export const referralApi = {
   reject: (id: string) => api.post(`/referrals/${id}/reject`),
   getMe: () => api.get('/referrals/me'),
   updateMe: (data: any) => api.patch('/referrals/me', data),
-  getMyReferredTenants: (type?: 'HOSPITAL' | 'PHARMACY') =>
+  getMyReferredTenants: (type?: 'HOSPITAL' | 'PHARMACY' | 'PATHOLOGY') =>
     api.get('/referrals/me/referred-tenants', { params: { type } }),
   submitKyc: (file: File) => {
     const formData = new FormData();
