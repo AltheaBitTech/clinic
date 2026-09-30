@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { pharmacyPrescriptionsApi } from '@/lib/api';
+import { pharmacyPrescriptionsApi, pharmacyMedicinesApi } from '@/lib/api';
 import { ArrowLeft, ClipboardCheck, PackageCheck, Loader2, User } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -21,16 +21,27 @@ export default function PharmacyPrescriptionDetailPage() {
   const { id } = useParams() as { id: string };
   const qc = useQueryClient();
   const [dispenseQuantities, setDispenseQuantities] = useState<Record<string, string>>({});
+  const [medicineMappings, setMedicineMappings] = useState<Record<string, string>>({});
 
   const { data: prescription, isLoading } = useQuery({
     queryKey: ['pharmacy-prescription', id],
     queryFn: () => pharmacyPrescriptionsApi.getOne(id).then((r) => r.data),
   });
 
+  const needsMapping = (prescription?.items || []).some((item: any) => !item.medicineId);
+
+  const { data: catalog } = useQuery({
+    queryKey: ['pharmacy-medicines', '', false],
+    queryFn: () => pharmacyMedicinesApi.getAll().then((r) => r.data),
+    enabled: needsMapping,
+  });
+
   const verifyMutation = useMutation({
-    mutationFn: () => pharmacyPrescriptionsApi.verify(id),
+    mutationFn: (items: { id: string; medicineId: string }[]) =>
+      pharmacyPrescriptionsApi.verify(id, items.length ? { items } : undefined),
     onSuccess: () => {
       toast.success('Prescription verified');
+      setMedicineMappings({});
       qc.invalidateQueries({ queryKey: ['pharmacy-prescription', id] });
     },
     onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to verify'),
@@ -42,6 +53,7 @@ export default function PharmacyPrescriptionDetailPage() {
     onSuccess: () => {
       toast.success('Prescription dispensed');
       setDispenseQuantities({});
+      setMedicineMappings({});
       qc.invalidateQueries({ queryKey: ['pharmacy-prescription', id] });
       qc.invalidateQueries({ queryKey: ['pharmacy-inventory-batches'] });
     },
@@ -67,11 +79,25 @@ export default function PharmacyPrescriptionDetailPage() {
   };
 
   const canDispense = prescription.status === 'VERIFIED' || prescription.status === 'PARTIALLY_DISPENSED';
+  const canMap = (prescription.status === 'PENDING' || canDispense) && needsMapping;
+
+  const mappedMedicineId = (item: any) => item.medicineId || medicineMappings[item.id];
+
+  const handleVerify = () => {
+    const items = Object.entries(medicineMappings)
+      .filter(([, medicineId]) => medicineId)
+      .map(([itemId, medicineId]) => ({ id: itemId, medicineId }));
+    verifyMutation.mutate(items);
+  };
 
   const handleDispense = () => {
     const items = Object.entries(dispenseQuantities)
       .filter(([, qty]) => qty && Number(qty) > 0)
-      .map(([prescriptionItemId, qty]) => ({ prescriptionItemId, quantity: Number(qty) }));
+      .map(([prescriptionItemId, qty]) => ({
+        prescriptionItemId,
+        quantity: Number(qty),
+        ...(medicineMappings[prescriptionItemId] && { medicineId: medicineMappings[prescriptionItemId] }),
+      }));
     if (items.length === 0) {
       toast.error('Enter a quantity for at least one item');
       return;
@@ -121,6 +147,9 @@ export default function PharmacyPrescriptionDetailPage() {
                 <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dosage</th>
                 <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Qty</th>
                 <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Remaining</th>
+                {canMap && (
+                  <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Catalog Medicine</th>
+                )}
                 {canDispense && (
                   <th className="py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dispense Qty</th>
                 )}
@@ -137,18 +166,40 @@ export default function PharmacyPrescriptionDetailPage() {
                     </td>
                     <td className="py-2 px-3 text-xs text-slate-600">{item.quantity}</td>
                     <td className="py-2 px-3 text-xs text-slate-600">{remaining}</td>
+                    {canMap && (
+                      <td className="py-2 px-3">
+                        {item.medicineId ? (
+                          <span className="text-xs text-slate-600">{item.medicine?.name || 'Mapped'}</span>
+                        ) : (
+                          <select
+                            value={medicineMappings[item.id] || ''}
+                            onChange={(e) =>
+                              setMedicineMappings((prev) => ({ ...prev, [item.id]: e.target.value }))
+                            }
+                            className="input text-xs w-44 py-1.5"
+                          >
+                            <option value="">Select medicine…</option>
+                            {(catalog || []).map((m: any) => (
+                              <option key={m.id} value={m.id}>
+                                {[m.name, m.strength].filter(Boolean).join(' ')}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+                    )}
                     {canDispense && (
                       <td className="py-2 px-3">
                         <input
                           type="number"
                           min={0}
                           max={remaining}
-                          disabled={remaining <= 0 || !item.medicineId}
+                          disabled={remaining <= 0 || !mappedMedicineId(item)}
                           value={dispenseQuantities[item.id] || ''}
                           onChange={(e) =>
                             setDispenseQuantities((prev) => ({ ...prev, [item.id]: e.target.value }))
                           }
-                          placeholder={!item.medicineId ? 'Not mapped' : remaining <= 0 ? 'Done' : '0'}
+                          placeholder={!mappedMedicineId(item) ? 'Map first' : remaining <= 0 ? 'Done' : '0'}
                           className="input text-xs w-24 py-1.5"
                         />
                       </td>
@@ -164,7 +215,7 @@ export default function PharmacyPrescriptionDetailPage() {
       <div className="flex gap-3">
         {prescription.status === 'PENDING' && (
           <button
-            onClick={() => verifyMutation.mutate()}
+            onClick={handleVerify}
             disabled={verifyMutation.isPending}
             className="btn-primary flex items-center gap-2 text-sm"
           >

@@ -35,6 +35,7 @@ describe('PharmacyPrescriptionsService.createFromHospitalPrescription', () => {
 
   let tx: {
     pharmacyPatient: { upsert: jest.Mock };
+    pharmacyMedicine: { findMany: jest.Mock };
     pharmacyPrescription: { create: jest.Mock; update: jest.Mock };
     prescriptionItem: { update: jest.Mock };
   };
@@ -49,6 +50,11 @@ describe('PharmacyPrescriptionsService.createFromHospitalPrescription', () => {
     tx = {
       pharmacyPatient: {
         upsert: jest.fn().mockResolvedValue({ id: 'pharmacy_patient_1' }),
+      },
+      pharmacyMedicine: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'catalog_med_1', name: 'paracetamol ' }]),
       },
       pharmacyPrescription: {
         create: jest.fn().mockResolvedValue({
@@ -111,6 +117,7 @@ describe('PharmacyPrescriptionsService.createFromHospitalPrescription', () => {
           items: {
             create: [
               expect.objectContaining({
+                medicineId: 'catalog_med_1',
                 medicineName: 'Paracetamol',
                 dosage: '500mg',
                 quantity: 1,
@@ -149,6 +156,7 @@ describe('PharmacyPrescriptionsService.verify — item corrections', () => {
   let prisma: {
     $transaction: jest.Mock;
     pharmacyPrescription: { findFirst: jest.Mock };
+    pharmacyMedicine: { count: jest.Mock };
   };
   let auditService: { log: jest.Mock };
   let service: PharmacyPrescriptionsService;
@@ -175,6 +183,7 @@ describe('PharmacyPrescriptionsService.verify — item corrections', () => {
       pharmacyPrescription: {
         findFirst: jest.fn().mockResolvedValue(pendingPrescription),
       },
+      pharmacyMedicine: { count: jest.fn().mockResolvedValue(1) },
     };
     auditService = { log: jest.fn().mockResolvedValue(undefined) };
     service = new PharmacyPrescriptionsService(
@@ -204,6 +213,17 @@ describe('PharmacyPrescriptionsService.verify — item corrections', () => {
     await expect(
       service.verify('pharm_presc_1', 'pharmacy_1', 'user_1', {
         items: [{ id: 'unknown_item', medicineId: 'catalog_med_1' }],
+      }),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(tx.prescriptionItem.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects a mapping to a medicine outside this pharmacy catalog', async () => {
+    prisma.pharmacyMedicine.count.mockResolvedValue(0);
+    await expect(
+      service.verify('pharm_presc_1', 'pharmacy_1', 'user_1', {
+        items: [{ id: 'item_1', medicineId: 'other_pharmacy_med' }],
       }),
     ).rejects.toThrow(BadRequestException);
 

@@ -141,6 +141,15 @@ export class DispenseItemDto {
   prescriptionItemId: string;
 
   @ApiPropertyOptional({
+    example: 'clx123medicine',
+    description:
+      'Catalog medicine to map an unmapped item to while dispensing it',
+  })
+  @IsString()
+  @IsOptional()
+  medicineId?: string;
+
+  @ApiPropertyOptional({
     example: 'clx123batch',
     description: 'Specific batch to dispense from; omit to auto-pick by FEFO',
   })

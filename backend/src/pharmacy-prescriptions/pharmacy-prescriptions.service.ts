@@ -110,6 +110,16 @@ export class PharmacyPrescriptionsService {
         },
       });
 
+      // Auto-map items to this pharmacy's catalog by exact (case-insensitive)
+      // name so they can be dispensed without manual mapping.
+      const catalog = await tx.pharmacyMedicine.findMany({
+        where: { pharmacyId, isActive: true },
+        select: { id: true, name: true },
+      });
+      const catalogByName = new Map(
+        catalog.map((c) => [c.name.trim().toLowerCase(), c.id]),
+      );
+
       return tx.pharmacyPrescription.create({
         data: {
           pharmacyId,
@@ -121,6 +131,7 @@ export class PharmacyPrescriptionsService {
           advice: prescription.notes ?? undefined,
           items: {
             create: medicines.map((m) => ({
+              medicineId: catalogByName.get(m.name.trim().toLowerCase()),
               medicineName: m.name,
               dosage: m.dosage,
               frequency: m.frequency,
@@ -198,6 +209,10 @@ export class PharmacyPrescriptionsService {
           );
         }
       }
+      await this.assertCatalogMedicines(
+        pharmacyId,
+        dto.items.map((c) => c.medicineId),
+      );
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -248,6 +263,11 @@ export class PharmacyPrescriptionsService {
       );
     }
 
+    await this.assertCatalogMedicines(
+      pharmacyId,
+      dto.items.map((l) => l.medicineId),
+    );
+
     return this.prisma.$transaction(async (tx) => {
       const dispense = await tx.dispense.create({
         data: {
@@ -267,9 +287,16 @@ export class PharmacyPrescriptionsService {
           );
         }
         if (!item.medicineId) {
-          throw new BadRequestException(
-            `Prescription item "${item.medicineName}" is not mapped to a catalog medicine yet`,
-          );
+          if (!line.medicineId) {
+            throw new BadRequestException(
+              `Prescription item "${item.medicineName}" is not mapped to a catalog medicine yet`,
+            );
+          }
+          await tx.prescriptionItem.update({
+            where: { id: item.id },
+            data: { medicineId: line.medicineId },
+          });
+          item.medicineId = line.medicineId;
         }
 
         const picks = line.batchId
@@ -348,5 +375,21 @@ export class PharmacyPrescriptionsService {
 
       return updatedPrescription;
     });
+  }
+
+  private async assertCatalogMedicines(
+    pharmacyId: string,
+    medicineIds: (string | undefined)[],
+  ) {
+    const ids = [...new Set(medicineIds.filter((id): id is string => !!id))];
+    if (ids.length === 0) return;
+    const count = await this.prisma.pharmacyMedicine.count({
+      where: { id: { in: ids }, pharmacyId },
+    });
+    if (count !== ids.length) {
+      throw new BadRequestException(
+        'One or more medicines are not in this pharmacy catalog',
+      );
+    }
   }
 }
