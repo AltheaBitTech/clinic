@@ -131,6 +131,7 @@ export default function AppointmentDetailPage() {
   }
 
   const effectiveStatus = getEffectiveAppointmentStatus(appt.status, appt.scheduledAt);
+  const isNoShow = effectiveStatus === 'NO_SHOW';
   const hasPrescription = !!appt.prescriptions && appt.prescriptions.length > 0;
 
   // Pre-populate amount if doctor has consultationFee
@@ -229,7 +230,7 @@ export default function AppointmentDetailPage() {
 
         <div className="flex items-center gap-3">
           <span className={cn('badge text-sm px-3.5 py-1.5 font-semibold rounded-full shadow-sm', getStatusColor(effectiveStatus))}>
-            {effectiveStatus === 'NO_SHOW' ? 'No Show' : appt.status}
+            {isNoShow ? 'No Show' : appt.status}
           </span>
           <span className="text-xs text-slate-400 font-medium bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
             {appt.type}
@@ -357,7 +358,7 @@ export default function AppointmentDetailPage() {
             <div className="pt-2">
               <div className="flex items-center justify-between mb-1.5">
                 <h4 className="text-xs uppercase font-bold text-slate-400 tracking-wider">Clinical / Consultation Notes</h4>
-                {isDoctor && isNotesChanged && (
+                {isDoctor && !isNoShow && isNotesChanged && (
                   <button
                     onClick={() => saveNotesMutation.mutate(clinicalNotes)}
                     disabled={saveNotesMutation.isPending}
@@ -369,7 +370,7 @@ export default function AppointmentDetailPage() {
                 )}
               </div>
 
-              {isDoctor && appt.status !== 'CANCELLED' ? (
+              {isDoctor && appt.status !== 'CANCELLED' && !isNoShow ? (
                 <textarea
                   value={clinicalNotes}
                   onChange={(e) => {
@@ -487,13 +488,13 @@ export default function AppointmentDetailPage() {
               {/* Scheduled / Confirmed State -> In Progress */}
               {(appt.status === 'SCHEDULED' || appt.status === 'CONFIRMED') && isStaff && (
                 <div className="space-y-2">
-                  {effectiveStatus === 'NO_SHOW' && (
+                  {isNoShow && (
                     <p className="text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 flex items-center gap-1.5">
                       <AlertCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      Scheduled time has passed without check-in.
+                      Scheduled time has passed without check-in. Book a new appointment if the patient still needs a visit.
                     </p>
                   )}
-                  {appt.status === 'SCHEDULED' && effectiveStatus !== 'NO_SHOW' && (
+                  {appt.status === 'SCHEDULED' && !isNoShow && (
                     <button
                       onClick={() => handleStatusChange('CONFIRMED')}
                       className="w-full bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-cyan-100"
@@ -501,13 +502,15 @@ export default function AppointmentDetailPage() {
                       <CheckSquare className="w-4 h-4" /> Confirm Appointment
                     </button>
                   )}
-                  <button
-                    onClick={() => handleStatusChange('IN_PROGRESS')}
-                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2 hover:shadow-cyan-100"
-                  >
-                    <Activity className="w-4 h-4 animate-pulse" /> Check In & Start Visit
-                  </button>
-                  {effectiveStatus === 'NO_SHOW' && (
+                  {!isNoShow && (
+                    <button
+                      onClick={() => handleStatusChange('IN_PROGRESS')}
+                      className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2 hover:shadow-cyan-100"
+                    >
+                      <Activity className="w-4 h-4 animate-pulse" /> Check In & Start Visit
+                    </button>
+                  )}
+                  {isNoShow && (
                     <button
                       onClick={() => handleStatusChange('NO_SHOW')}
                       className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-semibold py-2 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5"
@@ -538,7 +541,7 @@ export default function AppointmentDetailPage() {
               )}
 
               {/* Cancellation Option (Only available before completion or cancellation) */}
-              {(appt.status === 'SCHEDULED' || appt.status === 'CONFIRMED' || appt.status === 'IN_PROGRESS') && (
+              {(appt.status === 'SCHEDULED' || appt.status === 'CONFIRMED' || appt.status === 'IN_PROGRESS') && !isNoShow && (
                 <div>
                   {!showCancelDialog ? (
                     <button
@@ -642,6 +645,12 @@ export default function AppointmentDetailPage() {
               {(appt.status === 'COMPLETED' || appt.status === 'CANCELLED') && !isDoctor && (
                 <p className="text-xs text-slate-400 italic text-center py-2 bg-slate-50 rounded-xl border border-slate-100">
                   This appointment is archived and cannot be edited.
+                </p>
+              )}
+
+              {appt.status === 'NO_SHOW' && (
+                <p className="text-xs text-slate-400 italic text-center py-2 bg-slate-50 rounded-xl border border-slate-100">
+                  Patient did not show up. This appointment cannot be edited.
                 </p>
               )}
             </div>

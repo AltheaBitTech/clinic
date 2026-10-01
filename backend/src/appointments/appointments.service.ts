@@ -12,6 +12,7 @@ import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
 } from './dto/appointment.dto';
+import { isNoShowAppointment, NO_SHOW_LOCKED_MESSAGE } from './no-show.util';
 
 const CLINIC_TIMEZONE = 'Asia/Kolkata';
 const HISTORICAL_STATUSES = ['COMPLETED', 'CANCELLED'];
@@ -382,6 +383,23 @@ export class AppointmentsService {
           'Patients may only cancel their own appointments',
         );
       }
+    }
+
+    // A no-show is terminal: the only change still allowed is staff
+    // recording it as NO_SHOW. Check-in, cancel, reschedule, notes etc. are
+    // all refused — the patient needs a fresh booking instead.
+    if (isNoShowAppointment(appointment)) {
+      const isMarkingNoShow =
+        dto.status === 'NO_SHOW' &&
+        appointment.status !== 'NO_SHOW' &&
+        Object.keys(dto).every((key) => key === 'status');
+      if (!isMarkingNoShow) {
+        throw new BadRequestException(NO_SHOW_LOCKED_MESSAGE);
+      }
+    } else if (dto.status === 'NO_SHOW') {
+      throw new BadRequestException(
+        'An appointment can only be marked as no-show after its scheduled time has passed',
+      );
     }
 
     const previousScheduledAt = appointment.scheduledAt;

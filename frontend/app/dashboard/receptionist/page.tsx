@@ -11,7 +11,7 @@ import {
   UserPlus, DollarSign, Activity, ChevronRight, RefreshCw, Loader2, AlertCircle, FileBarChart
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { cn, formatCurrency, getStatusColor, getInitials } from '@/lib/utils';
+import { cn, formatCurrency, getStatusColor, getInitials, getEffectiveAppointmentStatus } from '@/lib/utils';
 
 // Billing only applies once a visit has started or finished — an
 // appointment that never happened (NO_SHOW/CANCELLED) or hasn't started yet
@@ -303,6 +303,8 @@ export default function ReceptionistDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                 {filteredSchedule.map((appt: any) => {
+                  const effectiveStatus = getEffectiveAppointmentStatus(appt.status, appt.scheduledAt);
+                  const isNoShow = effectiveStatus === 'NO_SHOW';
                   const initial = getInitials(appt.patient.user.firstName, appt.patient.user.lastName || '');
                   const apptTime = new Date(appt.scheduledAt).toLocaleTimeString('en-IN', {
                     hour: '2-digit',
@@ -349,8 +351,8 @@ export default function ReceptionistDashboard() {
 
                       {/* Visit Status Badge */}
                       <td className="py-4 px-4">
-                        <span className={cn('badge', getStatusColor(appt.status))}>
-                          {appt.status.replace('_', ' ')}
+                        <span className={cn('badge', getStatusColor(effectiveStatus))}>
+                          {effectiveStatus.replace('_', ' ')}
                         </span>
                       </td>
 
@@ -382,7 +384,7 @@ export default function ReceptionistDashboard() {
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {/* Checked In Action */}
-                          {(appt.status === 'SCHEDULED' || appt.status === 'CONFIRMED') && (
+                          {(appt.status === 'SCHEDULED' || appt.status === 'CONFIRMED') && !isNoShow && (
                             <button
                               onClick={() => handleCheckIn(appt.id)}
                               disabled={updateAppointmentMutation.isPending}
@@ -416,7 +418,7 @@ export default function ReceptionistDashboard() {
                           )}
 
                           {/* Cancel Action */}
-                          {['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'].includes(appt.status) && (
+                          {['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'].includes(appt.status) && !isNoShow && (
                             <button
                               onClick={() => handleCancel(appt.id)}
                               disabled={updateAppointmentMutation.isPending}

@@ -8,6 +8,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { PharmacyPrescriptionsService } from '../pharmacy-prescriptions/pharmacy-prescriptions.service';
 import { CreatePrescriptionDto } from './dto/prescription.dto';
+import {
+  isNoShowAppointment,
+  NO_SHOW_LOCKED_MESSAGE,
+} from '../appointments/no-show.util';
 import { StorageService } from '../storage/storage.service';
 import { UserRole } from '@prisma/client';
 import * as fs from 'fs';
@@ -85,6 +89,19 @@ export class PrescriptionsService {
     });
     if (!patient) {
       throw new NotFoundException('Patient not found in this hospital');
+    }
+
+    if (dto.appointmentId) {
+      const appointment = await this.prisma.appointment.findFirst({
+        where: { id: dto.appointmentId, tenantId: user.tenantId },
+        select: { status: true, scheduledAt: true },
+      });
+      if (!appointment) {
+        throw new NotFoundException('Appointment not found in this hospital');
+      }
+      if (isNoShowAppointment(appointment)) {
+        throw new BadRequestException(NO_SHOW_LOCKED_MESSAGE);
+      }
     }
 
     if (dto.pharmacyId) {

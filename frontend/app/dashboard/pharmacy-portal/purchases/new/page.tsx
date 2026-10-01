@@ -406,9 +406,9 @@ export default function NewPharmacyPurchaseOrderPage() {
               <SummaryInput label="Less Cr. Note" value={creditNote} onChange={setCreditNote} />
               <SummaryInput label="Add Dr. Note" value={debitNote} onChange={setDebitNote} />
               <SummaryInput label="Other +/-, R/o" value={otherAdjustment} onChange={setOtherAdjustment} allowNegative />
-              <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                <span className="text-sm font-bold text-slate-800 uppercase tracking-wide">Net Payable</span>
-                <span className="text-lg font-extrabold text-cyan-700">{formatCurrency(netPayable)}</span>
+              <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-200">
+                <span className="text-sm font-bold text-slate-800 uppercase tracking-wide shrink-0">Net Payable</span>
+                <span className="text-lg font-extrabold text-cyan-700 text-right break-all">{formatCurrency(netPayable)}</span>
               </div>
             </div>
           </div>

@@ -283,7 +283,7 @@ export default function PharmacyPurchaseOrderDetailPage() {
         </div>
       </div>
 
-      <div className="card mb-6 grid grid-cols-2 gap-6">
+      <div className="card mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <div className="space-y-2">
           <SummaryRow label="Item Total" value={formatCurrency(order.subtotal)} />
           <SummaryRow label="Less Prod Discount" value={`-${formatCurrency(order.discount)}`} />
@@ -295,9 +295,9 @@ export default function PharmacyPurchaseOrderDetailPage() {
           <SummaryRow label="Less Cr. Note" value={`-${formatCurrency(order.creditNote ?? 0)}`} />
           <SummaryRow label="Add Dr. Note" value={`+${formatCurrency(order.debitNote ?? 0)}`} />
           <SummaryRow label="Other +/-, R/o" value={formatCurrency(order.otherAdjustment ?? 0)} />
-          <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-            <span className="text-sm font-bold text-slate-800 uppercase tracking-wide">Net Payable</span>
-            <span className="text-lg font-extrabold text-cyan-700">{formatCurrency(order.total)}</span>
+          <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-200">
+            <span className="text-sm font-bold text-slate-800 uppercase tracking-wide shrink-0">Net Payable</span>
+            <span className="text-lg font-extrabold text-cyan-700 text-right break-all">{formatCurrency(order.total)}</span>
           </div>
         </div>
       </div>
@@ -318,9 +318,9 @@ export default function PharmacyPurchaseOrderDetailPage() {
 
 function SummaryRow({ label, value, emphasis }: { label: string; value: string; emphasis?: boolean }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between gap-3">
       <span className={`text-xs ${emphasis ? 'font-semibold text-slate-700' : 'text-slate-500'}`}>{label}</span>
-      <span className={`text-xs ${emphasis ? 'font-bold text-slate-900' : 'font-semibold text-slate-600'}`}>{value}</span>
+      <span className={`text-xs ${emphasis ? 'font-bold text-slate-900' : 'font-semibold text-slate-600'} text-right whitespace-nowrap`}>{value}</span>
     </div>
   );
 }
