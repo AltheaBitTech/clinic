@@ -61,6 +61,18 @@ export const authApi = {
     api.post('/auth/reset-password', { token, newPassword }),
 };
 
+export const errorReportApi = {
+  reportClientError: (data: {
+    message: string;
+    name?: string;
+    stack?: string;
+    path?: string;
+    digest?: string;
+    kind?: string;
+    userAgent?: string;
+  }) => api.post('/monitoring/client-error', data),
+};
+
 export const tenantsApi = {
   create: (data: any) => api.post('/tenants', data),
   getAll: (params?: any) => api.get('/tenants', { params }),

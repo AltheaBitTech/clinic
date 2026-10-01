@@ -1400,6 +1400,26 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// Deduplicated application errors — backs the email alerting in
+// src/monitoring. One row per fingerprint; `count` keeps incrementing and
+// `lastAlertedAt` enforces the alert cooldown across serverless instances.
+model ErrorEvent {
+  id            String    @id @default(cuid())
+  fingerprint   String    @unique
+  source        String
+  name          String
+  message       String
+  route         String?
+  count         Int       @default(1)
+  lastStack     String?
+  firstSeenAt   DateTime  @default(now())
+  lastSeenAt    DateTime  @default(now())
+  lastAlertedAt DateTime?
+
+  @@index([lastSeenAt])
+  @@map("error_events")
+}
+
 // ─────────────────────────────────────────
 // PATHOLOGY
 // ─────────────────────────────────────────

@@ -13,7 +13,11 @@ export class PrismaService
   constructor() {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const adapter = new PrismaPg(pool);
-    super({ adapter });
+    // Prisma's interactive-transaction defaults (maxWait 2s, timeout 5s) are
+    // too tight for multi-line stock operations (dispense, sales) against a
+    // remote DB: each line issues several sequential queries, so a few items
+    // exceed 5s and Prisma aborts with P2028.
+    super({ adapter, transactionOptions: { maxWait: 10_000, timeout: 30_000 } });
     this.pool = pool;
   }
 

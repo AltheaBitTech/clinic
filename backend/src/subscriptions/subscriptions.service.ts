@@ -10,6 +10,7 @@ import { SubscriptionStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RazorpayService } from './razorpay.service';
 import { EmailService } from '../email/email.service';
+import { ErrorAlertService } from '../monitoring/error-alert.service';
 
 // Razorpay's Subscriptions API requires a finite total_count even for plans
 // that should recur indefinitely until cancelled. 120 monthly cycles (10
@@ -25,6 +26,7 @@ export class SubscriptionsService {
     private prisma: PrismaService,
     private razorpay: RazorpayService,
     private emailService: EmailService,
+    private errorAlerts: ErrorAlertService,
   ) {}
 
   private async notifyTenantAdmin(
@@ -198,6 +200,14 @@ export class SubscriptionsService {
         this.logger.warn(
           `Failed to cancel previous Razorpay subscription ${previous.razorpaySubscriptionId}: ${err}`,
         );
+        await this.errorAlerts.report(err, {
+          source: 'outbound:razorpay',
+          tenantId: previous.tenantId,
+          extra: {
+            action: 'cancel previous subscription',
+            razorpaySubscriptionId: previous.razorpaySubscriptionId,
+          },
+        });
       }
       await this.prisma.subscription.update({
         where: { id: previous.id },
@@ -348,6 +358,10 @@ export class SubscriptionsService {
       this.logger.error(
         `Failed to process webhook ${eventId}: ${err?.message}`,
       );
+      await this.errorAlerts.report(err, {
+        source: 'outbound:razorpay-webhook',
+        extra: { flow: 'subscription', eventId, event: parsedBody?.event },
+      });
       await this.prisma.webhookEvent.update({
         where: { eventId },
         data: { error: String(err?.message ?? err) },
@@ -397,6 +411,11 @@ export class SubscriptionsService {
         this.logger.error(
           `Failed to record referral commission for subscription=${subscription.id}: ${err?.message}`,
         );
+        await this.errorAlerts.report(err, {
+          source: 'billing:referral-commission',
+          tenantId: subscription.tenantId,
+          extra: { subscriptionId: subscription.id },
+        });
       }
     }
   }

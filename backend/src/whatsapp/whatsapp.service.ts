@@ -1,12 +1,14 @@
 import {
   Injectable,
   Logger,
+  Optional,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { ErrorAlertService } from '../monitoring/error-alert.service';
 
 export type AppointmentConfirmationWhatsapp = {
   recipientUserId: string;
@@ -51,6 +53,7 @@ export class WhatsappService {
   constructor(
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
+    @Optional() private readonly errorAlerts?: ErrorAlertService,
   ) {}
 
   async sendAppointmentConfirmationWhatsapp(
@@ -309,6 +312,10 @@ export class WhatsappService {
       this.logger.error(
         `WhatsApp send failed (template=${templateName}, userId=${recipientUserId}, error=${message})`,
       );
+      await this.errorAlerts?.report(error, {
+        source: 'outbound:whatsapp',
+        extra: { template: templateName, messageLogId: logRow.id },
+      });
       await this.prisma.whatsappMessageLog.update({
         where: { id: logRow.id },
         data: { status: 'FAILED', errorMessage: message },

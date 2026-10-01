@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/auth';
 import { Toaster } from 'react-hot-toast';
 import QueryProvider from '@/components/providers/QueryProvider';
 import ServiceWorkerRegister from '@/components/providers/ServiceWorkerRegister';
+import ErrorReporter from '@/components/providers/ErrorReporter';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
           <AuthProvider>
             <ServiceWorkerRegister />
+            <ErrorReporter />
             {children}
             <Toaster
               position="top-right"

@@ -46,10 +46,12 @@ import { PathologyDashboardModule } from './pathology-dashboard/pathology-dashbo
 import { PathologyReportsModule } from './pathology-reports/pathology-reports.module';
 import { EmailModule } from './email/email.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
+import { MonitoringModule } from './monitoring/monitoring.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    MonitoringModule,
     EmailModule,
     WhatsappModule,
     PrismaModule,

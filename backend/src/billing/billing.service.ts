@@ -10,6 +10,7 @@ import * as crypto from 'crypto';
 import { PaymentMethod } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { ErrorAlertService } from '../monitoring/error-alert.service';
 import { RazorpayService } from '../subscriptions/razorpay.service';
 import { StorageService } from '../storage/storage.service';
 import * as fs from 'fs';
@@ -43,6 +44,7 @@ export class BillingService {
     private emailService: EmailService,
     private razorpay: RazorpayService,
     private storageService: StorageService,
+    private errorAlerts: ErrorAlertService,
   ) {}
 
   private generateInvoiceNo(): string {
@@ -112,6 +114,11 @@ export class BillingService {
       this.logger.error(
         `Invoice PDF generation failed (invoiceId=${invoice.id}, error=${message})`,
       );
+      await this.errorAlerts.report(error, {
+        source: 'billing:invoice-pdf',
+        tenantId: invoice.tenantId,
+        extra: { invoiceId: invoice.id },
+      });
     }
     const updated = await this.prisma.invoice.update({
       where: { id: invoice.id },
@@ -449,6 +456,10 @@ export class BillingService {
       this.logger.error(
         `Failed to process billing webhook ${eventId}: ${err?.message}`,
       );
+      await this.errorAlerts.report(err, {
+        source: 'outbound:razorpay-webhook',
+        extra: { flow: 'invoice payment', eventId, event: parsedBody?.event },
+      });
       await this.prisma.webhookEvent.update({
         where: { eventId },
         data: { error: String(err?.message ?? err) },

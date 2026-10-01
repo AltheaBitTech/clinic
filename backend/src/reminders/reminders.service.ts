@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { ErrorAlertService } from '../monitoring/error-alert.service';
 
 @Injectable()
 export class RemindersService {
@@ -9,6 +10,7 @@ export class RemindersService {
   constructor(
     private prisma: PrismaService,
     private whatsappService: WhatsappService,
+    private errorAlerts: ErrorAlertService,
   ) {}
 
   async processReminders() {
@@ -69,6 +71,10 @@ export class RemindersService {
           },
         });
       } catch (err) {
+        await this.errorAlerts.report(err, {
+          source: 'cron:medicine',
+          extra: { reminderId: reminder.id },
+        });
         await this.prisma.medicineReminder.update({
           where: { id: reminder.id },
           data: { status: 'FAILED' },
@@ -137,6 +143,11 @@ export class RemindersService {
         this.logger.error(
           `Appointment reminder WhatsApp failed (appointmentId=${appt.id}, error=${message})`,
         );
+        await this.errorAlerts.report(error, {
+          source: 'cron:appointments',
+          tenantId: appt.tenantId,
+          extra: { appointmentId: appt.id },
+        });
       }
 
       await this.prisma.notification.create({

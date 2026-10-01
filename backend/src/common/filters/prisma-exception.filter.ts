@@ -30,6 +30,54 @@ function extractConflictFields(
   return [];
 }
 
+/**
+ * Maps known Prisma error codes to user-readable HTTP exceptions. Returns null
+ * for codes we don't recognise — those are treated as server errors (and
+ * alerted on) by AllExceptionsFilter.
+ */
+export function mapPrismaError(
+  exception: Prisma.PrismaClientKnownRequestError,
+): HttpException | null {
+  switch (exception.code) {
+    case 'P2002': {
+      const fields = extractConflictFields(exception).map(humanizeField);
+      const message = fields.length
+        ? `${fields.join(', ')} already in use. Please use a different value.`
+        : 'This record already exists.';
+      return new ConflictException(message);
+    }
+    case 'P2025':
+      return new NotFoundException('The requested record could not be found.');
+    case 'P2003': {
+      const field = (exception.meta as Record<string, any> | undefined)
+        ?.field_name as string | undefined;
+      const label = field ? humanizeField(field.replace(/Id$/, '')) : undefined;
+      return new ConflictException(
+        label
+          ? `This action references a ${label} that no longer exists.`
+          : 'This action references a related record that no longer exists.',
+      );
+    }
+    case 'P2028':
+      return new BadRequestException(
+        'This took too long to process and was cancelled. Please try again.',
+      );
+    default:
+      return null;
+  }
+}
+
+/** Response for Prisma codes mapPrismaError doesn't recognise. */
+export function unknownPrismaErrorResponse(
+  exception: Prisma.PrismaClientKnownRequestError,
+): HttpException {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const message = isProduction
+    ? 'The request could not be processed. Please try again or contact support.'
+    : `Database error [${exception.code}]: ${exception.message || 'The request could not be processed.'}`;
+  return new BadRequestException(message);
+}
+
 @Catch(Prisma.PrismaClientKnownRequestError)
 export class PrismaExceptionFilter implements ExceptionFilter {
   catch(exception: Prisma.PrismaClientKnownRequestError, host: ArgumentsHost) {
@@ -38,50 +86,10 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     console.error('Prisma Error Meta:', JSON.stringify(exception.meta));
 
     const response = host.switchToHttp().getResponse<Response>();
-    const httpException = this.toHttpException(exception);
+    const httpException =
+      mapPrismaError(exception) ?? unknownPrismaErrorResponse(exception);
     response
       .status(httpException.getStatus())
       .json(httpException.getResponse());
-  }
-
-  private toHttpException(
-    exception: Prisma.PrismaClientKnownRequestError,
-  ): HttpException {
-    switch (exception.code) {
-      case 'P2002': {
-        const fields = extractConflictFields(exception).map(humanizeField);
-        const message = fields.length
-          ? `${fields.join(', ')} already in use. Please use a different value.`
-          : 'This record already exists.';
-        return new ConflictException(message);
-      }
-      case 'P2025':
-        return new NotFoundException(
-          'The requested record could not be found.',
-        );
-      case 'P2003': {
-        const field = (exception.meta as Record<string, any> | undefined)
-          ?.field_name as string | undefined;
-        const label = field
-          ? humanizeField(field.replace(/Id$/, ''))
-          : undefined;
-        return new ConflictException(
-          label
-            ? `This action references a ${label} that no longer exists.`
-            : 'This action references a related record that no longer exists.',
-        );
-      }
-      case 'P2028':
-        return new BadRequestException(
-          'This took too long to process and was cancelled. Please try again.',
-        );
-      default: {
-        const isProduction = process.env.NODE_ENV === 'production';
-        const message = isProduction
-          ? 'The request could not be processed. Please try again or contact support.'
-          : `Database error [${exception.code}]: ${exception.message || 'The request could not be processed.'}`;
-        return new BadRequestException(message);
-      }
-    }
   }
 }

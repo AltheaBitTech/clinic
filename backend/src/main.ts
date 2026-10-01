@@ -4,7 +4,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
-import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+import { requestIdMiddleware } from './monitoring/request-id.middleware';
+import { ErrorAlertService } from './monitoring/error-alert.service';
 import { getUploadDir } from './common/utils/upload.util';
 
 async function bootstrap() {
@@ -54,9 +55,22 @@ async function bootstrap() {
     }),
   );
 
-  // Translate raw Prisma errors (e.g. unique constraint violations) into
-  // user-readable HTTP responses instead of a generic 500
-  app.useGlobalFilters(new PrismaExceptionFilter());
+  // Tag each request so a user-visible 500 can be matched to its alert email.
+  // Exceptions (incl. Prisma error mapping) are handled by AllExceptionsFilter,
+  // registered as APP_FILTER in MonitoringModule, which emails the team on 5xx.
+  app.use(requestIdMiddleware);
+
+  const errorAlerts = app.get(ErrorAlertService);
+  process.on('unhandledRejection', (reason) => {
+    void errorAlerts.report(reason, { source: 'process:unhandledRejection' });
+  });
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught exception:', error);
+    // Keep Node's default crash-on-uncaught behaviour, but alert first.
+    void errorAlerts
+      .report(error, { source: 'process:uncaughtException' })
+      .finally(() => process.exit(1));
+  });
 
   // Static file serving (uploads)
   const uploadsDir = getUploadDir();
@@ -81,6 +95,7 @@ async function bootstrap() {
     .addTag('dashboard', 'Dashboard Analytics')
     .addTag('billing', 'Billing & Invoices')
     .addTag('subscriptions', 'SaaS Plan Subscriptions')
+    .addTag('monitoring', 'Error reporting & alerts')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

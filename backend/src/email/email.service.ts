@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
+import { ErrorAlertService } from '../monitoring/error-alert.service';
 
 export type AppointmentConfirmationEmail = {
   recipientEmail: string;
@@ -226,7 +227,10 @@ const ROLE_NEXT_STEPS: Record<string, string> = {
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    @Optional() private readonly errorAlerts?: ErrorAlertService,
+  ) {}
 
   async sendAppointmentConfirmation(
     params: AppointmentConfirmationEmail,
@@ -1159,6 +1163,7 @@ Arogyix Team`,
     };
 
     const resend = this.createResendClient(apiKey);
+    let alreadyReported = false;
 
     try {
       const result = await resend.emails.send(payload);
@@ -1167,7 +1172,12 @@ Arogyix Team`,
         this.logger.error(
           `${params.context} was not accepted by Resend (recipient=${this.maskEmail(recipientEmail)}, error=${result.error.message})`,
         );
+        await this.errorAlerts?.report(
+          new Error(`Resend rejected email: ${result.error.message}`),
+          { source: 'outbound:resend', extra: { email: params.context } },
+        );
         if (params.throwOnFailure) {
+          alreadyReported = true;
           throw new Error('Email was not accepted for delivery');
         }
         return;
@@ -1177,6 +1187,12 @@ Arogyix Team`,
         `${params.context} accepted by Resend (recipient=${this.maskEmail(recipientEmail)}, id=${result.data?.id ?? 'n/a'})`,
       );
     } catch (error) {
+      if (!alreadyReported) {
+        await this.errorAlerts?.report(error, {
+          source: 'outbound:resend',
+          extra: { email: params.context },
+        });
+      }
       if (params.throwOnFailure) {
         throw error;
       }
