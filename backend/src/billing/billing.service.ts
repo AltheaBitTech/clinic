@@ -35,6 +35,13 @@ const INVOICE_INCLUDE = {
 // hasn't started yet (SCHEDULED/CONFIRMED) shouldn't be billable.
 const BILLABLE_APPOINTMENT_STATUSES = ['IN_PROGRESS', 'COMPLETED'];
 
+// Online invoice payments are switched off until each tenant has its own
+// payout destination (e.g. a Razorpay Route linked account) — today every
+// order would settle into the platform's Razorpay account, not the
+// hospital's. Patients pay at the facility and staff record it via
+// markAsPaid. SaaS subscription billing is unaffected.
+const ONLINE_INVOICE_PAYMENTS_ENABLED = false;
+
 @Injectable()
 export class BillingService {
   private readonly logger = new Logger(BillingService.name);
@@ -317,6 +324,12 @@ export class BillingService {
   // banking/wallet options. The invoice stays PENDING until verifyPayment
   // confirms a signed payment against this order.
   async createPaymentOrder(id: string) {
+    if (!ONLINE_INVOICE_PAYMENTS_ENABLED) {
+      throw new BadRequestException(
+        'Online payment is not available — please pay at the reception',
+      );
+    }
+
     const invoice = await this.prisma.invoice.findUnique({ where: { id } });
     if (!invoice) throw new NotFoundException('Invoice not found');
     if (invoice.status !== 'PENDING') {
@@ -949,7 +962,9 @@ export class BillingService {
               .filter(Boolean)
               .join(' ') || 'Paid in full'
           : invoice.status === 'PENDING'
-            ? 'Pay online via the patient portal or at the reception.'
+            ? ONLINE_INVOICE_PAYMENTS_ENABLED
+              ? 'Pay online via the patient portal or at the reception.'
+              : 'Please pay at the reception.'
             : `This invoice is ${cap(invoice.status).toLowerCase()}.`,
         M + 14,
         infoY + 25,

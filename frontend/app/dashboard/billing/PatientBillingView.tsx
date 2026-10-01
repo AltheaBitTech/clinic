@@ -8,7 +8,6 @@ import {
   Receipt, CheckCircle2, Loader2, DollarSign, Clock, Download,
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
-import { PayInvoiceButton } from '@/components/billing/PayInvoiceButton';
 import toast from 'react-hot-toast';
 
 export default function PatientBillingView() {
@@ -132,12 +131,7 @@ export default function PatientBillingView() {
                   <span className="text-lg font-bold text-slate-800">{formatCurrency(inv.total)}</span>
                   <div className="flex items-center gap-2">
                     {inv.status === 'PENDING' && (
-                      <PayInvoiceButton
-                        invoiceId={inv.id}
-                        amount={Number(inv.total)}
-                        label="Pay Now"
-                        className="text-xs px-3 py-1.5"
-                      />
+                      <span className="text-xs text-slate-500">Pay at reception</span>
                     )}
                     <button
                       onClick={() => handleDownload(inv)}

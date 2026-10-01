@@ -6,7 +6,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { appointmentsApi, billingApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { PayInvoiceButton } from '@/components/billing/PayInvoiceButton';
 import {
   ArrowLeft, Calendar, Clock, User, Phone, Mail, FileText, Plus, Check,
   X, AlertCircle, Loader2, Sparkles, HeartPulse, Activity, CreditCard,
@@ -698,7 +697,7 @@ export default function AppointmentDetailPage() {
                   <p className="text-xs text-slate-400 italic">Notes: "{appt.invoice.notes}"</p>
                 )}
 
-                {/* Mark paid for staff, pay bill simulation for patients */}
+                {/* Staff record the offline payment; patients pay at reception */}
                 {appt.invoice.status === 'PENDING' && (
                   <div>
                     {isStaff ? (
@@ -711,11 +710,9 @@ export default function AppointmentDetailPage() {
                         Record Cash/Card Payment
                       </button>
                     ) : isPatient ? (
-                      <PayInvoiceButton
-                        invoiceId={appt.invoice.id}
-                        amount={Number(appt.invoice.total)}
-                        className="w-full"
-                      />
+                      <p className="w-full text-center text-sm text-slate-500 bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4">
+                        Please pay at the reception. Staff will mark this invoice as paid.
+                      </p>
                     ) : null}
                   </div>
                 )}
