@@ -118,6 +118,9 @@ export default function NewInvoicePage() {
               <span className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 font-bold text-sm flex items-center justify-center shrink-0 mr-2">1</span>
               <h3 className="font-semibold text-slate-800">Patient Information</h3>
             </div>
+            <p className="text-xs text-slate-500 -mt-2">
+              Only patients checked in today or with a completed visit can be billed here. Consultation bills are generated from the appointment.
+            </p>
 
             <div className="relative">
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">

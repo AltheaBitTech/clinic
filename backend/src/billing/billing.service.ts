@@ -91,6 +91,36 @@ export class BillingService {
         throw new NotFoundException('Doctor not found');
       }
       doctorId = doctor.id;
+
+      // A standalone invoice (e.g. an ECG or dressing) still needs a real
+      // visit behind it: the patient must be checked in today or have a
+      // completed visit at this hospital.
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const startOfTomorrow = new Date(startOfToday);
+      startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+      const eligibleVisit = await this.prisma.appointment.findFirst({
+        where: {
+          tenantId,
+          patientId: data.patientId,
+          OR: [
+            { status: 'COMPLETED' },
+            {
+              status: 'IN_PROGRESS',
+              OR: [
+                { checkedInAt: { gte: startOfToday, lt: startOfTomorrow } },
+                { scheduledAt: { gte: startOfToday, lt: startOfTomorrow } },
+              ],
+            },
+          ],
+        },
+        select: { id: true },
+      });
+      if (!eligibleVisit) {
+        throw new BadRequestException(
+          'An invoice can only be created for a patient who is checked in today or has a completed visit',
+        );
+      }
     }
 
     const total =
